@@ -14,9 +14,10 @@
     /*------------------
         Preloader
     --------------------*/
-    $(window).on('load', function () {
-        $(".loader").fadeOut();
-        $("#preloder").delay(200).fadeOut("slow");
+    setTimeout(function () {
+      $(".loader").fadeOut();
+      $("#preloder").fadeOut("slow");
+    }, 5000); // 5 seconds max wait
 
         /*------------------
             Portfolio filter
