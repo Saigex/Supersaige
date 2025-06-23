@@ -1,0 +1,1294 @@
+<!DOCTYPE html>
+<html oncontextmenu="return true">
+
+<head>
+    
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="referrer" content="origin">
+    <meta property="codeapi" content="67879">
+    <meta property="botid" content="">
+    <meta property="botbgcolor" content="#2a2a2a">
+    <meta property="bottextcolor" content="#ffffff">
+    <meta property="baseurl" content="file:///C:/Users/Admin/Desktop/Nouveau%20dossier%20(6)/ha1.html">
+    <link rel="stylesheet" href="css/ababot.css">
+    <link rel="stylesheet" href="css/bootstrap.min.css">
+    <link rel="stylesheet" href="css/all.css">
+    <script src="js/jquery.min.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300;1,400;1,500;1,600;1,700&family=Sora:wght@100;200;300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto+Mono&display=swap" rel="stylesheet">
+    <style>
+        * {
+            font-family: "Sora", serif;
+        }
+
+        :root {
+            --color1: #ffffff;
+            --color2: #000028;
+            --color3: #7683FF;
+            --color4: #5862BF;
+            --color5: #C0C1C6;
+            --color6: #000028;
+            --bg_bgc: #0005;
+            --size-timeline: 1em;
+            --color-timeline: var(--color4);
+            --acolor-timeline: #5862BF55;
+            --color-base-timeline: #e4e4e4;
+        }
+
+        #nav-trade * {
+            font-family: 'Roboto Mono', monospace;
+            font-size: 10pt;
+        }
+
+        .btn-outline-success {
+            --bs-btn-border-color: #0f0 !important;
+            --bs-btn-color: #0f0 !important;
+        }
+
+        .text-danger {
+            color: #c00 !important;
+        }
+
+        .text-success {
+            color: #0c0 !important;
+        }
+
+        .btn-success {
+            background-color: #22aa1e;
+        }
+
+        .btn-purple {
+            color: var(--color1);
+            background-color: var(--color3);
+            border-color: #7683FFaa;
+        }
+
+        .btn-purple:hover {
+            color: var(--color1);
+            background-color: var(--color4);
+            border-color: #ffffffaa;
+        }
+
+        .btn-purple:focus,
+        .btn-purple.active {
+            background-color: var(--color4);
+            color: var(--color1);
+            box-shadow: 0 0 0 .2rem #ffffffaa;
+        }
+
+        .btn-purple:focus,
+        .btn-purple.focus {
+            background-color: var(--color4);
+            color: var(--color1);
+            box-shadow: 0 0 0 .2rem #ffffffaa;
+        }
+
+        .btn-outline-purple {
+            color: var(--color3);
+            background-color: transparent;
+            background-image: none;
+            border-color: var(--color3)
+        }
+
+        .btn-outline-purple:hover {
+            color: var(--color1);
+            background-color: var(--color3);
+            border-color: #7683FFaa;
+        }
+
+        div[aria-describedby=logPanel] {
+            display: none !important;
+        }
+
+        .btn-border-gradient {
+            position: relative;
+
+        }
+
+        .btn-border-gradient>* {
+            background: #000;
+            margin: 1px;
+            border-radius: 10px;
+        }
+
+        .btn-border-gradient>*::before {
+            content: " ";
+            position: absolute;
+            z-index: -1;
+            left: 0;
+            top: 0;
+            height: calc(100%);
+            border-radius: 10px;
+            width: 100%;
+            background: linear-gradient(to right, var(--color4) 0%, rgba(0, 0, 0, 0) 50%, var(--color4) 100%);
+            transition: all .5s;
+            opacity: 1;
+        }
+
+        .btn-border-gradient>*::after {
+            content: " ";
+            position: absolute;
+            z-index: -1;
+            left: 0;
+            top: 0;
+            height: calc(100%);
+            border-radius: 10px;
+            width: 100%;
+            background: linear-gradient(to right, rgba(0, 0, 0, 0) 0%, var(--color4) 50%, rgba(0, 0, 0, 0));
+            transition: all .5s;
+            opacity: 0;
+        }
+
+        .btn-border-gradient>*:hover {
+            color: var(--color4) !important;
+        }
+
+        .btn-border-gradient>*:hover::before {
+            opacity: 0;
+        }
+
+        .btn-border-gradient>*:hover::after {
+            opacity: 1;
+        }
+
+
+
+        /*#nav-trade > div > table > thead > tr > th:nth-child(3){display:none!important}*/
+        /*#nav-trade > div > table > tbody > tr > td:nth-child(3){display:none!important}*/
+        .text-danger {
+            color: #ff0066 !important;
+        }
+
+        .text-success {
+            color: #00ff66 !important;
+        }
+
+        .legends small {
+            width: 9em;
+        }
+    </style>
+</head>
+
+<body oncontextmenu="return true" class="d-flex">
+    <div id="center"></div>
+    <input type="hidden" id="bots" value="0">
+    <div id="workspace_center"></div>
+    <span id="limits-dialog"></span>
+    <span id="load-dialog"></span>
+    <span id="save-dialog"></span>
+    <span id="integrations-dialog"></span>
+    <span id="chart-dialog"></span>
+    <span id="trading-view-dialog"></span>
+    <span id="logPanel" class="draggable-dialog" data-i18n-title="Log">
+        <div id="logTable" class="logTable-scroll"></div>
+    </span>
+    <span id="summaryPanel" class="draggable-dialog" data-i18n-title="Summary"></span>
+    <div>
+        <div class="blocker"></div>
+        <div class="reality-check" style="display: none">
+            <h1 data-i18n-text="Reality Check"></h1>
+            <p data-i18n-text="Options trading can become a real addiction, as can any other activity pushed to its limits. To avoid the danger of such an addiction, we provide a reality-check that gives you a summary of your trades and accounts on a regular basis."></p>
+            <p data-i18n-text="Please specify your preferred reality-check interval in minutes">
+                <input id="realityDuration" interval="1" maxlength="2" value="10">
+            </p>
+            <p id="rc-err" style="display: none;" class="error-msg" data-i18n-text="Please enter a number between 10 to 60."></p>
+            <div>
+                <button bcont="1" class="button" id="continue-trading" data-i18n-text="Continue Trading"></button>
+                <a id="statement-reality-check" class="button-secondary" href="#">
+                    <span data-i18n-text="Statement"></span>
+                </a>
+                <a id="logout-reality-check" class="button-secondary" href="#">
+                    <span data-i18n-text="Log out"></span>
+                </a>
+            </div>
+        </div>
+    </div>
+    <div class="container h-100">
+        <div class="row justify-content-center h-100">
+            <script>
+                document.addEventListener("DOMContentLoaded", function() {
+                    $(".btn-save-log").click(function() {
+                        $('.ui-dialog-titlebar .icon-save').click();
+                    });
+                    setTimeout(function() {
+                        $("#logButton").click();
+                        if (AutoBot.loaded == 0) {
+                            location.reload();
+                        }
+                    }, 6000);
+                    const infoBot = new bootstrap.Modal('#infobot', {
+                        keyboard: false
+                    })
+                    document.querySelector('#infobot').addEventListener('hidden.bs.modal', event => {
+                        $('#infobot').find('.modal-title').text('').parent().find('.modal-content').html('');
+                    })
+                    $('.blockbot').click(function() {
+                        $('.blockbot.ro a').removeClass('active');
+                        $('.campos').html('');
+                        AutoBot.Load($(this).data('id'));
+                        $('.blockbot.ro[data-id=' + $(this).data('id') + '] a').addClass('active');
+                    });
+                    $('.btn-botinfo').click(function() {
+                        if ($(this).data('id') === '') {
+                            Notiflix.Notify.failure('selecione um bot')
+                        } else $.getJSON('/bot/info/' + $(this).data('id'), function(jdb) {
+                            $('#infobot').find('.modal-title').text(jdb.bot_nome).parent().find('.modal-content').html(jdb.bot_desc);
+                            infoBot.show();
+                        });
+                        return false;
+                    });
+                    $('.btn-change').click(function() {
+                        localStorage.setItem('restorebot', '{"id":0,"stamp":0}');
+                        setTimeout(function() {
+                            window.location.reload()
+                        }, 100)
+                        $('.nbot').text('');
+                        $('.campos').html('');
+                        return false;
+                    });
+                });
+            </script>
+            <div class="col operacional p-0 minh-100 bg-transparent d-flex" style="backdrop-filter: blur(0px)!important;">
+                <div class="p-md-3 p-1 m-2 text-light d-flex flex-column ">
+                    <div class="row  mb-md-3 mb-1 py-0 flex-wrap flex-fill">
+                        <div class="col-12 col-md-6 d-flex flex-column-reverse flex-md-column gap-3">
+                            <div class="row">
+                                <div class="col-12 ms-md-auto d-flex flex-column ">
+                                    <div class="rounded-4 d-flex container-balance align-items-stretch bg-black flex-wrap border-0 mb-4">
+                                        <div class="py-md-3 px-md-3 py-1 px-2 rounded-4 rounded-end" style="background-color:#161616!important;margin-right:-3px;width:calc(65%)!important">
+                                            <small>Saldo</small>
+                                            <h5 class="p-0 m-0 fw-normal app_balance notranslate fw-bold" style='font-family:"Chakra Petch"!important;'>$ <v style='font-family:"Chakra Petch"!important;'>0,00</v>
+                                            </h5>
+                                        </div>
+                                        <div class="py-md-3 px-md-3 py-1 px-2 text-start" style="clip-path:none;background-color:#404040!important;width:calc(35% + 3px)!important">
+                                            <small clas>Lucro/Prejuízo</small>
+                                            <h5 class="p-0 m-0 fw-bold  notranslate" style='font-family:"Chakra Petch"!important;'>$ <v class="app_profit_loss" style='font-family:"Chakra Petch"!important;'>0,00</v>
+                                            </h5>
+                                        </div>
+                                        <div class="py-1 px-2 text-end w-100 text-secondary"> <small>Operações</small> <small class="win text-success h6">0</small> / <small class="loss">0</small></div>
+                                    </div>
+                                </div>
+                                <div class="col-12   d-flex container-account  gap-2">
+
+                                    <div class="d-flex flex-column mb-auto">
+                                        <small class="">Tipo de Conta</small>
+                                        <div class="btn bg-dark account text-light" data-bs-toggle="modal" data-bs-target="#exampleModal">
+                                            <h4 class="p-0 m-0 fs-6 d-inline"></h4><i class="fad fa-sync bg-secondary rounded p-1 ms-1"></i>
+                                            <small class="d-none" value=""></small>
+                                        </div>
+                                    </div>
+                                    <div class="d-flex flex-column mb-auto" style="max-width:50%">
+                                        <small class="mx-auto">Estratégia</small>
+                                        <button type="button" class="btn bg-dark text-light d-flex" data-bs-toggle="dropdown" aria-expanded="false">
+                                            <text class="nbot me-auto">Selecione</text><i class="fad fa-sync bg-secondary rounded p-1 ms-1"></i>
+                                        </button>
+                                        <ul class="dropdown-menu dropdown-menu-dark">
+                                                                                                                                                                                    <li><span class="dropdown-item-text text-success">Grátis</span></li>
+                                                                                                    <li class="blockbot ro" data-id="68"><a class="dropdown-item botname" href="#">Supersaige</a></li>
+                                                                                                    <li class="blockbot ro" data-id="69"><a class="dropdown-item botname" href="#">RD1</a></li>
+                                                                                                    <li class="blockbot ro" data-id="70"><a class="dropdown-item botname" href="#">Guardian</a></li>
+                                                                                                    <li class="blockbot ro" data-id="71"><a class="dropdown-item botname" href="#">01 Merlin</a></li>
+                                                                                                                                                                                </ul>
+                                    </div>
+                                    <div class="d-flex flex-column mb-auto flex-fill">
+                                        <small class="">Vídeo Aula</small>
+                                        <bunton data-id="" class="btn btn-ls btn-botinfo btn-danger border-dark flex-fill">
+                                            <div class="fa fa-play"></div>
+                                            <div class="fa fa-info"></div>
+                                        </bunton>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="bg-dark flex-fill rounded-3 d-flex flex-column text-center text-light">
+
+                                <div class="d-flex bg-dark rounded-3 rounded-top">
+                                    <ul class="nav nav-tabs border-0 d-md-none px-2 gap-2" id="myTab" role="tablist">
+                                        <li class="nav-item" role="presentation">
+                                            <button class="btn btn-outline-light border-0 btn-sm active" id="bar-tab" data-bs-toggle="tab" data-bs-target="#bar-tab-pane"><i class="fad fa-chart-bar"></i></button>
+                                        </li>
+                                        <li class="nav-item" role="presentation">
+                                            <button class="btn btn-outline-light border-0 btn-sm " id="line-tab" data-bs-toggle="tab" data-bs-target="#line-tab-pane"><i class="fad fa-chart-area"></i></button>
+                                        </li>
+                                    </ul>
+                                    <div class=" flex-fill my-auto">Last Digits: <i class="udig"></i></div>
+                                    <select class="border-0 bg-dark text-light w-auto py-0 px-1 text-end rounded-3" id="periodot">
+                                        <option value="25">25 ticks</option>
+                                        <option value="50">50 ticks</option>
+                                        <option value="100">100 ticks</option>
+                                        <option value="500">500 ticks</option>
+                                        <option value="1000">1000 ticks</option>
+                                    </select>
+                                </div>
+                                <style>
+                                    #indicadorbars>* {
+                                        transition: height .8s;
+                                        min-height: 2px;
+                                    }
+
+                                    #indicadorbars>*>small {
+                                        font-size: 8pt;
+                                    }
+                                </style>
+
+                                <div class="tab-content h-100 d-flex flex-column" id="myTabContent">
+                                    <div class="tab-pane collapse show active flex-fill d-md-block" id="bar-tab-pane">
+                                        <div class="d-flex flex-column h-100 " style="min-height:25vh">
+                                            <div class="d-flex flex-fill flex-row pt-3 px-1 gap-1" id="indicadorbars">
+                                                <div class="bg-light col position-relative mt-auto border border-1" style="--bs-bg-opacity:.8;height:0%">
+                                                    <small class="position-absolute bottom-100 start-50 translate-middle-x">0%</small>
+                                                </div>
+                                                <div class="bg-light col position-relative mt-auto border border-1" style="--bs-bg-opacity:.8;height:0%">
+                                                    <small class="position-absolute bottom-100 start-50 translate-middle-x">0%</small>
+                                                </div>
+                                                <div class="bg-light col position-relative mt-auto border border-1" style="--bs-bg-opacity:.8;height:0%">
+                                                    <small class="position-absolute bottom-100 start-50 translate-middle-x">0%</small>
+                                                </div>
+                                                <div class="bg-light col position-relative mt-auto border border-1" style="--bs-bg-opacity:.8;height:0%">
+                                                    <small class="position-absolute bottom-100 start-50 translate-middle-x">0%</small>
+                                                </div>
+                                                <div class="bg-light col position-relative mt-auto border border-1" style="--bs-bg-opacity:.8;height:0%">
+                                                    <small class="position-absolute bottom-100 start-50 translate-middle-x">0%</small>
+                                                </div>
+                                                <div class="bg-light col position-relative mt-auto border border-1" style="--bs-bg-opacity:.8;height:0%">
+                                                    <small class="position-absolute bottom-100 start-50 translate-middle-x">0%</small>
+                                                </div>
+                                                <div class="bg-light col position-relative mt-auto border border-1" style="--bs-bg-opacity:.8;height:0%">
+                                                    <small class="position-absolute bottom-100 start-50 translate-middle-x">0%</small>
+                                                </div>
+                                                <div class="bg-light col position-relative mt-auto border border-1" style="--bs-bg-opacity:.8;height:0%">
+                                                    <small class="position-absolute bottom-100 start-50 translate-middle-x">0%</small>
+                                                </div>
+                                                <div class="bg-light col position-relative mt-auto border border-1" style="--bs-bg-opacity:.8;height:0%">
+                                                    <small class="position-absolute bottom-100 start-50 translate-middle-x">0%</small>
+                                                </div>
+                                                <div class="bg-light col position-relative mt-auto border border-1" style="--bs-bg-opacity:.8;height:0%">
+                                                    <small class="position-absolute bottom-100 start-50 translate-middle-x">0%</small>
+                                                </div>
+                                            </div>
+                                            <div class="d-flex px-1 gap-1 small fw-bold position-relative rounded-3 rounded-bottom">
+                                                <div class="col">0</div>
+                                                <div class="col">1</div>
+                                                <div class="col">2</div>
+                                                <div class="col">3</div>
+                                                <div class="col">4</div>
+                                                <div class="col">5</div>
+                                                <div class="col">6</div>
+                                                <div class="col">7</div>
+                                                <div class="col">8</div>
+                                                <div class="col">9</div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="tab-pane collapse flex-fill  d-md-block" id="line-tab-pane">
+                                        <div id="chart" class="d-flex h-100 flex-row align-items-stretch"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="d-flex col-12 col-md-6 flex-column" style="min-height: 180px;">
+                            <div class="row mb-md-3 mb-1 nowrap ">
+                                <div class="col-auto  d-flex gap-2">
+                                    <button class=" fw-bold btn btn-outline-info text-light w-100 " data-bs-toggle="modal" data-bs-target="#modalcampos" style="--bs-btn-border-width:2px"><i class="fal fa-cog"></i></button>
+                                    <button class="btn-run fw-bold btn btn-outline-success text-light w-100 " style="--bs-btn-border-width:2px"><i class="fad fa-play"></i></button>
+                                </div>
+                                <div class="col-auto  d-none">
+                                    <button class="btn-stop fw-bold btn btn-outline-danger w-100 " style="--bs-btn-border-width:2px"><i class="fad fa-pause"></i></button>
+                                </div>
+
+                                <div class="col ps-0">
+
+                                    <div class="legends">
+                                        <small class="text-nowrap">Analisando</small>
+                                        <small class="text-nowrap">Contrato aberto</small>
+                                        <small class="text-nowrap">Contrato fechado</small>
+                                    </div>
+                                    <div class="timeline mt-0 mb-0">
+                                        <div class="line base"></div>
+                                        <div class="line"></div>
+                                        <div class="point"></div>
+                                        <div class="point"></div>
+                                        <div class="point"></div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="card bg-dark text-light  flex-fill">
+                                <div class="card-header p-1 nav gap-2 ">
+                                    <small class="btn btn-dark btn-sm totallw position-relative active " id="nav-trade-tab" data-bs-toggle="tab" data-bs-target="#nav-trade">
+                                        Trader
+                                    </small>
+                                    <small class="btn btn-dark btn-sm totallw position-relative" id="nav-message-tab" data-bs-toggle="tab" data-bs-target="#nav-message">
+                                        Notificações
+                                    </small>
+                                    <small class="btn btn-dark btn-reset p-1 px-2 ms-auto"><i class="fad fa-trash-alt"></i></small>
+                                    <small class="btn btn-dark btn-reg p-1 px-2" data-bs-toggle="collapse" href="#chartb"><i class="fad fa-chart-line"></i></small><!--id="chartButton"-->
+                                    <!--<small class="btn btn-dark btn-reg p-1 px-2 btn-save-log"><i class="fad fa-file-excel"></i></small>-->
+                                    <!-- <small class="btn btn-dark btn-reg p-1 px-2" id="nav-summary-tab" data-bs-toggle="tab" data-bs-target="#nav-log"><i class="fad fa-poll-h"></i></small> -->
+                                </div>
+
+                                <div class="row  flex-fill">
+                                    <div class="col">
+                                        <div class="tab-content">
+                                            <div class="tab-pane fade show active" id="nav-trade">
+                                                <div class="table-responsive">
+                                                    <table class="table table-sm table-dark  align-middle table-striped position-relative">
+                                                        <thead class="sticky-top" style="z-index:10">
+                                                            <tr>
+                                                                <th scope="col">Hora</th>
+                                                                <th class=" text-center" scope="col">Tipo</th>
+                                                                <th class="" scope="col">Tick Final</th>
+                                                                <th class="" scope="col">Preço</th>
+                                                                <th class="" scope="col w-100">Resultado</th>
+                                                            </tr>
+                                                        </thead>
+                                                        <tbody class="contracts notranslate">
+                                                        </tbody>
+                                                    </table>
+                                                </div>
+                                            </div>
+                                            <div class="tab-pane fade" id="nav-message">
+                                                <div class="table-responsive">
+                                                    <table class="table table-sm table-dark  align-middle position-relative">
+                                                        <thead class="sticky-top" style="z-index:10">
+                                                            <tr>
+                                                                <th style="width:.1em;"></th>
+                                                                <th class="d-none d-md-table-cell w-100" scope="col">message</th>
+                                                                <th>
+                                                                    <small class="not notranslate">0</small>
+                                                            </tr>
+                                                        </thead>
+                                                        <tbody class="notifys">
+                                                        </tbody>
+                                                    </table>
+                                                </div>
+                                            </div>
+                                            <div class="tab-pane fade" id="nav-log">
+                                                <div class="table-responsive">
+                                                    <table class="table table-sm table-dark  align-middle table-striped position-relative">
+                                                        <thead class="sticky-top">
+                                                            <tr>
+                                                                <th scope="col">Time</th>
+                                                                <th scope="col">log</th>
+                                                            </tr>
+                                                        </thead>
+                                                        <tbody class="logs">
+                                                        </tbody>
+                                                    </table>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-12 col-md-6 collapse" id="chartb">
+                                        <div id="chart" class="text-dark"></div>
+                                    </div>
+                                </div>
+                                <div class="card-footer d-flex gap-1 px-2 notranslate">
+                                    <div class="d-flex my-auto" id="server-status"></div>
+                                    <div class="me-auto">Deriv</div>
+                                    <div id="server-time" class="fw-light small "></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mb-1 mb-md-3 text-dark position-relative">
+                        <div class="row collapse g-2" id="planilha">
+                            <div class="col-12 col-md mb-3">
+                                <div class="form-floating">
+                                    <input type="number" class="form-control  bg-dark text-light text-center" id="floatingBanca" value="100" min="0">
+                                    <label for="floatingBanca" class="position-absolute text-light fw-bold bottom-100 pt-1 start-50 translate-middle-x">Banca</label>
+                                </div>
+                            </div>
+                            <div class="col-12 col-md mb-3">
+                                <div class="form-floating">
+                                    <input type="number" class="form-control  bg-dark text-light text-center" id="floatingMeta" value="3" min="0">
+                                    <label for="floatingBanca" class="position-absolute text-light fw-bold bottom-100 pt-1 start-50 translate-middle-x text-nowrap">% Meta</label>
+                                </div>
+                            </div>
+                            <div class="col-12 col-md mb-3">
+                                <div class="form-floating">
+                                    <input type="number" class="form-control  bg-dark text-light text-center" id="floatingLimitePerda" value="15" min="0">
+                                    <label for="floatingBanca" class="position-absolute text-light fw-bold bottom-100 pt-1 start-50 translate-middle-x text-nowrap">% Stop loss</label>
+                                </div>
+                            </div>
+                            <div class="col-12 col-md mb-3">
+                                <div class="form-floating">
+                                    <input type="text" class="form-control  bg-dark text-success text-center" readonly id="floatingStopGain">
+                                    <label for="floatingBanca" class="position-absolute text-success fw-bold bottom-100 pt-1 start-50 translate-middle-x text-nowrap">Stop Gain</label>
+                                </div>
+                            </div>
+                            <div class="col-12 col-md mb-3">
+                                <div class="form-floating">
+                                    <input type="text" class="form-control  bg-dark text-danger text-center" readonly style="color:#ff0000 !important" id="floatingStopLoss">
+                                    <label for="floatingBanca" style="color:#ff0000 !important" class="position-absolute text-danger fw-bold bottom-100 pt-1 start-50 translate-middle-x text-nowrap">Stop Loss</label>
+                                </div>
+                            </div>
+                            <!-- <div class="col col-md-auto d-flex mb-3 position-relative">
+                                <a target="_blank" href="https://api.whatsapp.com/send?phone=5511972969261&text=Ol%C3%A1!%20Sou%20cliente%20do%20PLETSCH%20e%20gostaria%20de%20realizar%20um%20dep%C3%B3sito%20na%20minha%20conta%20da%20Deriv" class="btn btn-tranparent mh-100 rounded-0 border-0 flex-fill p-0">
+                                    <img class="mh-100 w-auto" height="55" src="https://thrust-x.trk.pro/image/deposito.png" alt="">
+                                </a>
+                            </div> -->
+                        </div>
+                        <a class="btn btn-dark btn-sm small py-0 px-1 position-absolute top-100 end-0 translate-middle-y" data-bs-toggle="collapse" href="#planilha">
+                            Planilha
+                        </a>
+                    </div>
+                    <script defer>
+                        const calcP = function() {
+                            $("#floatingBanca").val(localStorage.getItem("banca"));
+                            const bc = parseFloat($("#floatingBanca").val() ?? '0');
+                            const mt = parseFloat($("#floatingMeta").val() ?? '0');
+                            const lp = parseFloat($("#floatingLimitePerda").val() ?? '0');
+
+                            const pmt = mt * 0.01;
+                            const plp = lp * 0.01;
+                            $("#floatingStopGain").val((pmt * bc).toFixed(2))
+                            $("#floatingStopLoss").val((plp * bc).toFixed(2))
+                        }
+                        $("#floatingBanca").change(() => {
+                            localStorage.setItem("banca", $("#floatingBanca").val())
+                            calcP();
+                        });
+                        $("#floatingMeta").change(calcP);
+                        $("#floatingLimitePerda").change(calcP);
+                        calcP();
+                    </script>
+
+                    <!-- <h3 class="text-center fw-bold mb-3">Robô parado</h3> -->
+                    <!--<div class="d-flex align-items-center mb-3">-->
+                    <!--    <hr class="bg-light w-100">-->
+                    <!--    <small class="px-2 mb-2 nbot text-nowrap text-break"></small>-->
+                    <!--    <hr class="bg-light w-100">-->
+                    <!--</div>-->
+                    <!--<h3 class="text-center mb-3 fw-bold fs-3" id="status-bot-active" style='font-family:"Chakra Petch"!important;'>Robô parado</h3> -->
+
+
+
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="barspinner">
+        <div class="d-flex justify-content-center flex-column h-100">
+
+            <div class="spinner-border mx-auto mt-auto" style="color:--color4;height:5rem;width:5rem;"></div>
+            <label class="mx-auto mt-4 mb-auto text-light font-weight-bold" style="text-shadow: 2px 2px #000"><i class="spinner-percent">0%</i></label>
+            <div class="progress " style="height: 2px;">
+                <div class="progress-bar" style="transition:none;background-color:--color4"></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="exampleModal" tabindex="-1">
+        <div class="d-flex w-100 position-absolute">
+            <button type="button" class="btn text-light ms-auto m-3" data-bs-dismiss="modal" aria-label="Close">
+                <i class="fa fa-times fa-x2"></i>
+            </button>
+        </div>
+        <div class="modal-dialog modal-dialog-scrollable flex-column">
+            <h3 class="text-light text-center" style="text-shadow: -1px -1px 1px rgba(255,255,255,.1), 1px 1px 1px rgba(0,0,0,.5);">Selecione a conta para operar</h3>
+            <div class="modal-content rounded login-id-list" id="toolbox-all-accounts">
+            </div>
+            <div class="modal-content rounded"><button class="btn btn-danger my-auto fw-bold w-100" id="toolbox-logout" style="display: none;" ib="67879"><i class="fad fa-portal-exit"></i>
+                    Desconectar</button></div>
+        </div>
+    </div>
+    <div class="modal fade h-100" id="infobot" tabindex="-1">
+        <div class="d-flex w-100 position-absolute">
+            <button type="button" class="btn text-light ms-auto m-3" data-bs-dismiss="modal" aria-label="Close">
+                <i class="fa fa-times fa-x2"></i>
+            </button>
+        </div>
+        <div class="modal-dialog modal-xl modal-dialog-scrollable flex-column" style="height: calc(100% - 80px);">
+            <h3 class="text-light modal-title text-center" style="text-shadow: -1px -1px 1px rgba(255,255,255,.1), 1px 1px 1px rgba(0,0,0,.5);"></h3>
+            <div class="modal-content modal-body bg-dark text-light rounded-top d-flex p-3 pb-2">
+            </div>
+        </div>
+    </div>
+    <div class="modal fade h-100" id="modalcampos" tabindex="-1">
+        <div class="d-flex w-100 position-absolute">
+            <button type="button" class="btn text-light ms-auto m-3" data-bs-dismiss="modal" aria-label="Close">
+                <i class="fa fa-times fa-x2"></i>
+            </button>
+        </div>
+        <div class="modal-dialog modal-lg modal-dialog-scrollable flex-column" style="height: calc(100% - 80px);">
+            <h3 class="text-light modal-title text-center" style="text-shadow: -1px -1px 1px rgba(255,255,255,.1), 1px 1px 1px rgba(0,0,0,.5);"></h3>
+            <div class="modal-content modal-body bg-dark text-light rounded-top d-flex p-3 pb-2">
+                <div class="row row-cols-1 row-cols-md-2 g-3 campos mx-0 px-2 pb-3 mt-2">
+                </div>
+            </div>
+        </div>
+    </div>
+    <form id="fileUploadForm" style="display: none;">
+        <input data-i18n-title="Open an already saved XML file and retrieve its blocks" type="file" id="files" accept=".xml" multiple />
+    </form>
+    <div id="footer" class="d-none">
+        <button id="logButton"></button>
+    </div>
+    
+    <div class="position-absolute top-0 end-0 bottom-0 start-0" id="loginderiv" style='background-color:var(--color2);background-image:url(https://thrust-x.trk.pro);background-size:cover;background-position:center; display:none;'>
+        <div class="position-absolute top-50 start-50 translate-middle w-100 bg-black p-4 rounded-4" style="--bs-bg-opacity:.8;max-width:620px">
+            <p class="text-white" style="text-align:justify;"><i class="px-4"></i>Lembre-se de que os CFDs e outros produtos oferecidos neste site são derivados complexos e podem não ser adequados para todos os clientes. A negociação desses produtos acarreta um risco substancial de perder dinheiro rapidamente.</p>
+            <div class="d-flex justify-content-center">
+                <button class="btn btn-danger shadow-danger bg-gradient my-auto small rounded-pill py-2 px-4 me-3" id="toolbox-login" ib="67879"><i class="fad fa-portal-enter"></i>
+                    Conectar</button>
+                <a href="https://hub.deriv.com/tradershub/signup?t=WsRvHHeIDn0gNsRF4En1H2Nd7ZgqdRLk&utm_source=affiliate_179251&utm_medium=affiliate&utm_campaign=MyAffiliates&utm_content=&referrer=" target="_Blank" class="btn btn-info shadow-info bg-gradient my-auto small rounded-pill py-2 px-4" ib="67879"><i class="fa fa-user-plus"></i>
+                    Cadastra-se na corretora</a>
+            </div>
+        </div>
+    </div>
+    <script src="js/bootstrap.bundle.min.js"></script>
+    <script src="js/modularize.min.js?1"></script>
+    <script src="https://thrust-x.trk.pro/js/notiflix-aio-3.2.5.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
+    <script src="https://unpkg.com/@deriv/deriv-api/dist/DerivAPIBasic.js"></script>
+    <script>
+        var options = {
+            chart: {
+                type: 'line',
+                background: '#00000030',
+                foreColor: '#aaa',
+                toolbar: {
+                    show: false,
+                },
+                zoom: {
+                    enabled: false,
+                },
+                animations: {
+                    enabled: false,
+                },
+                selection: {
+                    enabled: true,
+                    type: 'x',
+                    fill: {
+                        color: '#24292e',
+                        opacity: 0.1
+                    },
+                    stroke: {
+                        width: 1,
+                        dashArray: 2,
+                        color: '#24292e',
+                        opacity: 0.4
+                    },
+                    xaxis: {
+                        min: undefined,
+                        max: undefined
+                    },
+                    yaxis: {
+                        min: undefined,
+                        max: undefined
+                    }
+                },
+            },
+            stroke: {
+                show: true,
+                //curve: 'smooth',
+                lineCap: 'butt',
+                colors: '#fff',
+                width: 1,
+                dashArray: 0,
+            },
+            markers: {
+                size: 2,
+                colors: '#0cf',
+                strokeColors: undefined,
+                strokeWidth: 0,
+                strokeOpacity: 0.9,
+                strokeDashArray: 0,
+                fillOpacity: 1,
+                discrete: [],
+                shape: "circle",
+                radius: 2,
+                offsetX: 0,
+                offsetY: 0,
+                onClick: undefined,
+                onDblClick: undefined,
+                showNullDataPoints: true,
+                hover: {
+                    size: undefined,
+                    sizeOffset: 3
+                }
+            },
+            series: [{
+                name: '',
+                data: []
+            }],
+            xaxis: {
+                categories: []
+            },
+            grid: {
+                borderColor: '#444',
+                xaxis: {
+                    lines: {
+                        show: false,
+                    }
+                },
+                yaxis: {
+                    lines: {
+                        show: false
+                    }
+                }
+            }
+        };
+
+        var chart = new ApexCharts(document.querySelector("#chart"), options);
+        chart.render();
+
+        const Grafic = {
+            ticks: [],
+            activeSymbol: "R_50",
+            pip_size: 0,
+            rangerTick: 25
+        }
+        const api = new DerivAPIBasic({
+            endpoint: 'ws.derivws.com',
+            app_id: 67879 /* 1089 is a default test app_id, replace with your own app_id */ ,
+            lang: 'PT',
+            brand: 'autobot'
+        });
+        api.onClose().subscribe(function() {
+            setTimeout(api.reconnect, 5000);
+        });
+        api.onOpen().subscribe(async function() {
+            //api.forgetAll('ticks');
+            api.send({
+                "forget_all": ["ticks"]
+            });
+
+            api.send({
+                "ticks_history": Grafic.activeSymbol,
+                "count": 1000,
+                "end": "latest",
+                "subscribe": 1
+            })
+
+        })
+        api.onMessage().subscribe(function({
+            data
+        }) {
+            switch (data.msg_type) {
+                case "history":
+                    Grafic.pip_size = data.pip_size;
+                    Grafic.ticks = data.history.prices;
+                    break;
+                case "tick":
+                    //console.log(data.tick)
+
+                    Grafic.ticks = [...Grafic.ticks.slice(1), data.tick.quote];
+
+                    const ultimosTicks = Grafic.ticks.slice(-Grafic.rangerTick);
+
+                    const datachart = {
+                        categories: [],
+                        series: []
+                    }
+                    let ultimoTick = ultimosTicks[ultimosTicks.length - 1];
+                    let ultimotick0 = ultimoTick.toFixed(Grafic.pip_size);
+
+                    $('.udig').text(ultimotick0[ultimotick0.length - 1]);
+                    ultimosTicks.forEach(element => {
+                        let ask = element.toFixed(Grafic.pip_size);
+                        datachart.categories.push(ask[ask.length - 1]);
+                        datachart.series.push(ask);
+                    });
+
+                    chart.updateOptions({
+                        xaxis: {
+                            categories: datachart.categories
+                        },
+                        yaxis: {
+                            labels: {
+                                formatter: function(valor) {
+                                    // Use o método toFixed para controlar o número de casas decimais
+                                    return valor.toFixed(Grafic.pip_size);
+                                }
+                            }
+                        }
+                    });
+
+                    chart.updateSeries([{
+                        name: '',
+                        data: datachart.series
+                    }])
+
+                    const totalNumeros = ultimosTicks.length;
+                    const contagemNumeros = Array(10).fill(0); // Inicializa um array para contar cada número de 0 a 9
+
+                    // Conta a ocorrência de cada número no array
+
+                    for (const numero of ultimosTicks) {
+                        let ask = numero.toFixed(Grafic.pip_size);
+                        contagemNumeros[parseInt(ask[ask.length - 1])]++;
+                    }
+
+                    let minPorcentagem = Infinity;
+                    let maxPorcentagem = -Infinity;
+                    for (let i = 0; i < contagemNumeros.length; i++) {
+                        const porcentagem = (contagemNumeros[i] / totalNumeros) * 100;
+                        minPorcentagem = Math.min(minPorcentagem, porcentagem);
+                        maxPorcentagem = Math.max(maxPorcentagem, porcentagem);
+                    }
+
+                    indicadorBars.forEach(bar => {
+                        bar.classList.remove('bg-success', 'bg-danger', 'bg-light', 'border-danger', 'border-success');
+                    });
+                    // Calcula e imprime as porcentagens
+                    for (let i = 0; i < contagemNumeros.length; i++) {
+                        const porcentagem = (contagemNumeros[i] / totalNumeros) * 100;
+                        const alturaProporcional = (porcentagem / maxPorcentagem) * 100;
+
+                        indicadorText[i].textContent = `${porcentagem.toFixed(1)}%`;
+                        indicadorBars[i].style.height = `${alturaProporcional.toFixed(2)}%`;
+
+                        if (porcentagem === maxPorcentagem) {
+                            indicadorBars[i].classList.add('bg-success', 'border-success');
+                        } else if (porcentagem === minPorcentagem) {
+                            indicadorBars[i].classList.add('bg-danger', 'border-danger');
+                        } else {
+                            indicadorBars[i].classList.add('bg-light');
+                        }
+                    }
+                    break;
+                default:
+                    console.log(data);
+                    break;
+            }
+
+
+        })
+        //germinaGraficoCandle()
+        const periodoT = document.querySelector('#periodot');
+        const indicadorBars = document.querySelectorAll('#indicadorbars > *');
+        const indicadorText = document.querySelectorAll('#indicadorbars > * > small');
+        //indicadorBars[0].style.height = '50%';
+
+        periodoT.addEventListener('change', function() {
+            Grafic.rangerTick = parseInt(this.value);
+        })
+
+        const germinaGrafico = async function(symbol = "R_50") {
+            if (Grafic.activeSymbol != symbol) {
+                Grafic.activeSymbol = symbol;
+                api.send({
+                    "forget_all": ["ticks"]
+                });
+
+                api.send({
+                    "ticks_history": Grafic.activeSymbol,
+                    "count": 1000,
+                    "end": "latest",
+                    "subscribe": 1
+                })
+            }
+            //console.log(Grafic.ticks)
+        }
+        germinaGrafico();
+        //setTimeout(() => console.log(api.basic), 5000)
+    </script>
+    <script defer>
+        var AutoBot = {
+            "loaded": 0,
+            "balance": 0,
+            "codeapi": document.querySelector('meta[property=codeapi]').content,
+            "baseurl": document.querySelector('meta[property=baseurl]').content,
+            "botbgcolor": document.querySelector('meta[property=botbgcolor]').content,
+            "bottextcolor": document.querySelector('meta[property=bottextcolor]').content,
+            "botid": document.querySelector('meta[property=botid]').content,
+            "botInit": function(grafic) {
+                germinaGrafico(grafic)
+            },
+            "gerarInputNumber": function(id, title, value, badge) {
+                if ($("#" + id).length == 0)
+                    $('.campos').append(`
+                <div class="col">
+                    <label>${title}</label>
+                    <div class="position-relative">
+                    <input type="text" data-type="number" id="${id}" class="form-control form-control-lg bg-white text-dark border-0" value="${value}" />
+                    ` + (typeof badge != 'undefined' && badge != '' ? `<div class="position-absolute  end-0 px-2 py-1 fw-bold rounded-3 bg-black text-light me-2 top-0 mt-2 bottom-0 mb-2">${badge}</div>` : '') + `
+                    </div>
+                </div>
+            `);
+            },
+            "gerarInputText": function(id, title, value, badge) {
+                if ($("#" + id).length == 0)
+                    $('.campos').append(`
+                <div class="col">
+                    <label>${title}</label>
+                    <div class="position-relative">
+                    <input type="text" data-type="text" id="${id}" class="form-control form-control-lg bg-white text-dark border-0" value="${value}" />
+                    ` + (typeof badge != 'undefined' && badge != '' ? `<div class="position-absolute  end-0 px-2 py-1 fw-bold rounded-3 bg-black text-light me-2 top-0 mt-2 bottom-0 mb-2">${badge}</div>` : '') + `
+                    </div>
+                </div>
+            `);
+            },
+            "gerarSelect": function(id, title, value) {
+                if ($("#" + id).length == 0)
+                    if (value.length > 0) {
+                        var options = '';
+                        value.forEach(element => {
+                            options += `<option class="text-dark" value="${element.value}">${element.name}</option>`;
+                        });
+                        $('.campos').append(`
+                <div class="col w-100">
+                    <label>${title}</label>
+                    <select id="${id}" class="form-select form-select-lg bg-white text-white border-0" style="--bs-bg-opacity:.2">${options}</select>
+                </div>
+            `);
+                    }
+            },
+            "onLogged": function() {
+                AutoBot.loaded = 1;
+                $('.account').show();
+                $('#toolbox-login').hide();
+                $('#toolbox-logout').show();
+                $("#loginderiv").hide();
+                $('.container-account').removeClass('d-none');
+            },
+            "onLoggedOut": function() {
+                AutoBot.loaded = 1;
+                $('.account').hide();
+                $('#toolbox-logout').hide();
+                $('#toolbox-login').show();
+                $("#loginderiv").show();
+            },
+            'onBotClear': function() {
+                $('.contracts').html('');
+                $('.totallw').find('.win').text(0).next().text(0).next().text(0);
+                $('.app_profit_loss').text('0,00').removeClass('text-succes').removeClass('text-danger');
+                $('.app_profit_loss').next('v').text('0,00').removeClass('text-succes').removeClass('text-danger');
+            },
+            "botInfo": function(info) {
+                if ('balance' in info) {
+                    if (this.balance == 0)
+                        this.balance = parseFloat(info.balance.split(' ')[0]);
+                }
+
+                if ('profit' in info) {
+                    if (info.profit > 0) {
+                        $('.contract_profit_loss').find('v').removeClass('text-white').removeClass('text-danger').addClass('text-success');
+                    } else if (info.profit < 0) {
+                        $('.contract_profit_loss').find('v').removeClass('text-white').removeClass('text-success').addClass('text-danger');
+                    } else {
+                        $('.contract_profit_loss').find('v').removeClass('text-danger').removeClass('text-success').addClass('text-white');
+                    }
+
+                }
+
+                if ('totalProfit' in info) {
+                    $('.app_profit_loss').text(info.totalProfit);
+                    if (info.totalProfit > 0) {
+                        $('.app_profit_loss').removeClass('text-white').removeClass('text-danger').addClass('text-success');
+                    } else if (info.totalProfit < 0) {
+                        $('.app_profit_loss').removeClass('text-white').removeClass('text-success').addClass('text-danger');
+                    } else {
+                        $('.app_profit_loss').removeClass('text-danger').removeClass('text-success').addClass('text-white');
+                    }
+                }
+
+                if ('totalRuns' in info) {
+                    $('small.runs').text(info.totalRuns);
+                }
+                if ('totalLosses' in info) {
+                    $('small.loss').text(info.totalLosses);
+                }
+                if ('totalWins' in info) {
+                    $('small.win').text(info.totalWins);
+                }
+
+
+            },
+            "botRun": function() {
+                $('.btn-run').parent().addClass('d-none');
+                $('.btn-change').parent().addClass('d-none');
+                $('.btn-stop').parent().removeClass('d-none');
+                $("#btnConfigModal").attr('disabled', 'disabled');
+                setTimeout(() => {
+                    this.activateStage(0);
+                }, 350)
+            },
+            "botStop": function() {
+                $('.btn-run').parent().removeClass('d-none');
+                $('.btn-change').parent().removeClass('d-none');
+                $('.btn-stop').parent().addClass('d-none');
+                $("#btnConfigModal").removeAttr('disabled');
+                this.activateStage(-1);
+            },
+            "notify": function({
+                position,
+                message,
+                sound,
+                notType,
+                unique
+            }) {
+                var codenAll = '';
+                if (position == 'left') {
+                    codenAll += '<tr id="' + unique + '">';
+                    codenAll += '<td class="bg-' + notType + '" style="width:.1em;"></td><td>' + message + '</td>';
+                    codenAll += '</tr>';
+                } else if (position == 'right') {
+                    if ($(".allnotify").length) {
+                        if ($(".allnotify").is(":checked")) {
+                            codenAll += '<tr id="' + unique + '">';
+                            codenAll += '<td style="width:.1em;"></td><td class="text-end">' + message + '</td><td class="bg-' + notType + '" style="width:.1em;"></td>';
+                            codenAll += '</tr>';
+                        }
+                    }
+                }
+                $('.notifys').prepend(codenAll);
+                $('.not').text($('.notifys > *').length);
+                setTimeout(() => {
+                    $("#" + unique).remove();
+                    $('.not').text($('.notifys > *').length);
+                }, 6000);
+                if (sound !== 'silent') {
+                    $("#".concat(sound)).get(0).play();
+                }
+            },
+            "accounttype": '',
+            "getTimestamp": date => new Date(date * 1000).toLocaleString(),
+            "activateStage": function(index) {
+                switch (index) {
+                    case 2:
+                        $('.bot-status').addClass('d-none');
+                        $('.ctf').removeClass('d-none');
+                        $('.timeline').removeClass('inicio').removeClass('meio').addClass('fim');
+                        break;
+                    case 1:
+                        $('.bot-status').addClass('d-none');
+                        $('.cta').removeClass('d-none');
+                        $('.timeline').removeClass('fim').removeClass('inicio').addClass('meio');
+                        break;
+                    case 0:
+                        $('.bot-status').addClass('d-none');
+                        $('.ald').removeClass('d-none');
+                        $('.timeline').removeClass('fim').removeClass('meio').addClass('inicio');
+                        break;
+                    case -1:
+                        $('.bot-status').addClass('d-none');
+                        $('.prd').removeClass('d-none');
+                        $('.timeline').removeClass('fim').removeClass('meio').removeClass('inicio');
+                        break;
+                }
+            },
+            "onContract": function(row) {
+                if (!row) {
+                    return;
+                }
+                if (row.status == 'open' && (row.profit == '' || row.profit == null)) {
+                    this.activateStage(1);
+                } else if (row.profit != '' && row.profit != null) {
+                    this.activateStage(2);
+                }
+
+                const reference = typeof fragment === 'undefined' ? row.reference : AutoBot.accounttype === 'Virtual' ? (row.virtual_strategy ? row.reference : parseInt(parseInt(String(row.reference).slice(0, -1)) * fragment) + '1') : (row.virtual_strategy ? row.reference : parseInt(parseInt(String(row.reference).slice(0, -1)) / fragment) + '8');
+                const linha = $('.r' + reference);
+                if (linha.length == 0) {
+                    let codeAll = '<tr class="r' + reference + '">';
+                    codeAll += '<td>' +
+                        row.timestamp.match(/(\d{2}:\d{2})/)[0] + '</td><td class="text-center d-md-table-cell">' +
+                        row.contract_type + '</td><td class=" d-md-table-cell">' +
+                        (row.entry_tick ?? '') + '</td><td class=" d-md-table-cell ">' +
+                        (row.virtual_strategy == true ? 'VIRTUAL' : row.buy_price) + '</td><td class="fw-bold  ' +
+                        ((row.status == 'won') ? 'text-success' : (row.status == 'lost' ? 'text-danger' : '')) + '">' +
+                        row.profit + '</td>';
+                    codeAll += '</tr>';
+                    $('.contracts').prepend(codeAll);
+                } else {
+                    linha.find('td').eq(0).html(row.timestamp.match(/(\d{2}:\d{2})/)[0]);
+                    linha.find('td').eq(1).html(row.contract_type);
+                    linha.find('td').eq(2).html(row.entry_tick ?? '');
+                    linha.find('td').eq(3).html(row.virtual_strategy == true ? 'VIRTUAL' : row.buy_price);
+                    if (row.profit > 0) {
+                        linha.find('td').eq(4).addClass('text-success');
+                    }
+                    if (row.profit < 0) {
+                        linha.find('td').eq(4).addClass('text-danger');
+                    }
+                    linha.find('td').eq(4).html(row.virtual_strategy == true && row.profit != "" ? (row.status == 'won' ? 'WIN' : 'LOSS') : row.profit.replace('-', ''));
+                }
+            },
+            "destrinchar": function(e) {
+                for (var t = (e = (e = (e = (e = (e = (e = e.replaceAll("y", ".")).replaceAll("x", ".")).replaceAll("z", ".")).replaceAll("k", ".")).replaceAll("h", ".")).replaceAll("i", ".")).split("."), n = "", r = 0; r < t.length; r++)
+                    0 < r && (n += String.fromCharCode(parseInt(t[r]) - parseInt(t[0])));
+                return decodeURIComponent(escape(n));
+            },
+            "beforeLoad": function() {
+                $(".barspinner").show();
+                $(".progress-bar").css("width", "0%");
+                $(".spinner-percent").text("0%");
+            },
+            "errorLoad": function(e) {
+                Notiflix.Report.failure('Atenção', e, 'ok');
+            },
+            "successLoad": function() {},
+            "afterLoad": function() {
+                $(".barspinner").hide();
+            },
+            "Load": function(bot) {
+                this.beforeLoad();
+
+                if (!bot) {
+                    this.afterLoad();
+                    return;
+                }
+
+                let urlpath = AutoBot.baseurl + "/license/load/" + bot;
+                fetch(urlpath, {
+                    method: 'POST',
+                    headers: {
+                        "Content-Type": "application/json",
+                        "X-Requested-With": "XMLHttpRequest"
+                    }
+                }).then(response => response.text()).then(async text => {
+                    let pts = parseInt(text);
+                    let progress = 0;
+                    let total = 0;
+                    const urls = Array.from({
+                        length: pts
+                    }, (_, i) => urlpath + '.' + (i + 1));
+                    const promises = urls.map(url => fetch(url, {
+                        method: 'POST',
+                        headers: {
+                            "Content-Type": "application/json",
+                            "X-Requested-With": "XMLHttpRequest"
+                        }
+                    }));
+                    total = promises.length;
+                    try {
+                        const responses = await Promise.all(promises);
+                        const texts = await Promise.all(responses.map(response => {
+                            updateProgress();
+                            return response.text()
+                        }));
+                        const concatenatedText = texts.join('');
+                        Blockly.Events.setGroup('load');
+                        Blockly.mainWorkspace.clear();
+                        var zy = this.destrinchar(concatenatedText);
+                        try {
+                            var ozy = Blockly.Json.textToObject(zy);
+                        } catch (e) {
+                            var ozy = undefined;
+                        }
+                        try {
+                            if (ozy !== undefined) {
+                                Blockly.Json.objectToWorkspace(ozy, Blockly.mainWorkspace);
+                            } else {
+                                var domm = Blockly.Xml.textToDom(zy);
+                                Blockly.Xml.domToWorkspace(domm, Blockly.mainWorkspace);
+                            }
+                            Notiflix.Notify.success('Estrategia carregada com sucesso!', {
+                                position: 'center-bottom'
+                            });
+                            $('.btn-botinfo').data('id', bot);
+                            localStorage.setItem('restorebot', JSON.stringify({
+                                id: bot,
+                                stamp: new Date().getTime()
+                            }));
+                            $('.selbots').fadeToggle(200);
+                            $('.img-bot').attr('src', $(".blockbot[data-id=" + bot + "]").first().find('img').attr('src'));
+                            $('.nbot').text($(".blockbot[data-id=" + bot + "]").first().find('.botname').text());
+                        } catch (e) {
+                            this.errorLoad('Bot indisponivel!');
+                        }
+                        Blockly.Events.setGroup(false);
+                        this.afterLoad();
+                    } catch (error) {
+                        this.errorLoad('Não foi possivel carregar o bot!');
+                        this.afterLoad();
+                    }
+
+
+                    function updateProgress(event) {
+                        const percent = ((++progress) / total) * 100;
+                        $(".progress-bar").css("width", percent + "%");
+                        $(".spinner-percent").text(percent + "%");
+                    }
+                }).catch(error => {
+                    this.errorLoad('Não foi possivel carregar o bot!');
+                    this.afterLoad();
+                });
+            }
+        };
+    </script>
+    <script src="https://cdn.drv.pro/js/bundle2.min.js" defer></script>
+    <script src="https://cdn.drv.pro/js/app.mod.min.js" defer></script>
+    <style>
+        div.skiptranslate,
+        #google_translate_element2 {
+            display: none !important;
+        }
+
+        body {
+            top: 0 !important;
+        }
+    </style>
+    <div id="google_translate_element2"></div>
+    <script>
+        function googleTranslateElementInit2() {
+            new google.translate.TranslateElement({
+                pageLanguage: 'pt',
+                autoDisplay: false
+            }, 'google_translate_element2');
+        }
+        if (!window.gt_translate_script) {
+            window.gt_translate_script = document.createElement('script');
+            gt_translate_script.src = 'https://translate.google.com/translate_a/element.js?cb=googleTranslateElementInit2';
+            document.body.appendChild(gt_translate_script);
+        }
+    </script>
+
+    <script>
+        function GTranslateGetCurrentLang() {
+            var keyValue = document['cookie'].match('(^|;) ?googtrans=([^;]*)(;|$)');
+            return keyValue ? keyValue[2].split('/')[2] : null;
+        }
+
+        function GTranslateFireEvent(element, event) {
+            try {
+                if (document.createEventObject) {
+                    var evt = document.createEventObject();
+                    element.fireEvent('on' + event, evt)
+                } else {
+                    var evt = document.createEvent('HTMLEvents');
+                    evt.initEvent(event, true, true);
+                    element.dispatchEvent(evt)
+                }
+            } catch (e) {}
+        }
+
+        function doGTranslate(lang_pair) {
+            if (lang_pair.value) lang_pair = lang_pair.value;
+            if (lang_pair == '') return;
+            var lang = lang_pair.split('|')[1];
+            if (GTranslateGetCurrentLang() == null && lang == lang_pair.split('|')[0]) return;
+            if (typeof ga == 'function') {
+                ga('send', 'event', 'GTranslate', lang, location.hostname + location.pathname + location.search);
+            }
+            var teCombo;
+            var sel = document.getElementsByTagName('select');
+            for (var i = 0; i < sel.length; i++)
+                if (sel[i].className.indexOf('goog-te-combo') != -1) {
+                    teCombo = sel[i];
+                    break;
+                } if (document.getElementById('google_translate_element2') == null || document.getElementById('google_translate_element2').innerHTML.length == 0 || teCombo.length == 0 || teCombo.innerHTML.length == 0) {
+                setTimeout(function() {
+                    doGTranslate(lang_pair)
+                }, 500)
+            } else {
+                teCombo.value = lang;
+                GTranslateFireEvent(teCombo, 'change');
+                GTranslateFireEvent(teCombo, 'change')
+            }
+        }
+        (function gt_jquery_ready() {
+            if (!window.jQuery || !jQuery.fn.click) return setTimeout(gt_jquery_ready, 20);
+            if (GTranslateGetCurrentLang() != null) jQuery(document).ready(function() {
+                var lang_html = jQuery('div.switcher div.option').find('img[alt="' + GTranslateGetCurrentLang() + '"]').parent().html();
+                if (typeof lang_html != 'undefined') jQuery('div.switcher div.selected a').html(lang_html.replace('data-gt-lazy-', ''));
+            });
+        })();
+    </script>
+</body>
+
+</html>
