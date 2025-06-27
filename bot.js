@@ -177,22 +177,15 @@ document.addEventListener("DOMContentLoaded", () => {
     requestAnimationFrame(() => {
       if (chart) chart.remove();
 
-      chart = LightweightCharts.createChart(chartContainer, {
-        width: chartContainer.clientWidth,
-        height: chartContainer.clientHeight,
-        layout: {
-          backgroundColor: '#1e293b',
-          textColor: 'rgba(255, 255, 255, 0.8)',
-        },
-        grid: {
-          vertLines: { color: '#334155' },
-          horzLines: { color: '#334155' },
-        },
-        timeScale: {
-          timeVisible: true,
-          secondsVisible: true,
-        },
-      });
+      if (typeof LightweightCharts !== 'undefined') {
+  chart = LightweightCharts.createChart(document.getElementById("chart"), {
+    // options
+  });
+} else {
+  console.error("LightweightCharts failed to load.");
+  botStatusEl.textContent = "Chart library failed to load. Please refresh.";
+}
+
 
       lineSeries = chart.addLineSeries({
         color: '#4ade80',
