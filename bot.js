@@ -28,9 +28,11 @@
       window.location.href = loginUrl;
     };
 
-    // Parse token from URL
     const urlParams = new URLSearchParams(window.location.search);
-    token = urlParams.get("token");
+    const hashParams = new URLSearchParams(window.location.hash.slice(1)); // remove '#'
+    token = urlParams.get("token") || hashParams.get("access_token");
+
+
 
     if (token) {
       // Hide connect, show dashboard
