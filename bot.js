@@ -105,9 +105,9 @@ function connectToDeriv(selectedToken) {
       balanceEl.textContent = `Balance: $${balance.toFixed(2)}`;
       botBalanceEl.textContent = `Balance: $${balance.toFixed(2)}`;
 
-      if (balance <= 1) {
+      if (balance <= 0) {
         startBtn.disabled = true;
-        botStatusEl.textContent = "Cannot trade: Balance is under 1$.";
+        botStatusEl.textContent = "Cannot trade: Balance is 0.";
       } else {
         startBtn.disabled = false;
       }
