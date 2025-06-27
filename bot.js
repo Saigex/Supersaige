@@ -72,7 +72,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
     ws.onmessage = (msg) => {
       const data = JSON.parse(msg.data);
-      console.log("WebSocket message:", data);
 
       if (data.msg_type === "authorize") {
         statusEl.textContent = `Logged in as: ${data.authorize.loginid}`;
