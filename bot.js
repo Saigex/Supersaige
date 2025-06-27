@@ -40,6 +40,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const currency = urlParams.get(`cur${i}`) || "";
     if (acct && tok) {
       accounts.push({ loginid: acct, token: tok, currency });
+      console.log(`Account ${i}:`, acct, tok, currency);
     }
   }
 
@@ -166,39 +167,62 @@ document.addEventListener("DOMContentLoaded", () => {
     }));
   }
 
-  function initChart() {
-    const chartContainer = document.getElementById("chart");
+function initChart() {
+  const chartContainer = document.getElementById("chart");
 
-    if (!window.LightweightCharts) {
-      console.error("LightweightCharts is not defined!");
-      return;
-    }
-
-    requestAnimationFrame(() => {
-      if (chart) chart.remove();
-
-      if (typeof LightweightCharts !== 'undefined') {
-  chart = LightweightCharts.createChart(document.getElementById("chart"), {
-    // options
-  });
-} else {
-  console.error("LightweightCharts failed to load.");
-  botStatusEl.textContent = "Chart library failed to load. Please refresh.";
-}
-
-
-      lineSeries = chart.addLineSeries({
-        color: '#4ade80',
-        lineWidth: 2,
-      });
-
-      lineSeries.setData([]);
-
-      setTimeout(() => {
-        chart.resize(chartContainer.clientWidth, chartContainer.clientHeight);
-      }, 100);
-    });
+  if (!chartContainer) {
+    console.error("Chart container is not found.");
+    return;
   }
+
+  if (typeof LightweightCharts === 'undefined') {
+    console.error("LightweightCharts is not defined!");
+    return;
+  }
+
+  // Ensure chart only initializes once
+  if (chart) {
+    console.log("Chart already initialized.");
+    return;
+  }
+
+  chart = LightweightCharts.createChart(chartContainer, {
+    width: chartContainer.clientWidth,
+    height: chartContainer.clientHeight,
+    layout: {
+      backgroundColor: "#0f172a",
+      textColor: "#94a3b8",
+    },
+    grid: {
+      vertLines: { color: '#334155' },
+      horzLines: { color: '#334155' },
+    },
+    crosshair: {
+      mode: LightweightCharts.CrosshairMode.Normal,
+    },
+    priceScale: {
+      borderColor: '#334155',
+    },
+  });
+
+  lineSeries = chart.addLineSeries({
+    color: '#4ade80',
+    lineWidth: 2,
+  });
+
+  lineSeries.setData([]);
+
+  // Resize chart when window size changes
+  window.addEventListener("resize", () => {
+    if (chart) {
+      chart.resize(chartContainer.clientWidth, chartContainer.clientHeight);
+    }
+  });
+
+  setTimeout(() => {
+    chart.resize(chartContainer.clientWidth, chartContainer.clientHeight);
+  }, 100); // Delay to ensure elements are rendered
+}
 
   function handleBuy(buyData) {
     botStatusEl.textContent = `Trade Placed: ${buyData.contract_id}`;
