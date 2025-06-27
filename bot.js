@@ -170,19 +170,8 @@ document.addEventListener("DOMContentLoaded", () => {
 function initChart() {
   const chartContainer = document.getElementById("chart");
 
-  if (!chartContainer) {
-    console.error("Chart container is not found.");
-    return;
-  }
-
-  if (typeof LightweightCharts === 'undefined') {
-    console.error("LightweightCharts is not defined!");
-    return;
-  }
-
-  // Ensure chart only initializes once
-  if (chart) {
-    console.log("Chart already initialized.");
+  if (!window.LightweightCharts) {
+    console.error("LightweightCharts library is not loaded!");
     return;
   }
 
@@ -221,8 +210,9 @@ function initChart() {
 
   setTimeout(() => {
     chart.resize(chartContainer.clientWidth, chartContainer.clientHeight);
-  }, 100); // Delay to ensure elements are rendered
+  }, 100);
 }
+
 
   function handleBuy(buyData) {
     botStatusEl.textContent = `Trade Placed: ${buyData.contract_id}`;
