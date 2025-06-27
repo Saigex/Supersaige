@@ -69,73 +69,80 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 
   // Core connection logic
-  function connectToDeriv(selectedToken) {
-    token = selectedToken;
-    isBotRunning = false;
+function connectToDeriv(selectedToken) {
+  token = selectedToken;
+  isBotRunning = false;
 
-    // Show UI
-    connectSection.style.display = "none";
-    dashboardSection.style.display = "flex";
-    botStatusEl.textContent = "Connecting to Deriv...";
-    statusEl.textContent = "Connecting to Deriv...";
+  connectSection.style.display = "none";
+  dashboardSection.style.display = "flex";
+
+  botStatusEl.textContent = "Connecting to Deriv...";
+  statusEl.textContent = "Connecting to Deriv...";
+  startBtn.disabled = true;
+  stopBtn.disabled = true;
+
+  ws = new WebSocket(`wss://ws.derivws.com/websockets/v3?app_id=${app_id}`);
+
+  ws.onopen = () => {
+    ws.send(JSON.stringify({ authorize: token }));
+  };
+
+  ws.onmessage = (msg) => {
+    const data = JSON.parse(msg.data);
+    console.log("WebSocket:", data);
+
+    if (data.msg_type === "authorize") {
+      statusEl.textContent = `Logged in as: ${data.authorize.loginid}`;
+      botStatusEl.textContent = `Logged in as: ${data.authorize.loginid}`;
+      getBalance();
+
+      // We want to delay chart init so container is visible
+      setTimeout(() => initChart(), 100);
+    }
+
+    if (data.msg_type === "balance") {
+      let balance = parseFloat(data.balance.balance);
+      balanceEl.textContent = `Balance: $${balance.toFixed(2)}`;
+      botBalanceEl.textContent = `Balance: $${balance.toFixed(2)}`;
+
+      if (balance <= 1) {
+        startBtn.disabled = true;
+        botStatusEl.textContent = "Cannot trade: Balance is under 1$.";
+      } else {
+        startBtn.disabled = false;
+      }
+    }
+
+    if (data.msg_type === "tick" && isBotRunning) {
+      handleTick(data.tick);
+    }
+
+    if (data.msg_type === "buy") {
+      handleBuy(data.buy);
+    }
+
+    if (data.msg_type === "proposal_open_contract") {
+      if (data.proposal_open_contract.is_sold) {
+        handleContractResult(data.proposal_open_contract);
+      }
+    }
+  };
+
+  ws.onerror = () => {
+    statusEl.textContent = "WebSocket error.";
+    botStatusEl.textContent = "WebSocket error.";
     startBtn.disabled = true;
     stopBtn.disabled = true;
+  };
 
-    // Init WebSocket
-    ws = new WebSocket(`wss://ws.derivws.com/websockets/v3?app_id=${app_id}`);
+  ws.onclose = () => {
+    statusEl.textContent = "Disconnected.";
+    botStatusEl.textContent = "Disconnected.";
+    startBtn.disabled = true;
+    stopBtn.disabled = true;
+  };
+}
 
-    ws.onopen = () => {
-      ws.send(JSON.stringify({ authorize: token }));
-    };
-
-    ws.onmessage = (msg) => {
-      const data = JSON.parse(msg.data);
-      console.log("WebSocket:", data);
-
-      if (data.msg_type === "authorize") {
-        statusEl.textContent = `Logged in as: ${data.authorize.loginid}`;
-        botStatusEl.textContent = `Logged in as: ${data.authorize.loginid}`;
-        startBtn.disabled = false;
-        stopBtn.disabled = true;
-        getBalance();
-        initChart();
-      }
-
-      if (data.msg_type === "balance") {
-        const bal = parseFloat(data.balance.balance).toFixed(2);
-        balanceEl.textContent = `Balance: $${bal}`;
-        botBalanceEl.textContent = `Balance: $${bal}`;
-      }
-
-      if (data.msg_type === "tick" && isBotRunning) {
-        handleTick(data.tick);
-      }
-
-      if (data.msg_type === "buy") {
-        handleBuy(data.buy);
-      }
-
-      if (data.msg_type === "proposal_open_contract") {
-        if (data.proposal_open_contract.is_sold) {
-          handleContractResult(data.proposal_open_contract);
-        }
-      }
-    };
-
-    ws.onerror = () => {
-      statusEl.textContent = "WebSocket error.";
-      botStatusEl.textContent = "WebSocket error.";
-      startBtn.disabled = true;
-      stopBtn.disabled = true;
-    };
-
-    ws.onclose = () => {
-      statusEl.textContent = "Disconnected.";
-      botStatusEl.textContent = "Disconnected.";
-      startBtn.disabled = true;
-      stopBtn.disabled = true;
-    };
-  }
 
   // WebSocket helpers
   function getBalance() {
@@ -167,47 +174,48 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   // Chart
-  function initChart() {
-    setTimeout(() => {
-      const chartContainer = document.getElementById("chart");
-      if (!chartContainer) return;
+function initChart() {
+  requestAnimationFrame(() => {
+    const chartContainer = document.getElementById("chart");
+    if (!chartContainer) return;
 
-      if (chart) {
-        chart.remove();
-      }
-
-      chart = LightweightCharts.createChart(chartContainer, {
-        width: chartContainer.clientWidth,
-        height: chartContainer.clientHeight,
-        layout: {
-          backgroundColor: '#1e293b',
-          textColor: 'rgba(255, 255, 255, 0.8)',
-        },
-        grid: {
-          vertLines: { color: '#334155' },
-          horzLines: { color: '#334155' },
-        },
-        timeScale: {
-          timeVisible: true,
-          secondsVisible: true,
-        },
-      });
-
-      lineSeries = chart.addLineSeries({
-        color: '#4ade80',
-        lineWidth: 2,
-      });
-
-      // Optional: seed with empty data
-      lineSeries.setData([]);
-    }, 100);
-  }
-
-  window.addEventListener("resize", () => {
+    // Clear existing chart
     if (chart) {
-      chart.applyOptions({ width: document.getElementById("chart").clientWidth });
+      chart.remove();
     }
+
+    // Create new chart
+    chart = LightweightCharts.createChart(chartContainer, {
+      width: chartContainer.clientWidth,
+      height: chartContainer.clientHeight,
+      layout: {
+        backgroundColor: '#1e293b',
+        textColor: 'rgba(255, 255, 255, 0.8)',
+      },
+      grid: {
+        vertLines: { color: '#334155' },
+        horzLines: { color: '#334155' },
+      },
+      timeScale: {
+        timeVisible: true,
+        secondsVisible: true,
+      },
+    });
+
+    lineSeries = chart.addLineSeries({
+      color: '#4ade80',
+      lineWidth: 2,
+    });
+
+    lineSeries.setData([]);
+
+    // Force a resize so it renders
+    setTimeout(() => {
+      chart.resize(chartContainer.clientWidth, chartContainer.clientHeight);
+    }, 100);
   });
+}
+
 
   // Bot logic
   function handleTick(tick) {
