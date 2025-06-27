@@ -20,7 +20,7 @@ document.addEventListener("DOMContentLoaded", () => {
   let ws;
   let token;
   let isBotRunning = false;
-  let selectedSymbol = "R_100";
+  let selectedSymbol = "R_75"; // Volatility 75 (1s) symbol
   let chart, lineSeries;
   let trades = [];
   let lastKnownBalance = 0;
@@ -167,126 +167,24 @@ document.addEventListener("DOMContentLoaded", () => {
     }));
   }
 
-function initChart() {
-  const chartContainer = document.getElementById("chart");
+  function initChart() {
+    const chartContainer = document.getElementById("chart");
 
-  if (!window.LightweightCharts) {
-    console.error("LightweightCharts library is not loaded!");
-    return;
-  }
-
-  chart = LightweightCharts.createChart(chartContainer, {
-    width: chartContainer.clientWidth,
-    height: chartContainer.clientHeight,
-    layout: {
-      backgroundColor: "#0f172a",
-      textColor: "#94a3b8",
-    },
-    grid: {
-      vertLines: { color: '#334155' },
-      horzLines: { color: '#334155' },
-    },
-    crosshair: {
-      mode: LightweightCharts.CrosshairMode.Normal,
-    },
-    priceScale: {
-      borderColor: '#334155',
-    },
-  });
-
-  lineSeries = chart.addLineSeries({
-    color: '#4ade80',
-    lineWidth: 2,
-  });
-
-  lineSeries.setData([]);
-
-  // Resize chart when window size changes
-  window.addEventListener("resize", () => {
-    if (chart) {
-      chart.resize(chartContainer.clientWidth, chartContainer.clientHeight);
-    }
-  });
-
-  setTimeout(() => {
-    chart.resize(chartContainer.clientWidth, chartContainer.clientHeight);
-  }, 100);
-}
-
-
-  function handleBuy(buyData) {
-    botStatusEl.textContent = `Trade Placed: ${buyData.contract_id}`;
-    addTradeToHistory({
-      contract_id: buyData.contract_id,
-      type: buyData.contract_type,
-      amount: buyData.amount,
-      profit: null,
-      time: new Date().toLocaleTimeString()
-    });
-  }
-
-  function addTradeToHistory(trade) {
-    trades.unshift(trade);
-    if (trades.length > 50) trades.pop();
-    renderTradeHistory();
-  }
-
-  function updateTradeProfit(contract_id, profit) {
-    const trade = trades.find(t => t.contract_id === contract_id);
-    if (trade) {
-      trade.profit = profit.toFixed(2);
-      renderTradeHistory();
-    }
-  }
-
-  function renderTradeHistory() {
-    tradeHistoryBody.innerHTML = "";
-    trades.forEach(trade => {
-      const tr = document.createElement("tr");
-      tr.innerHTML = `
-        <td>${trade.contract_id}</td>
-        <td>${trade.type}</td>
-        <td>${trade.amount}</td>
-        <td>${trade.profit !== null ? trade.profit : "-"}</td>
-        <td>${trade.time}</td>
-      `;
-      tradeHistoryBody.appendChild(tr);
-    });
-  }
-
-  startBtn.onclick = () => {
-    if (lastKnownBalance <= 0) {
-      botStatusEl.textContent = "Cannot start: Balance is zero.";
+    if (!window.LightweightCharts) {
+      console.error("LightweightCharts library is not loaded!");
       return;
     }
-    if (!isBotRunning) {
-      isBotRunning = true;
-      botStatusEl.textContent = "Bot started.";
-      startBtn.disabled = true;
-      stopBtn.disabled = false;
-      subscribeTicks(selectedSymbol);
-    }
-  };
 
-  stopBtn.onclick = () => {
-    if (isBotRunning) {
-      isBotRunning = false;
-      botStatusEl.textContent = "Bot stopped.";
-      startBtn.disabled = false;
-      stopBtn.disabled = true;
-      forgetTicks();
-    }
-  };
-
-  window.addEventListener("resize", () => {
-    if (chart) {
-      chart.applyOptions({ width: document.getElementById("chart").clientWidth });
-    }
-  });
-
-  accountSelector.addEventListener("change", (e) => {
-    if (ws) ws.close();
-    const newToken = e.target.value;
-    connectToDeriv(newToken);
-  });
-});
+    chart = LightweightCharts.createChart(chartContainer, {
+      width: chartContainer.clientWidth,
+      height: chartContainer.clientHeight,
+      layout: {
+        backgroundColor: "#0f172a",
+        textColor: "#94a3b8",
+      },
+      grid: {
+        vertLines: { color: '#334155' },
+        horzLines: { color: '#334155' },
+      },
+      crosshair: {
+        mode: LightweightCharts.CrosshairMode
