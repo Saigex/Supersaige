@@ -349,6 +349,10 @@ document.addEventListener("DOMContentLoaded", () => {
   const tradeHistoryBody = document.getElementById("tradeHistoryBody");
   const digitCanvas = document.getElementById("digitChart");
 
+  // Disable buttons initially
+  startBtn.disabled = true;
+  stopBtn.disabled = true;
+
   // Chart.js bar chart for digit frequency
   const digitChart = new Chart(digitCanvas, {
     type: 'bar',
@@ -482,6 +486,12 @@ document.addEventListener("DOMContentLoaded", () => {
         let balance = parseFloat(data.balance.balance);
         lastKnownBalance = balance;
         balanceEl.textContent = botBalanceEl.textContent = `Balance: $${balance.toFixed(2)}`;
+
+        // Enable start button after getting balance if bot not running
+        if (!isBotRunning) {
+          startBtn.disabled = false;
+          stopBtn.disabled = true;
+        }
       }
 
       if (data.msg_type === "tick" && data.tick) {
@@ -543,7 +553,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // Sends request to get account balance updates
     function getBalance() {
-      if (ws.readyState === WebSocket.OPEN) {
+      if (ws && ws.readyState === WebSocket.OPEN) {
         ws.send(JSON.stringify({ balance: 1, subscribe: 1 }));
       }
     }
@@ -677,7 +687,7 @@ document.addEventListener("DOMContentLoaded", () => {
     stopBtn.disabled = false;
 
     // Resubscribe to ticks (if needed)
-    if (ws.readyState === WebSocket.OPEN) {
+    if (ws && ws.readyState === WebSocket.OPEN) {
       ws.send(JSON.stringify({ ticks: selectedSymbol, subscribe: 1 }));
     }
   };
@@ -691,7 +701,7 @@ document.addEventListener("DOMContentLoaded", () => {
     botStatusEl.textContent = "Bot stopped.";
     startBtn.disabled = false;
     stopBtn.disabled = true;
-    if (ws.readyState === WebSocket.OPEN) ws.send(JSON.stringify({ forget_all: ["ticks"] }));
+    if (ws && ws.readyState === WebSocket.OPEN) ws.send(JSON.stringify({ forget_all: ["ticks"] }));
   };
 
   // Change account handler
@@ -700,6 +710,13 @@ document.addEventListener("DOMContentLoaded", () => {
     isBotRunning = false;
     trades = [];
     renderTradeHistory();
+
+    // Disable buttons and clear balance/status on account switch
+    startBtn.disabled = true;
+    stopBtn.disabled = true;
+    balanceEl.textContent = botBalanceEl.textContent = "Balance: --";
+    botStatusEl.textContent = statusEl.textContent = "Switching accounts...";
+
     connectToDeriv(e.target.value);
   });
 
@@ -731,7 +748,6 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 });
-
 
   </script>
 
