@@ -229,11 +229,14 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     function handleBuy(buyData) {
+      console.log("Buy Data:", buyData);  // For debugging to see actual data shape
+
       botStatusEl.textContent = `Trade Placed: ${buyData.contract_id}`;
+
       addTradeToHistory({
         contract_id: buyData.contract_id,
         type: buyData.contract_type,
-        amount: buyData.amount,
+        amount: buyData.buy_price,
         profit: null,
         time: new Date().toLocaleTimeString(),
       });
@@ -262,8 +265,8 @@ document.addEventListener("DOMContentLoaded", () => {
       const tr = document.createElement("tr");
       tr.innerHTML = `
         <td>${trade.contract_id}</td>
-        <td>${trade.type}</td>
-        <td>${trade.amount}</td>
+        <td>${trade.type !== undefined ? trade.type : "-"}</td>
+        <td>${trade.amount !== undefined ? trade.amount : "-"}</td>
         <td>${trade.profit !== null ? trade.profit : "-"}</td>
         <td>${trade.time}</td>
       `;
