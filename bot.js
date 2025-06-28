@@ -108,41 +108,31 @@ document.addEventListener("DOMContentLoaded", () => {
       }
 
       if (data.msg_type === "tick" && data.tick) {
-        // IMPORTANT: Only trade if bot running and balance > 0
-        if (!isBotRunning || lastKnownBalance <= 0) {
-          // Just update chart and last digit without trading
-          const tick = data.tick;
-          const price = parseFloat(tick.quote);
-          const lastDigit = parseInt(price.toString().slice(-1));
+  const tick = data.tick;
+  const price = parseFloat(tick.quote);
+  const lastDigit = parseInt(price.toString().slice(-1));
 
-          botStatusEl.textContent = `Last digit: ${lastDigit}`;
+  botStatusEl.textContent = `Last digit: ${lastDigit}`;
 
-          if (lineSeries) {
-            lineSeries.update({ time: Math.floor(tick.epoch), value: price });
-          }
-          return; // Skip trading if not running or no balance
-        }
+  if (lineSeries) {
+    lineSeries.update({ time: Math.floor(tick.epoch), value: price });
+  }
 
-        // Bot is running and balance positive → proceed trading
-        const tick = data.tick;
-        const price = parseFloat(tick.quote);
-        const lastDigit = parseInt(price.toString().slice(-1));
+  if (!isBotRunning) {
+    // If bot is not started, do nothing here
+    return;
+  }
 
-        botStatusEl.textContent = `Last digit: ${lastDigit}`;
+  const strategy = strategySelect.value;
+  if (
+    (strategy === "even" && lastDigit % 2 === 0) ||
+    (strategy === "odd" && lastDigit % 2 !== 0)
+  ) {
+    botStatusEl.textContent = `Last digit: ${lastDigit} → Buying DIGIT${strategy.toUpperCase()}`;
+    makeDigitTrade(`DIGIT${strategy.toUpperCase()}`, selectedSymbol);
+  }
+}
 
-        if (lineSeries) {
-          lineSeries.update({ time: Math.floor(tick.epoch), value: price });
-        }
-
-        const strategy = strategySelect.value;
-        if (
-          (strategy === "even" && lastDigit % 2 === 0) ||
-          (strategy === "odd" && lastDigit % 2 !== 0)
-        ) {
-          botStatusEl.textContent = `Last digit: ${lastDigit} → Buying DIGIT${strategy.toUpperCase()}`;
-          makeDigitTrade(`DIGIT${strategy.toUpperCase()}`, selectedSymbol);
-        }
-      }
 
       if (data.msg_type === "buy" && data.buy) {
         handleBuy(data.buy);
