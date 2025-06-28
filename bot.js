@@ -99,7 +99,7 @@ document.addEventListener("DOMContentLoaded", () => {
         botBalanceEl.textContent = `Balance: $${balance.toFixed(2)}`;
 
         startBtn.disabled = balance <= 0;
-        botStatusEl.textContent = balance <= 0 ? "Cannot trade: Balance is zero." : "Ready to trade.";
+        botStatusEl.textContent = balance <= 0 ? "Cannot trade: Balance is zero." : "";
       }
 
       if (data.msg_type === "tick" && data.tick) {
