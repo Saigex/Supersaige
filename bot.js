@@ -99,6 +99,9 @@ document.addEventListener("DOMContentLoaded", () => {
         } catch (err) {
           console.error("Error loading historical data:", err);
         }
+         if (ws.readyState === WebSocket.OPEN) {
+         ws.send(JSON.stringify({ ticks: selectedSymbol, subscribe: 1 }));
+      }
       }
 
       if (data.msg_type === "balance") {
