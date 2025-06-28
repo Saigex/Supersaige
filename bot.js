@@ -24,6 +24,7 @@ document.addEventListener("DOMContentLoaded", () => {
   let chart, lineSeries;
   let trades = [];
   let lastKnownBalance = 0;
+  let isSwitchingAccount = false;  // <-- NEW FLAG
 
   connectBtn.onclick = () => {
     const loginUrl = `https://oauth.deriv.com/oauth2/authorize?app_id=${app_id}&redirect_uri=${redirect_uri}`;
@@ -136,10 +137,12 @@ document.addEventListener("DOMContentLoaded", () => {
     };
 
     ws.onclose = () => {
-      statusEl.textContent = "Disconnected.";
-      botStatusEl.textContent = "Disconnected.";
-      startBtn.disabled = true;
-      stopBtn.disabled = true;
+      if (!isSwitchingAccount) {  // <-- ONLY update UI if NOT switching account
+        statusEl.textContent = "Disconnected.";
+        botStatusEl.textContent = "Disconnected.";
+        startBtn.disabled = true;
+        stopBtn.disabled = true;
+      }
     };
 
     function getBalance() {
@@ -230,7 +233,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     function addTradeToHistory(trade) {
       trades.unshift(trade);
-            if (trades.length > 50) trades.pop();
+      if (trades.length > 50) trades.pop();
       renderTradeHistory();
     }
 
@@ -258,7 +261,6 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
-  // 🟩 Start/Stop bot handlers
   startBtn.onclick = () => {
     if (lastKnownBalance <= 0) {
       botStatusEl.textContent = "Cannot start: Balance is zero.";
@@ -282,8 +284,9 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   };
 
-  // ✅ FIX: Switching accounts correctly
   accountSelector.addEventListener("change", (e) => {
+    isSwitchingAccount = true;   // <--- Set flag BEFORE closing
+
     if (ws) {
       ws.close();
     }
@@ -303,7 +306,11 @@ document.addEventListener("DOMContentLoaded", () => {
     stopBtn.disabled = true;
 
     const newToken = e.target.value;
-    connectToDeriv(newToken);
+
+    // Wait briefly for socket to close cleanly, then reconnect
+    setTimeout(() => {
+      connectToDeriv(newToken);
+      isSwitchingAccount = false;  // Reset flag after reconnect
+    }, 300);
   });
 });
-
