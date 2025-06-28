@@ -267,28 +267,38 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   // 🟩 Start/Stop bot handlers
-  startBtn.onclick = () => {
-    if (lastKnownBalance <= 0) {
-      botStatusEl.textContent = "Cannot start: Balance is zero.";
-      return;
+startBtn.onclick = () => {
+  if (lastKnownBalance <= 0) {
+    botStatusEl.textContent = "Cannot start: Balance is zero.";
+    return;
+  }
+  if (!isBotRunning) {
+    isBotRunning = true;
+    botStatusEl.textContent = "Bot started.";
+    startBtn.disabled = true;
+    stopBtn.disabled = false;
+
+    // Subscribe to ticks for the selected symbol
+    if (ws && ws.readyState === WebSocket.OPEN) {
+      ws.send(JSON.stringify({ ticks: selectedSymbol, subscribe: 1 }));
     }
-    if (!isBotRunning) {
-      isBotRunning = true;
-      botStatusEl.textContent = "Bot started.";
-      startBtn.disabled = true;
-      stopBtn.disabled = false;
-    }
-  };
+  }
+};
+
 
   stopBtn.onclick = () => {
-    if (isBotRunning) {
-      isBotRunning = false;
-      botStatusEl.textContent = "Bot stopped.";
-      startBtn.disabled = false;
-      stopBtn.disabled = true;
-      if (ws) ws.send(JSON.stringify({ forget_all: ["ticks"] }));
+  if (isBotRunning) {
+    isBotRunning = false;
+    botStatusEl.textContent = "Bot stopped.";
+    startBtn.disabled = false;
+    stopBtn.disabled = true;
+
+    if (ws && ws.readyState === WebSocket.OPEN) {
+      ws.send(JSON.stringify({ forget_all: ["ticks"] }));
     }
-  };
+  }
+};
+
 
   // ✅ Switching accounts correctly
   accountSelector.addEventListener("change", (e) => {
