@@ -26,7 +26,7 @@ document.addEventListener("DOMContentLoaded", () => {
   let lastKnownBalance = 0;
 
   connectBtn.onclick = () => {
-    const loginUrl = https://oauth.deriv.com/oauth2/authorize?app_id=${app_id}&redirect_uri=${redirect_uri};
+    const loginUrl = `https://oauth.deriv.com/oauth2/authorize?app_id=${app_id}&redirect_uri=${redirect_uri}`;
     window.location.href = loginUrl;
   };
 
