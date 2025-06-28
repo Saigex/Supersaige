@@ -20,7 +20,7 @@ document.addEventListener("DOMContentLoaded", () => {
   let ws;
   let token;
   let isBotRunning = false;
-  let selectedSymbol = "R_75"; // Volatility 75 (1s) symbol
+  let selectedSymbol = "R_75"; // Volatility 75 1s
   let chart, lineSeries;
   let trades = [];
   let lastKnownBalance = 0;
@@ -187,4 +187,96 @@ document.addEventListener("DOMContentLoaded", () => {
         horzLines: { color: '#334155' },
       },
       crosshair: {
-        mode: LightweightCharts.CrosshairMode
+        mode: LightweightCharts.CrosshairMode.Normal,
+      },
+      priceScale: {
+        borderColor: '#334155',
+      },
+    });
+
+    lineSeries = chart.addLineSeries({
+      color: '#4ade80',
+      lineWidth: 2,
+    });
+
+    lineSeries.setData([]); // Initially empty data.
+
+    // Resize chart when window size changes
+    window.addEventListener("resize", () => {
+      if (chart) {
+        chart.resize(chartContainer.clientWidth, chartContainer.clientHeight);
+      }
+    });
+
+    setTimeout(() => {
+      chart.resize(chartContainer.clientWidth, chartContainer.clientHeight);
+    }, 100);
+
+    // Subscribe to Volatility 75 (1s) ticks
+    subscribeTicks(selectedSymbol);
+  }
+
+  function handleBuy(buyData) {
+    botStatusEl.textContent = `Trade Placed: ${buyData.contract_id}`;
+    addTradeToHistory({
+      contract_id: buyData.contract_id,
+      type: buyData.contract_type,
+      amount: buyData.amount,
+      profit: null,
+      time: new Date().toLocaleTimeString()
+    });
+  }
+
+  function addTradeToHistory(trade) {
+    trades.unshift(trade);
+    if (trades.length > 50) trades.pop();
+    renderTradeHistory();
+  }
+
+  function updateTradeProfit(contract_id, profit) {
+    const trade = trades.find(t => t.contract_id === contract_id);
+    if (trade) {
+      trade.profit = profit.toFixed(2);
+      renderTradeHistory();
+    }
+  }
+
+  function renderTradeHistory() {
+    tradeHistoryBody.innerHTML = "";
+    trades.forEach(trade => {
+      const tr = document.createElement("tr");
+      tr.innerHTML = `
+        <td>${trade.contract_id}</td>
+        <td>${trade.type}</td>
+        <td>${trade.amount}</td>
+        <td>${trade.profit !== null ? trade.profit : "-"}</td>
+        <td>${trade.time}</td>
+      `;
+      tradeHistoryBody.appendChild(tr);
+    });
+  }
+
+  startBtn.onclick = () => {
+    if (lastKnownBalance <= 0) {
+      botStatusEl.textContent = "Cannot start: Balance is zero.";
+      return;
+    }
+    if (!isBotRunning) {
+      isBotRunning = true;
+      botStatusEl.textContent = "Bot started.";
+      startBtn.disabled = true;
+      stopBtn.disabled = false;
+      subscribeTicks(selectedSymbol);
+    }
+  };
+
+  stopBtn.onclick = () => {
+    if (isBotRunning) {
+      isBotRunning = false;
+      botStatusEl.textContent = "Bot stopped.";
+      stopBtn.disabled = true;
+      startBtn.disabled = false;
+      forgetTicks();
+    }
+  };
+});
