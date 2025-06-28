@@ -456,6 +456,7 @@ document.addEventListener("DOMContentLoaded", () => {
     ws.onmessage = async (msg) => {
       const data = JSON.parse(msg.data);
       console.log('Received:', data);
+
       if (data.msg_type === "authorize") {
         console.log("Authorized:", data.authorize.loginid);
         statusEl.textContent = `Logged in as: ${data.authorize.loginid}`;
@@ -521,7 +522,6 @@ document.addEventListener("DOMContentLoaded", () => {
         if (!isBotRunning || waitingForResult) return;
         placeTrade(currentContractType);
         console.log(`Placing trade of type ${currentContractType} with stake ${currentStake}`);
-
       }
 
       if (data.msg_type === "buy" && data.buy) handleBuy(data.buy);
@@ -532,11 +532,15 @@ document.addEventListener("DOMContentLoaded", () => {
         updateTradeProfit(contract_id, profit);
 
         waitingForResult = false;
+
         if (profit > 0) {
+          // On win: reset stake and contract type
           currentStake = initialStake;
           currentContractType = "DIGITUNDER9";
         } else {
+          // On loss: increase stake by 25%
           currentStake = +(currentStake * 1.25).toFixed(2);
+          // Switch contract type from DIGITUNDER9 to DIGITUNDER5 on first loss
           if (currentContractType === "DIGITUNDER9") currentContractType = "DIGITUNDER5";
         }
       }
@@ -563,29 +567,34 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     // Places the trade according to current strategy contract type and stake
-function placeTrade(contractType) {
-  if (!ws || ws.readyState !== WebSocket.OPEN) return;
+    function placeTrade(contractType) {
+      if (!ws || ws.readyState !== WebSocket.OPEN) return;
 
-  const amount = +currentStake.toFixed(2);
+      const amount = +currentStake.toFixed(2);
 
-  const buyRequest = {
-    buy: 1,
-    amount: amount,
-    basis: "stake",
-    contract_type: contractType,
-    currency: "USD",
-    duration: 5,
-    duration_unit: "t",
-    symbol: selectedSymbol,
-  };
+      // Determine barrier based on contract type
+      let barrier = 9; // default for DIGITUNDER9
+      if (contractType === "DIGITUNDER5") barrier = 5;
 
-  console.log("Sending buy request:", buyRequest);
+      const buyRequest = {
+        buy: 1,
+        amount: amount,
+        basis: "stake",
+        contract_type: "DIGITUNDER",
+        currency: "USD",
+        duration: 5,
+        duration_unit: "t",
+        symbol: selectedSymbol,
+        barrier: barrier,  // IMPORTANT: barrier defines the digit under value
+        subscribe: 1
+      };
 
-  ws.send(JSON.stringify(buyRequest));
-  botStatusEl.textContent = `Placing trade: ${contractType} for $${amount.toFixed(2)}`;
-  waitingForResult = true;
-}
+      console.log("Sending buy request:", buyRequest);
 
+      ws.send(JSON.stringify(buyRequest));
+      botStatusEl.textContent = `Placing trade: DIGITUNDER${barrier} for $${amount.toFixed(2)}`;
+      waitingForResult = true;
+    }
 
     // Updates the digit frequency bar chart
     function updateDigitChart() {
@@ -753,6 +762,7 @@ function placeTrade(contractType) {
     });
   }
 });
+
 
   </script>
 
