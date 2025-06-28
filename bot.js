@@ -1,5 +1,3 @@
-// Deriv Bot with Full Historical Chart, Fixed Autostart Bug, and Clean Trade History
-
 document.addEventListener("DOMContentLoaded", () => {
   const app_id = "82467";
   const redirect_uri = "https://saigex.github.io/Supersaige";
@@ -83,6 +81,9 @@ document.addEventListener("DOMContentLoaded", () => {
         chartContainer.innerHTML = "";
         initChart();
 
+        // ✅ Always subscribe to ticks — even before bot starts
+        subscribeTicks(selectedSymbol);
+
         try {
           const historicalData = await loadHistoricalData(selectedSymbol);
           lineSeries.setData(historicalData);
@@ -109,6 +110,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
         botStatusEl.textContent = `Last digit: ${lastDigit}`;
         if (lineSeries) lineSeries.update({ time: Math.floor(tick.epoch), value: price });
+
         if (!isBotRunning) return;
 
         const strategy = strategySelect.value;
@@ -270,7 +272,11 @@ document.addEventListener("DOMContentLoaded", () => {
     botStatusEl.textContent = "Bot started.";
     startBtn.disabled = true;
     stopBtn.disabled = false;
-    if (ws.readyState === WebSocket.OPEN) ws.send(JSON.stringify({ ticks: selectedSymbol, subscribe: 1 }));
+
+    // Still sending ticks subscription just in case
+    if (ws.readyState === WebSocket.OPEN) {
+      ws.send(JSON.stringify({ ticks: selectedSymbol, subscribe: 1 }));
+    }
   };
 
   stopBtn.onclick = () => {
@@ -278,7 +284,11 @@ document.addEventListener("DOMContentLoaded", () => {
     botStatusEl.textContent = "Bot stopped.";
     startBtn.disabled = false;
     stopBtn.disabled = true;
-    if (ws.readyState === WebSocket.OPEN) ws.send(JSON.stringify({ forget_all: ["ticks"] }));
+
+    // ✅ Removed forget_all → keep ticks for chart live
+    // if (ws.readyState === WebSocket.OPEN) {
+    //   ws.send(JSON.stringify({ forget_all: ["ticks"] }));
+    // }
   };
 
   accountSelector.addEventListener("change", (e) => {
