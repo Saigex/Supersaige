@@ -246,34 +246,35 @@ document.addEventListener("DOMContentLoaded", () => {
       });
     }
 
-    function loadHistoricalData(symbol) {
-      return new Promise((resolve, reject) => {
-        const req_id = 9999;
-        ws.send(JSON.stringify({
-          ticks_history: symbol,
-          end: "latest",
-          count: 100,
-          granularity: 60,
-          style: "candles",
-          req_id: req_id
-        }));
+function loadHistoricalData(symbol) {
+  return new Promise((resolve, reject) => {
+    const req_id = 9999;
+    ws.send(JSON.stringify({
+      ticks_history: symbol,
+      end: "latest",
+      count: 100,
+      granularity: 60,
+      style: "candles",
+      req_id: req_id
+    }));
 
-        function onMessage(event) {
-          const data = JSON.parse(event.data);
-          if (data.req_id === req_id) {
-            ws.removeEventListener("message", onMessage);
-            if (data.history && data.history.candles) {
-              const candles = data.history.candles.map(c => ({ time: c.epoch, value: c.close }));
-              resolve(candles);
-            } else {
-              reject(data.error?.message || "No candle data returned");
-            }
-          }
+    function onMessage(event) {
+      const data = JSON.parse(event.data);
+      if (data.req_id === req_id) {
+        ws.removeEventListener("message", onMessage);
+        if (data.candles) {
+          const candles = data.candles.map(c => ({ time: c.epoch, value: c.close }));
+          resolve(candles);
+        } else {
+          reject(data.error?.message || "No candle data returned");
         }
-
-        ws.addEventListener("message", onMessage);
-      });
+      }
     }
+
+    ws.addEventListener("message", onMessage);
+  });
+}
+
 
     function handleBuy(buyData) {
       const type = buyData.contract_type?.includes("DIGIT") ? buyData.contract_type :
