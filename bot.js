@@ -35,12 +35,12 @@ document.addEventListener("DOMContentLoaded", () => {
   const accounts = [];
 
   for (let i = 1; i <= 20; i++) {
-    const acct = urlParams.get('acct${i}');
-    const tok = urlParams.get('token${i}');
-    const currency = urlParams.get('cur${i}') || "";
+    const acct = urlParams.get(`acct${i}`);
+    const tok = urlParams.get(`token${i}`);
+    const currency = urlParams.get(`cur${i}`) || "";
     if (acct && tok) {
       accounts.push({ loginid: acct, token: tok, currency });
-      console.log(Account ${i}:, acct, tok, currency);
+      console.log(`Account ${i}:`, acct, tok, currency);
     }
   }
 
@@ -56,7 +56,7 @@ document.addEventListener("DOMContentLoaded", () => {
     accounts.forEach(acc => {
       const option = document.createElement("option");
       option.value = acc.token;
-      option.textContent = ${acc.loginid} (${acc.currency});
+      option.textContent = `${acc.loginid} (${acc.currency})`;
       accountSelector.appendChild(option);
     });
 
@@ -114,8 +114,8 @@ function connectToDeriv(selectedToken) {
 
         const strategy = strategySelect.value;
         if ((strategy === "even" && lastDigit % 2 === 0) || (strategy === "odd" && lastDigit % 2 !== 0)) {
-          botStatusEl.textContent = Last digit: ${lastDigit} → Buying DIGIT${strategy.toUpperCase()};
-          makeDigitTrade(DIGIT${strategy.toUpperCase()}, selectedSymbol);
+          botStatusEl.textContent = `Last digit: ${lastDigit} → Buying DIGIT${strategy.toUpperCase()}`;
+          makeDigitTrade(`DIGIT${strategy.toUpperCase()}`, selectedSymbol);
         }
       }
 
@@ -126,14 +126,12 @@ function connectToDeriv(selectedToken) {
       if (data.msg_type === "proposal_open_contract") {
         if (data.proposal_open_contract.is_sold) {
           const profit = data.proposal_open_contract.profit;
-          botStatusEl.textContent = Trade ended. Profit: $${profit.toFixed(2)};
+          botStatusEl.textContent = `Trade ended. Profit: $${profit.toFixed(2)}`;
           updateTradeProfit(data.proposal_open_contract.contract_id, profit);
         }
       }
     };
-    function subscribeTicks(symbol) {
-      ws.send(JSON.stringify({ ticks: symbol, subscribe: 1 }));
-    }
+    
 
     ws.onerror = () => {
       statusEl.textContent = "WebSocket error.";
@@ -230,7 +228,7 @@ function initChart() {
 
 
   function handleBuy(buyData) {
-    botStatusEl.textContent = Trade Placed: ${buyData.contract_id};
+    botStatusEl.textContent = `Trade Placed: ${buyData.contract_id}`;
     addTradeToHistory({
       contract_id: buyData.contract_id,
       type: buyData.contract_type,
@@ -258,13 +256,13 @@ function initChart() {
     tradeHistoryBody.innerHTML = "";
     trades.forEach(trade => {
       const tr = document.createElement("tr");
-      tr.innerHTML = 
+      tr.innerHTML = `
         <td>${trade.contract_id}</td>
         <td>${trade.type}</td>
         <td>${trade.amount}</td>
         <td>${trade.profit !== null ? trade.profit : "-"}</td>
         <td>${trade.time}</td>
-      ;
+      `;
       tradeHistoryBody.appendChild(tr);
     });
   }
