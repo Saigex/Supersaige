@@ -118,14 +118,18 @@ document.addEventListener("DOMContentLoaded", () => {
         const price = parseFloat(tick.quote);
         const lastDigit = parseInt(price.toString().slice(-1));
 
+        // Show last digit always
         botStatusEl.textContent = `Last digit: ${lastDigit}`;
+
         if (lineSeries) lineSeries.update({ time: Math.floor(tick.epoch), value: price });
 
         if (!isBotRunning) return;
 
         // Guardian strategy: trade only on even last digits
         if (lastDigit % 2 === 0) {
+          // Calculate stake amount based on balance and stakePercent
           const stakeAmount = +(lastKnownBalance * stakePercent).toFixed(2);
+
           botStatusEl.textContent = `Last digit: ${lastDigit} → Buying DIGITEVEN with stake $${stakeAmount}`;
 
           makeDigitTradeWithAmount("DIGITEVEN", selectedSymbol, stakeAmount);
@@ -147,11 +151,11 @@ document.addEventListener("DOMContentLoaded", () => {
         // Update total profit in USD
         totalProfitUSD += profit;
 
-        // Update stakePercent according to win/loss
+        // Adjust stakePercent according to win/loss
         if (profit > 0) {
           consecutiveWins++;
           if (consecutiveWins > 3) consecutiveWins = 3;  // max 3 consecutive doubles
-          stakePercent = Math.min(0.01 * Math.pow(2, consecutiveWins), 0.2); // cap max stake to 20%
+          stakePercent = Math.min(0.01 * Math.pow(2, consecutiveWins), 0.2); // max 20%
         } else {
           consecutiveWins = 0;
           stakePercent = 0.01; // reset to 1%
@@ -166,11 +170,13 @@ document.addEventListener("DOMContentLoaded", () => {
           isBotRunning = false;
           startBtn.disabled = false;
           stopBtn.disabled = true;
+          if (ws.readyState === WebSocket.OPEN) ws.send(JSON.stringify({ forget_all: ["ticks"] }));
         } else if (profitPercent <= -10) {
           botStatusEl.textContent = `Loss limit reached (${profitPercent.toFixed(2)}%). Stopping bot.`;
           isBotRunning = false;
           startBtn.disabled = false;
           stopBtn.disabled = true;
+          if (ws.readyState === WebSocket.OPEN) ws.send(JSON.stringify({ forget_all: ["ticks"] }));
         }
       }
     };
