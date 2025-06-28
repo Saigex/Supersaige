@@ -20,7 +20,7 @@ document.addEventListener("DOMContentLoaded", () => {
   let ws;
   let token;
   let isBotRunning = false;
-  let selectedSymbol = "R_100";
+  let selectedSymbol = "V75_1";
   let chart, lineSeries;
   let trades = [];
   let lastKnownBalance = 0;
@@ -63,48 +63,54 @@ document.addEventListener("DOMContentLoaded", () => {
     connectToDeriv(accounts[0].token);
   }
 
-  function connectToDeriv(selectedToken) {
-    token = selectedToken;
-    ws = new WebSocket(wss://ws.derivws.com/websockets/v3?app_id=${app_id});
+function connectToDeriv(selectedToken) {
+  token = selectedToken;
+  ws = new WebSocket(`wss://ws.derivws.com/websockets/v3?app_id=${app_id}`);
 
-    ws.onopen = () => {
-      ws.send(JSON.stringify({ authorize: token }));
-    };
+  ws.onopen = () => {
+    ws.send(JSON.stringify({ authorize: token }));
+  };
 
-    ws.onmessage = (msg) => {
-      const data = JSON.parse(msg.data);
+  ws.onmessage = (msg) => {
+    const data = JSON.parse(msg.data);
 
-      if (data.msg_type === "authorize") {
-        statusEl.textContent = Logged in as: ${data.authorize.loginid};
-        botStatusEl.textContent = Logged in as: ${data.authorize.loginid};
-        getBalance();
-        initChart();
+    // Authorization success handler
+    if (data.msg_type === "authorize") {
+      statusEl.textContent = `Logged in as: ${data.authorize.loginid}`;
+      botStatusEl.textContent = `Logged in as: ${data.authorize.loginid}`;
+      getBalance();
+      initChart(); // Initialize chart here
+    }
+
+    // Balance update
+    if (data.msg_type === "balance") {
+      let balance = parseFloat(data.balance.balance);
+      lastKnownBalance = balance;
+
+      balanceEl.textContent = `Balance: $${balance.toFixed(2)}`;
+      botBalanceEl.textContent = `Balance: $${balance.toFixed(2)}`;
+
+      if (balance <= 0) {
+        startBtn.disabled = true;
+        botStatusEl.textContent = "Cannot trade: Balance is zero.";
+      } else {
+        startBtn.disabled = false;
       }
+    }
 
-      if (data.msg_type === "balance") {
-        let balance = parseFloat(data.balance.balance);
-        lastKnownBalance = balance;
+    // Real-time tick data for Volatility 75
+    if (data.msg_type === "tick" && data.tick) {
+      const tick = data.tick;
+      const price = parseFloat(tick.quote);
+      const lastDigit = parseInt(price.toString().slice(-1));
 
-        balanceEl.textContent = Balance: $${balance.toFixed(2)};
-        botBalanceEl.textContent = Balance: $${balance.toFixed(2)};
+      botStatusEl.textContent = `Last digit: ${lastDigit}`;
 
-        if (balance <= 0) {
-          startBtn.disabled = true;
-          botStatusEl.textContent = "Cannot trade: Balance is zero.";
-        } else {
-          startBtn.disabled = false;
-        }
+      if (lineSeries) {
+        // Update the chart with the latest price data
+        lineSeries.update({ time: Math.floor(tick.epoch), value: price });
       }
-
-      if (data.msg_type === "tick" && isBotRunning) {
-        const tick = data.tick;
-        const price = parseFloat(tick.quote);
-        const lastDigit = parseInt(price.toString().slice(-1));
-        botStatusEl.textContent = Last digit: ${lastDigit};
-
-        if (lineSeries) {
-          lineSeries.update({ time: Math.floor(tick.epoch), value: price });
-        }
+    }
 
         const strategy = strategySelect.value;
         if ((strategy === "even" && lastDigit % 2 === 0) || (strategy === "odd" && lastDigit % 2 !== 0)) {
@@ -125,6 +131,9 @@ document.addEventListener("DOMContentLoaded", () => {
         }
       }
     };
+    function subscribeTicks(symbol) {
+      ws.send(JSON.stringify({ ticks: symbol, subscribe: 1 }));
+    }
 
     ws.onerror = () => {
       statusEl.textContent = "WebSocket error.";
@@ -175,6 +184,7 @@ function initChart() {
     return;
   }
 
+  // Create the chart
   chart = LightweightCharts.createChart(chartContainer, {
     width: chartContainer.clientWidth,
     height: chartContainer.clientHeight,
@@ -194,11 +204,13 @@ function initChart() {
     },
   });
 
+  // Create a line series for the chart
   lineSeries = chart.addLineSeries({
     color: '#4ade80',
     lineWidth: 2,
   });
 
+  // Initialize chart with no data (empty array)
   lineSeries.setData([]);
 
   // Resize chart when window size changes
@@ -211,6 +223,9 @@ function initChart() {
   setTimeout(() => {
     chart.resize(chartContainer.clientWidth, chartContainer.clientHeight);
   }, 100);
+
+  // Start updating the chart with real-time Volatility 75 data
+  subscribeTicks("V75_1");
 }
 
 
