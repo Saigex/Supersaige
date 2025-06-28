@@ -16,6 +16,9 @@ document.addEventListener("DOMContentLoaded", () => {
   const stopBtn = document.getElementById("stopBot");
   const tradeHistoryBody = document.getElementById("tradeHistoryBody");
 
+  // New: User input for initial stake amount
+  const stakeInput = document.getElementById("stakeInput"); // Add this input in your HTML!
+
   const digitCanvas = document.getElementById("digitChart");
   const digitChart = new Chart(digitCanvas, {
     type: 'bar',
@@ -53,8 +56,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 
-  const digitCounts = Array(10).fill(0);
-  let digitTotal = 0;
+  const last100Digits = []; // To hold last 100 digits for histogram
 
   let ws;
   let token;
@@ -64,15 +66,28 @@ document.addEventListener("DOMContentLoaded", () => {
   let trades = [];
   let lastKnownBalance = 0;
 
-  let stakePercent = 0.01;
-  let startingBalance = 0;
-  let currentStake = 0;
-  let totalProfitUSD = 0;
+  // Strategy variables:
+  let initialStake = 1;   // User sets this, minimum 1$
+  let currentStake = 1;
+  let waitingForResult = false;
+  let currentContractType = "DIGITUNDER9";
 
   connectBtn.onclick = () => {
     const loginUrl = `https://oauth.deriv.com/oauth2/authorize?app_id=${app_id}&redirect_uri=${redirect_uri}`;
     window.location.href = loginUrl;
   };
+
+  // Initialize stake input value & listener
+  if(stakeInput){
+    stakeInput.value = initialStake.toFixed(2);
+    stakeInput.addEventListener("change", () => {
+      let val = parseFloat(stakeInput.value);
+      if (isNaN(val) || val < 1) val = 1;
+      stakeInput.value = val.toFixed(2);
+      initialStake = val;
+      currentStake = val;
+    });
+  }
 
   const urlParams = new URLSearchParams(window.location.search);
   const accounts = [];
@@ -122,10 +137,10 @@ document.addEventListener("DOMContentLoaded", () => {
         botStatusEl.textContent = `Logged in as: ${data.authorize.loginid}`;
         getBalance();
 
-        startingBalance = 0;
-        stakePercent = 0.01;
-        currentStake = 0;
-        totalProfitUSD = 0;
+        // Reset strategy state
+        currentStake = initialStake;
+        waitingForResult = false;
+        currentContractType = "DIGITUNDER9";
 
         const chartContainer = document.getElementById("chart");
         chartContainer.innerHTML = "";
@@ -147,45 +162,35 @@ document.addEventListener("DOMContentLoaded", () => {
         let balance = parseFloat(data.balance.balance);
         lastKnownBalance = balance;
 
-        if (startingBalance === 0) {
-          startingBalance = balance;
-          currentStake = startingBalance * stakePercent;
-        }
-
         balanceEl.textContent = `Balance: $${balance.toFixed(2)}`;
         botBalanceEl.textContent = `Balance: $${balance.toFixed(2)}`;
 
-        startBtn.disabled = balance <= 0;
-        botStatusEl.textContent = balance <= 0 ? "Cannot trade: Balance is zero." : "";
+        startBtn.disabled = balance < 1;
+        botStatusEl.textContent = balance < 1 ? "Cannot trade: Balance less than $1." : "";
       }
 
       if (data.msg_type === "tick" && data.tick) {
         const tick = data.tick;
         const price = parseFloat(tick.quote);
-        const lastDigit = parseInt(price.toString().slice(-1));
+        const lastDigit = extractLastDigit(price);
 
-        digitCounts[lastDigit]++;
-        digitTotal++;
+        if(lastDigit === null) return;
 
-        const freqs = digitCounts.map(c => (c / digitTotal) * 100);
-        digitChart.data.datasets[0].data = freqs;
-        digitChart.update();
+        // Update last 100 digits array
+        last100Digits.push(lastDigit);
+        if (last100Digits.length > 100) last100Digits.shift();
+
+        // Update digit frequency chart
+        updateDigitChart();
 
         botStatusEl.textContent = `Last digit: ${lastDigit}`;
         if (lineSeries) lineSeries.update({ time: Math.floor(tick.epoch), value: price });
 
-        if (!isBotRunning) return;
+        // === Strategy execution ===
+        if (!isBotRunning || waitingForResult) return;
 
-        if (lastDigit % 2 === 0) {
-          const stakeAmount = +currentStake.toFixed(2);
-          if (stakeAmount < 1) {
-            console.warn("Stake too low to place trade");
-            return;
-          }
-
-          botStatusEl.textContent = `Buying DIGITEVEN with $${stakeAmount}`;
-          makeDigitTradeWithAmount("DIGITEVEN", selectedSymbol, stakeAmount);
-        }
+        // Place trade based on currentContractType strategy
+        placeTrade(currentContractType);
       }
 
       if (data.msg_type === "buy" && data.buy) {
@@ -198,22 +203,24 @@ document.addEventListener("DOMContentLoaded", () => {
 
         botStatusEl.textContent = `Trade ended. Profit: $${profit.toFixed(2)}`;
         updateTradeProfit(contract_id, profit);
-        totalProfitUSD += profit;
+
+        waitingForResult = false;
 
         if (profit > 0) {
-          currentStake += startingBalance * 0.01;
+          // Win: reset stake & contract type
+          currentStake = initialStake;
+          currentContractType = "DIGITUNDER9";
+          botStatusEl.textContent = `Trade won! Stake reset to $${currentStake.toFixed(2)}.`;
         } else {
-          currentStake = startingBalance * 0.01;
-        }
+          // Loss: increase stake by 25%
+          currentStake = +(currentStake * 1.25).toFixed(2);
 
-        const profitPercent = (totalProfitUSD / startingBalance) * 100;
-
-        if (profitPercent >= 15 || profitPercent <= -10) {
-          botStatusEl.textContent = `Threshold reached (${profitPercent.toFixed(2)}%). Stopping.`;
-          isBotRunning = false;
-          startBtn.disabled = false;
-          stopBtn.disabled = true;
-          if (ws.readyState === WebSocket.OPEN) ws.send(JSON.stringify({ forget_all: ["ticks"] }));
+          if (currentContractType === "DIGITUNDER9") {
+            currentContractType = "DIGITUNDER5";
+            botStatusEl.textContent = `Lost on DIGITUNDER9. Switching to DIGITUNDER5 and increasing stake to $${currentStake.toFixed(2)}.`;
+          } else {
+            botStatusEl.textContent = `Lost on DIGITUNDER5. Increasing stake to $${currentStake.toFixed(2)} and retrying DIGITUNDER5.`;
+          }
         }
       }
     };
@@ -234,75 +241,58 @@ document.addEventListener("DOMContentLoaded", () => {
       ws.send(JSON.stringify({ balance: 1, subscribe: 1 }));
     }
 
-    function makeDigitTradeWithAmount(contractType, symbol, amount) {
-      const tradeRequest = {
+    function placeTrade(contractType) {
+      if (!ws || ws.readyState !== WebSocket.OPEN) return;
+
+      const amount = +currentStake.toFixed(2);
+      if (amount < 1) {
+        botStatusEl.textContent = "Stake less than minimum $1. Stopping bot.";
+        stopBtn.click();
+        return;
+      }
+
+      // Duration 5 ticks (you can adjust)
+      const duration = 5;
+
+      const buyRequest = {
         buy: 1,
+        subscribe: 1,
         price: amount,
         parameters: {
-          amount: amount,
+          amount,
           basis: "stake",
           contract_type: contractType,
           currency: "USD",
-          duration: 1,
+          duration,
           duration_unit: "t",
-          symbol: symbol
-        }
+          symbol: selectedSymbol,
+        },
+        req_id: Date.now()
       };
-      ws.send(JSON.stringify(tradeRequest));
+
+      ws.send(JSON.stringify(buyRequest));
+      botStatusEl.textContent = `Placing trade: ${contractType} for $${amount.toFixed(2)}`;
+      waitingForResult = true;
     }
 
-    function initChart() {
-      const chartContainer = document.getElementById("chart");
-      chart = LightweightCharts.createChart(chartContainer, {
-        width: chartContainer.clientWidth,
-        height: chartContainer.clientHeight,
-        layout: {
-          backgroundColor: "#0f172a",
-          textColor: "#94a3b8",
-        },
-        grid: {
-          vertLines: { color: "#334155" },
-          horzLines: { color: "#334155" },
-        },
-        crosshair: { mode: LightweightCharts.CrosshairMode.Normal },
-        priceScale: { borderColor: "#334155" },
-      });
-
-      lineSeries = chart.addLineSeries({ color: "#4ade80", lineWidth: 2 });
-      lineSeries.setData([]);
-
-      window.addEventListener("resize", () => {
-        if (chart) chart.resize(chartContainer.clientWidth, chartContainer.clientHeight);
-      });
-    }
-
-    function loadHistoricalData(symbol) {
-      return new Promise((resolve, reject) => {
-        const req_id = 9999;
-        ws.send(JSON.stringify({
-          ticks_history: symbol,
-          end: "latest",
-          count: 100,
-          granularity: 60,
-          style: "candles",
-          req_id: req_id
-        }));
-
-        function onMessage(event) {
-          const data = JSON.parse(event.data);
-          if (data.req_id === req_id) {
-            ws.removeEventListener("message", onMessage);
-            if (data.candles) {
-              const candles = data.candles.map(c => ({ time: c.epoch, value: c.close }));
-              resolve(candles);
-            } else {
-              reject(data.error?.message || "No candle data returned");
-            }
-          }
+    function extractLastDigit(price) {
+      // Convert to string and get last numeric digit ignoring decimal point
+      const priceStr = price.toString();
+      for (let i = priceStr.length - 1; i >= 0; i--) {
+        if ("0123456789".includes(priceStr[i])) {
+          return parseInt(priceStr[i]);
         }
+      }
+      return null;
+    }
 
-        ws.addEventListener("message", onMessage);
-      });
+    function updateDigitChart() {
+      const counts = Array(10).fill(0);
+      last100Digits.forEach(d => counts[d]++);
+      const total = last100Digits.length;
+      const percentages = counts.map(c => (c / total) * 100);
+      digitChart.data.datasets[0].data = percentages;
+      digitChart.update();
     }
 
     function handleBuy(buyData) {
@@ -350,19 +340,35 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   startBtn.onclick = () => {
-    if (lastKnownBalance <= 0) {
-      botStatusEl.textContent = "Cannot start: Balance is zero.";
+    if (lastKnownBalance < 1) {
+      botStatusEl.textContent = "Cannot start: Balance less than $1.";
       return;
     }
+
+    if(stakeInput){
+      let val = parseFloat(stakeInput.value);
+      if (isNaN(val) || val < 1) {
+        stakeInput.value = "1.00";
+        initialStake = 1;
+      } else {
+        initialStake = val;
+      }
+      currentStake = initialStake;
+    }
+
     isBotRunning = true;
     botStatusEl.textContent = "Bot started.";
     startBtn.disabled = true;
     stopBtn.disabled = false;
+
     if (ws.readyState === WebSocket.OPEN) ws.send(JSON.stringify({ ticks: selectedSymbol, subscribe: 1 }));
   };
 
   stopBtn.onclick = () => {
     isBotRunning = false;
+    waitingForResult = false;
+    currentStake = initialStake;
+    currentContractType = "DIGITUNDER9";
     botStatusEl.textContent = "Bot stopped.";
     startBtn.disabled = false;
     stopBtn.disabled = true;
