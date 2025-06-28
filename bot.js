@@ -20,7 +20,7 @@ document.addEventListener("DOMContentLoaded", () => {
   let ws;
   let token;
   let isBotRunning = false;
-  let selectedSymbol = "V75_1";
+  let selectedSymbol = "R_100";
   let chart, lineSeries;
   let trades = [];
   let lastKnownBalance = 0;
@@ -220,7 +220,7 @@ document.addEventListener("DOMContentLoaded", () => {
         chart.resize(chartContainer.clientWidth, chartContainer.clientHeight);
       }, 100);
 
-      subscribeTicks("V75_1");
+      subscribeTicks("R_100");
     }
 
     function handleBuy(buyData) {
