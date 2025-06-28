@@ -76,7 +76,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     ws.onmessage = async (msg) => {
       const data = JSON.parse(msg.data);
-
+      console.log("WS message received:", data);
       if (data.msg_type === "authorize") {
         statusEl.textContent = `Logged in as: ${data.authorize.loginid}`;
         botStatusEl.textContent = `Logged in as: ${data.authorize.loginid}`;
@@ -204,20 +204,22 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     function makeDigitTradeWithAmount(contractType, symbol, amount) {
-      ws.send(JSON.stringify({
-        buy: 1,
-        price: 1,
-        parameters: {
-          amount: amount,
-          basis: "stake",
-          contract_type: contractType,
-          currency: "USD",
-          duration: 1,
-          duration_unit: "t",
-          symbol: symbol
-        }
-      }));
+  const tradeRequest = {
+    buy: 1,
+    price: amount,
+    parameters: {
+      amount: amount,
+      basis: "stake",
+      contract_type: contractType,
+      currency: "USD",
+      duration: 1,
+      duration_unit: "t",
+      symbol: symbol
     }
+  };
+  console.log("Sending trade request:", tradeRequest);
+  ws.send(JSON.stringify(tradeRequest));
+}
 
     function initChart() {
       const chartContainer = document.getElementById("chart");
