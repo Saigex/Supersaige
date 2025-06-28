@@ -17,7 +17,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const tradeHistoryBody = document.getElementById("tradeHistoryBody");
 
   // New: User input for initial stake amount
-  const stakeInput = document.getElementById("stakeInput"); // Add this input in your HTML!
+  const stakeInput = document.getElementById("stakeInput"); 
 
   const digitCanvas = document.getElementById("digitChart");
   const digitChart = new Chart(digitCanvas, {
