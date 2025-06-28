@@ -230,4 +230,80 @@ document.addEventListener("DOMContentLoaded", () => {
 
     function addTradeToHistory(trade) {
       trades.unshift(trade);
-      if (trades.le
+            if (trades.length > 50) trades.pop();
+      renderTradeHistory();
+    }
+
+    function updateTradeProfit(contract_id, profit) {
+      const trade = trades.find(t => t.contract_id === contract_id);
+      if (trade) {
+        trade.profit = profit.toFixed(2);
+        renderTradeHistory();
+      }
+    }
+
+    function renderTradeHistory() {
+      tradeHistoryBody.innerHTML = "";
+      trades.forEach(trade => {
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+          <td>${trade.contract_id}</td>
+          <td>${trade.type}</td>
+          <td>${trade.amount}</td>
+          <td>${trade.profit !== null ? trade.profit : "-"}</td>
+          <td>${trade.time}</td>
+        `;
+        tradeHistoryBody.appendChild(tr);
+      });
+    }
+  }
+
+  // 🟩 Start/Stop bot handlers
+  startBtn.onclick = () => {
+    if (lastKnownBalance <= 0) {
+      botStatusEl.textContent = "Cannot start: Balance is zero.";
+      return;
+    }
+    if (!isBotRunning) {
+      isBotRunning = true;
+      botStatusEl.textContent = "Bot started.";
+      startBtn.disabled = true;
+      stopBtn.disabled = false;
+    }
+  };
+
+  stopBtn.onclick = () => {
+    if (isBotRunning) {
+      isBotRunning = false;
+      botStatusEl.textContent = "Bot stopped.";
+      startBtn.disabled = false;
+      stopBtn.disabled = true;
+      if (ws) ws.send(JSON.stringify({ forget_all: ["ticks"] }));
+    }
+  };
+
+  // ✅ FIX: Switching accounts correctly
+  accountSelector.addEventListener("change", (e) => {
+    if (ws) {
+      ws.close();
+    }
+
+    // Reset state
+    isBotRunning = false;
+    lastKnownBalance = 0;
+    trades = [];
+    renderTradeHistory();
+
+    // Reset UI
+    balanceEl.textContent = "Balance: --";
+    botBalanceEl.textContent = "Balance: --";
+    botStatusEl.textContent = "Switching accounts...";
+    statusEl.textContent = "Switching accounts...";
+    startBtn.disabled = true;
+    stopBtn.disabled = true;
+
+    const newToken = e.target.value;
+    connectToDeriv(newToken);
+  });
+});
+
