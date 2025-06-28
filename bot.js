@@ -35,9 +35,9 @@ document.addEventListener("DOMContentLoaded", () => {
   const accounts = [];
 
   for (let i = 1; i <= 20; i++) {
-    const acct = urlParams.get(acct${i});
-    const tok = urlParams.get(token${i});
-    const currency = urlParams.get(cur${i}) || "";
+    const acct = urlParams.get('acct${i}');
+    const tok = urlParams.get('token${i}');
+    const currency = urlParams.get('cur${i}') || "";
     if (acct && tok) {
       accounts.push({ loginid: acct, token: tok, currency });
       console.log(Account ${i}:, acct, tok, currency);
