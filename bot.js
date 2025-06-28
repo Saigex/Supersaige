@@ -63,57 +63,55 @@ document.addEventListener("DOMContentLoaded", () => {
     connectToDeriv(accounts[0].token);
   }
 
-function connectToDeriv(selectedToken) {
-  token = selectedToken;
-  ws = new WebSocket(`wss://ws.derivws.com/websockets/v3?app_id=${app_id}`);
+  function connectToDeriv(selectedToken) {
+    token = selectedToken;
+    ws = new WebSocket(`wss://ws.derivws.com/websockets/v3?app_id=${app_id}`);
 
-  ws.onopen = () => {
-    ws.send(JSON.stringify({ authorize: token }));
-  };
+    ws.onopen = () => {
+      ws.send(JSON.stringify({ authorize: token }));
+    };
 
-  ws.onmessage = (msg) => {
-    const data = JSON.parse(msg.data);
+    ws.onmessage = (msg) => {
+      const data = JSON.parse(msg.data);
 
-    // Authorization success handler
-    if (data.msg_type === "authorize") {
-      statusEl.textContent = `Logged in as: ${data.authorize.loginid}`;
-      botStatusEl.textContent = `Logged in as: ${data.authorize.loginid}`;
-      getBalance();
-      initChart(); // Initialize chart here
-    }
-
-    // Balance update
-    if (data.msg_type === "balance") {
-      let balance = parseFloat(data.balance.balance);
-      lastKnownBalance = balance;
-
-      balanceEl.textContent = `Balance: $${balance.toFixed(2)}`;
-      botBalanceEl.textContent = `Balance: $${balance.toFixed(2)}`;
-
-      if (balance <= 0) {
-        startBtn.disabled = true;
-        botStatusEl.textContent = "Cannot trade: Balance is zero.";
-      } else {
-        startBtn.disabled = false;
+      if (data.msg_type === "authorize") {
+        statusEl.textContent = `Logged in as: ${data.authorize.loginid}`;
+        botStatusEl.textContent = `Logged in as: ${data.authorize.loginid}`;
+        getBalance();
+        initChart();
       }
-    }
 
-    // Real-time tick data for Volatility 75
-    if (data.msg_type === "tick" && data.tick) {
-      const tick = data.tick;
-      const price = parseFloat(tick.quote);
-      const lastDigit = parseInt(price.toString().slice(-1));
+      if (data.msg_type === "balance") {
+        let balance = parseFloat(data.balance.balance);
+        lastKnownBalance = balance;
 
-      botStatusEl.textContent = `Last digit: ${lastDigit}`;
+        balanceEl.textContent = `Balance: $${balance.toFixed(2)}`;
+        botBalanceEl.textContent = `Balance: $${balance.toFixed(2)}`;
 
-      if (lineSeries) {
-        // Update the chart with the latest price data
-        lineSeries.update({ time: Math.floor(tick.epoch), value: price });
+        if (balance <= 0) {
+          startBtn.disabled = true;
+          botStatusEl.textContent = "Cannot trade: Balance is zero.";
+        } else {
+          startBtn.disabled = false;
+        }
       }
-    }
+
+      if (data.msg_type === "tick" && data.tick) {
+        const tick = data.tick;
+        const price = parseFloat(tick.quote);
+        const lastDigit = parseInt(price.toString().slice(-1));
+
+        botStatusEl.textContent = `Last digit: ${lastDigit}`;
+
+        if (lineSeries) {
+          lineSeries.update({ time: Math.floor(tick.epoch), value: price });
+        }
 
         const strategy = strategySelect.value;
-        if ((strategy === "even" && lastDigit % 2 === 0) || (strategy === "odd" && lastDigit % 2 !== 0)) {
+        if (
+          (strategy === "even" && lastDigit % 2 === 0) ||
+          (strategy === "odd" && lastDigit % 2 !== 0)
+        ) {
           botStatusEl.textContent = `Last digit: ${lastDigit} → Buying DIGIT${strategy.toUpperCase()}`;
           makeDigitTrade(`DIGIT${strategy.toUpperCase()}`, selectedSymbol);
         }
@@ -131,7 +129,6 @@ function connectToDeriv(selectedToken) {
         }
       }
     };
-    
 
     ws.onerror = () => {
       statusEl.textContent = "WebSocket error.";
@@ -145,161 +142,92 @@ function connectToDeriv(selectedToken) {
       stopBtn.disabled = true;
     };
 
+    function getBalance() {
+      ws.send(JSON.stringify({ balance: 1, subscribe: 1 }));
+    }
 
-  function getBalance() {
-    ws.send(JSON.stringify({ balance: 1, subscribe: 1 }));
-  }
+    function subscribeTicks(symbol) {
+      ws.send(JSON.stringify({ ticks: symbol, subscribe: 1 }));
+    }
 
-  function subscribeTicks(symbol) {
-    ws.send(JSON.stringify({ ticks: symbol, subscribe: 1 }));
-  }
+    function forgetTicks() {
+      ws.send(JSON.stringify({ forget_all: ["ticks"] }));
+    }
 
-  function forgetTicks() {
-    ws.send(JSON.stringify({ forget_all: ["ticks"] }));
-  }
+    function makeDigitTrade(contractType, symbol) {
+      ws.send(JSON.stringify({
+        buy: 1,
+        price: 1,
+        parameters: {
+          amount: 1,
+          basis: "stake",
+          contract_type: contractType,
+          currency: "USD",
+          duration: 1,
+          duration_unit: "t",
+          symbol: symbol
+        }
+      }));
+    }
 
-  function makeDigitTrade(contractType, symbol) {
-    ws.send(JSON.stringify({
-      buy: 1,
-      price: 1,
-      parameters: {
-        amount: 1,
-        basis: "stake",
-        contract_type: contractType,
-        currency: "USD",
-        duration: 1,
-        duration_unit: "t",
-        symbol: symbol
+    function initChart() {
+      const chartContainer = document.getElementById("chart");
+
+      if (!window.LightweightCharts) {
+        console.error("LightweightCharts library is not loaded!");
+        return;
       }
-    }));
-  }
 
-function initChart() {
-  const chartContainer = document.getElementById("chart");
+      chart = LightweightCharts.createChart(chartContainer, {
+        width: chartContainer.clientWidth,
+        height: chartContainer.clientHeight,
+        layout: {
+          backgroundColor: "#0f172a",
+          textColor: "#94a3b8",
+        },
+        grid: {
+          vertLines: { color: "#334155" },
+          horzLines: { color: "#334155" },
+        },
+        crosshair: {
+          mode: LightweightCharts.CrosshairMode.Normal,
+        },
+        priceScale: {
+          borderColor: "#334155",
+        },
+      });
 
-  if (!window.LightweightCharts) {
-    console.error("LightweightCharts library is not loaded!");
-    return;
-  }
+      lineSeries = chart.addLineSeries({
+        color: "#4ade80",
+        lineWidth: 2,
+      });
 
-  // Create the chart
-  chart = LightweightCharts.createChart(chartContainer, {
-    width: chartContainer.clientWidth,
-    height: chartContainer.clientHeight,
-    layout: {
-      backgroundColor: "#0f172a",
-      textColor: "#94a3b8",
-    },
-    grid: {
-      vertLines: { color: '#334155' },
-      horzLines: { color: '#334155' },
-    },
-    crosshair: {
-      mode: LightweightCharts.CrosshairMode.Normal,
-    },
-    priceScale: {
-      borderColor: '#334155',
-    },
-  });
+      lineSeries.setData([]);
 
-  // Create a line series for the chart
-  lineSeries = chart.addLineSeries({
-    color: '#4ade80',
-    lineWidth: 2,
-  });
+      window.addEventListener("resize", () => {
+        if (chart) {
+          chart.resize(chartContainer.clientWidth, chartContainer.clientHeight);
+        }
+      });
 
-  // Initialize chart with no data (empty array)
-  lineSeries.setData([]);
+      setTimeout(() => {
+        chart.resize(chartContainer.clientWidth, chartContainer.clientHeight);
+      }, 100);
 
-  // Resize chart when window size changes
-  window.addEventListener("resize", () => {
-    if (chart) {
-      chart.resize(chartContainer.clientWidth, chartContainer.clientHeight);
+      subscribeTicks("V75_1");
     }
-  });
 
-  setTimeout(() => {
-    chart.resize(chartContainer.clientWidth, chartContainer.clientHeight);
-  }, 100);
-
-  // Start updating the chart with real-time Volatility 75 data
-  subscribeTicks("V75_1");
-}
-
-
-  function handleBuy(buyData) {
-    botStatusEl.textContent = `Trade Placed: ${buyData.contract_id}`;
-    addTradeToHistory({
-      contract_id: buyData.contract_id,
-      type: buyData.contract_type,
-      amount: buyData.amount,
-      profit: null,
-      time: new Date().toLocaleTimeString()
-    });
-  }
-
-  function addTradeToHistory(trade) {
-    trades.unshift(trade);
-    if (trades.length > 50) trades.pop();
-    renderTradeHistory();
-  }
-
-  function updateTradeProfit(contract_id, profit) {
-    const trade = trades.find(t => t.contract_id === contract_id);
-    if (trade) {
-      trade.profit = profit.toFixed(2);
-      renderTradeHistory();
+    function handleBuy(buyData) {
+      botStatusEl.textContent = `Trade Placed: ${buyData.contract_id}`;
+      addTradeToHistory({
+        contract_id: buyData.contract_id,
+        type: buyData.contract_type,
+        amount: buyData.amount,
+        profit: null,
+        time: new Date().toLocaleTimeString(),
+      });
     }
-  }
 
-  function renderTradeHistory() {
-    tradeHistoryBody.innerHTML = "";
-    trades.forEach(trade => {
-      const tr = document.createElement("tr");
-      tr.innerHTML = `
-        <td>${trade.contract_id}</td>
-        <td>${trade.type}</td>
-        <td>${trade.amount}</td>
-        <td>${trade.profit !== null ? trade.profit : "-"}</td>
-        <td>${trade.time}</td>
-      `;
-      tradeHistoryBody.appendChild(tr);
-    });
-  }
-
-  startBtn.onclick = () => {
-    if (lastKnownBalance <= 0) {
-      botStatusEl.textContent = "Cannot start: Balance is zero.";
-      return;
-    }
-    if (!isBotRunning) {
-      isBotRunning = true;
-      botStatusEl.textContent = "Bot started.";
-      startBtn.disabled = true;
-      stopBtn.disabled = false;
-      subscribeTicks(selectedSymbol);
-    }
-  };
-
-  stopBtn.onclick = () => {
-    if (isBotRunning) {
-      isBotRunning = false;
-      botStatusEl.textContent = "Bot stopped.";
-      startBtn.disabled = false;
-      stopBtn.disabled = true;
-      forgetTicks();
-    }
-  };
-
-  window.addEventListener("resize", () => {
-    if (chart) {
-      chart.applyOptions({ width: document.getElementById("chart").clientWidth });
-    }
-  });
-
-  accountSelector.addEventListener("change", (e) => {
-    if (ws) ws.close();
-    const newToken = e.target.value;
-    connectToDeriv(newToken);
-  });
-});
+    function addTradeToHistory(trade) {
+      trades.unshift(trade);
+      if (trades.le
