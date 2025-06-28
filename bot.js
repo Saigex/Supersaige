@@ -108,6 +108,22 @@ document.addEventListener("DOMContentLoaded", () => {
       }
 
       if (data.msg_type === "tick" && data.tick) {
+        // IMPORTANT: Only trade if bot running and balance > 0
+        if (!isBotRunning || lastKnownBalance <= 0) {
+          // Just update chart and last digit without trading
+          const tick = data.tick;
+          const price = parseFloat(tick.quote);
+          const lastDigit = parseInt(price.toString().slice(-1));
+
+          botStatusEl.textContent = `Last digit: ${lastDigit}`;
+
+          if (lineSeries) {
+            lineSeries.update({ time: Math.floor(tick.epoch), value: price });
+          }
+          return; // Skip trading if not running or no balance
+        }
+
+        // Bot is running and balance positive → proceed trading
         const tick = data.tick;
         const price = parseFloat(tick.quote);
         const lastDigit = parseInt(price.toString().slice(-1));
@@ -229,12 +245,33 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     function handleBuy(buyData) {
-      console.log("Buy Data:", buyData); // Debug log to inspect buy object
+      console.log("Buy Data:", buyData); // Debug
 
       botStatusEl.textContent = `Trade Placed: ${buyData.contract_id}`;
 
-      // Use fallback for type and amount if undefined
-      const tradeType = buyData.contract_type || buyData.longcode || "-";
+      // Simplify type to "Rise" or "Fall" based on contract_type or longcode
+      let tradeType = "Unknown";
+      if (buyData.contract_type) {
+        if (buyData.contract_type.toLowerCase().includes("rise") || buyData.contract_type.toLowerCase().includes("call")) {
+          tradeType = "Rise";
+        } else if (buyData.contract_type.toLowerCase().includes("fall") || buyData.contract_type.toLowerCase().includes("put")) {
+          tradeType = "Fall";
+        } else if (buyData.contract_type.toLowerCase().includes("digit")) {
+          tradeType = buyData.contract_type;
+        } else {
+          tradeType = buyData.contract_type;
+        }
+      } else if (buyData.longcode) {
+        // Fallback: parse from longcode for simpler type
+        if (/rise/i.test(buyData.longcode) || /call/i.test(buyData.longcode)) {
+          tradeType = "Rise";
+        } else if (/fall/i.test(buyData.longcode) || /put/i.test(buyData.longcode)) {
+          tradeType = "Fall";
+        } else {
+          tradeType = buyData.longcode.slice(0, 15) + "...";
+        }
+      }
+
       const amount = buyData.buy_price || buyData.amount || "-";
 
       addTradeToHistory({
