@@ -6,6 +6,7 @@
   <title>Supersaige Deriv Bot</title>
   
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet" />
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
     :root {
       --bg-color: #0f172a;
@@ -46,7 +47,6 @@
       gap: 20px;
     }
 
-    /* Initial Connect Screen */
     #connectSection {
       display: flex;
       flex-direction: column;
@@ -83,6 +83,7 @@
       color: var(--secondary);
       font-size: 16px;
     }
+
     #dashboard {
       display: none;
       flex-direction: column;
@@ -211,7 +212,6 @@
       background: #dc2626;
     }
 
-    /* Trade History */
     #tradeHistorySection {
       margin-top: 30px;
       background: var(--card-bg);
@@ -259,8 +259,6 @@
 </head>
 <body>
   <div class="container">
-
-    <!-- Initial Connect Section -->
     <section id="connectSection">
       <h1>Supersaige Deriv Bot</h1>
       <button id="connectBtn">Connect to Deriv</button>
@@ -268,12 +266,12 @@
       <p id="balance"></p>
     </section>
 
-    <!-- Dashboard Section - hidden initially -->
     <section id="dashboard">
       <header>
         <h1>Supersaige Bot Dashboard</h1>
         <select id="accountSelector" title="Select Account"></select>
       </header>
+
       <main>
         <section class="chart-section">
           <div id="chart" class="chart"></div>
@@ -294,6 +292,12 @@
           </div>
         </section>
       </main>
+
+      <section style="margin-top: 20px; background: var(--card-bg); border-radius: 16px; padding: 20px;">
+        <h2 style="color: var(--primary); margin-bottom: 12px;">Last Digit Frequency</h2>
+        <canvas id="digitChart" height="120"></canvas>
+      </section>
+
       <section id="tradeHistorySection">
         <h2>Trade History</h2>
         <table>
@@ -312,8 +316,9 @@
         </table>
       </section>
     </section>
-
   </div>
+
   <script src="https://cdn.jsdelivr.net/npm/lightweight-charts@3.8.0/dist/lightweight-charts.standalone.production.js"></script>
   <script src="bot.js"></script>
+</body>
 </html>
