@@ -331,7 +331,6 @@
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/lightweight-charts@3.8.0/dist/lightweight-charts.standalone.production.js"></script>
   <script>
-// === FULL UPDATED SCRIPT WITH COLORED TRADE HISTORY ===
 document.addEventListener("DOMContentLoaded", () => {
   const app_id = "82467";
   const redirect_uri = "https://saigex.github.io/Supersaige";
@@ -350,6 +349,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const tradeHistoryBody = document.getElementById("tradeHistoryBody");
   const digitCanvas = document.getElementById("digitChart");
 
+  // Chart.js bar chart for digit frequency
   const digitChart = new Chart(digitCanvas, {
     type: 'bar',
     data: {
@@ -386,6 +386,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 
+  // Variables for bot logic
   const last100Digits = [];
   let ws, token;
   let isBotRunning = false;
@@ -413,6 +414,7 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
+  // Get accounts from URL params
   const urlParams = new URLSearchParams(window.location.search);
   const accounts = [];
   for (let i = 1; i <= 20; i++) {
@@ -459,8 +461,10 @@ document.addEventListener("DOMContentLoaded", () => {
         waitingForResult = false;
         currentContractType = "DIGITUNDER9";
 
+        // Init/clear price chart container and create chart
         document.getElementById("chart").innerHTML = "";
         initChart();
+
         try {
           const historical = await loadHistoricalData(selectedSymbol);
           lineSeries.setData(historical);
@@ -468,7 +472,10 @@ document.addEventListener("DOMContentLoaded", () => {
           console.error("Chart load error:", e);
         }
 
-        ws.send(JSON.stringify({ ticks: selectedSymbol, subscribe: 1 }));
+        // Subscribe to ticks stream
+        if (ws.readyState === WebSocket.OPEN) {
+          ws.send(JSON.stringify({ ticks: selectedSymbol, subscribe: 1 }));
+        }
       }
 
       if (data.msg_type === "balance") {
@@ -480,7 +487,17 @@ document.addEventListener("DOMContentLoaded", () => {
       if (data.msg_type === "tick" && data.tick) {
         const tick = data.tick;
         const price = parseFloat(tick.quote);
-        const lastDigit = parseInt(price.toString().slice(-1));
+
+        // Extract last digit correctly (handle decimals)
+        const priceStr = price.toString();
+        let lastDigit = null;
+        for (let i = priceStr.length - 1; i >= 0; i--) {
+          if ("0123456789".includes(priceStr[i])) {
+            lastDigit = parseInt(priceStr[i]);
+            break;
+          }
+        }
+        if (lastDigit === null) return;
 
         last100Digits.push(lastDigit);
         if (last100Digits.length > 100) last100Digits.shift();
@@ -511,6 +528,27 @@ document.addEventListener("DOMContentLoaded", () => {
       }
     };
 
+    ws.onerror = (e) => {
+      statusEl.textContent = "WebSocket error.";
+      botStatusEl.textContent = "WebSocket error.";
+      console.error("WebSocket error", e);
+    };
+
+    ws.onclose = () => {
+      statusEl.textContent = "Disconnected.";
+      botStatusEl.textContent = "Disconnected.";
+      startBtn.disabled = true;
+      stopBtn.disabled = true;
+    };
+
+    // Sends request to get account balance updates
+    function getBalance() {
+      if (ws.readyState === WebSocket.OPEN) {
+        ws.send(JSON.stringify({ balance: 1, subscribe: 1 }));
+      }
+    }
+
+    // Places the trade according to current strategy contract type and stake
     function placeTrade(contractType) {
       if (!ws || ws.readyState !== WebSocket.OPEN) return;
 
@@ -534,6 +572,7 @@ document.addEventListener("DOMContentLoaded", () => {
       waitingForResult = true;
     }
 
+    // Updates the digit frequency bar chart
     function updateDigitChart() {
       const counts = Array(10).fill(0);
       last100Digits.forEach(d => counts[d]++);
@@ -542,10 +581,7 @@ document.addEventListener("DOMContentLoaded", () => {
       digitChart.update();
     }
 
-    function getBalance() {
-      ws.send(JSON.stringify({ balance: 1, subscribe: 1 }));
-    }
-
+    // Handle new trade data for trade history display
     function handleBuy(buyData) {
       addTradeToHistory({
         contract_id: buyData.contract_id,
@@ -556,9 +592,10 @@ document.addEventListener("DOMContentLoaded", () => {
       });
     }
 
+    // Load historical candle data for the chart
     function loadHistoricalData(symbol) {
       return new Promise((resolve, reject) => {
-        const req_id = 12345;
+        const req_id = Date.now();
         ws.send(JSON.stringify({
           ticks_history: symbol,
           end: "latest",
@@ -584,12 +621,14 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
+  // Adds a trade to history and keeps max 50 trades
   function addTradeToHistory(trade) {
     trades.unshift(trade);
     if (trades.length > 50) trades.pop();
     renderTradeHistory();
   }
 
+  // Updates trade profit and rerenders history
   function updateTradeProfit(contract_id, profit) {
     const trade = trades.find(t => t.contract_id === contract_id);
     if (trade) {
@@ -598,6 +637,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
+  // Render trade history table with colored profit/loss cells
   function renderTradeHistory() {
     tradeHistoryBody.innerHTML = "";
     trades.forEach(trade => {
@@ -615,14 +655,34 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
+  // Starts the bot
   startBtn.onclick = () => {
     isBotRunning = true;
     waitingForResult = false;
+
+    // Update stake from input (validate)
+    if(stakeInput){
+      let val = parseFloat(stakeInput.value);
+      if (isNaN(val) || val < 1) {
+        stakeInput.value = "1.00";
+        initialStake = 1;
+      } else {
+        initialStake = val;
+      }
+      currentStake = initialStake;
+    }
+
     botStatusEl.textContent = "Bot started.";
     startBtn.disabled = true;
     stopBtn.disabled = false;
+
+    // Resubscribe to ticks (if needed)
+    if (ws.readyState === WebSocket.OPEN) {
+      ws.send(JSON.stringify({ ticks: selectedSymbol, subscribe: 1 }));
+    }
   };
 
+  // Stops the bot and resets state
   stopBtn.onclick = () => {
     isBotRunning = false;
     waitingForResult = false;
@@ -634,6 +694,7 @@ document.addEventListener("DOMContentLoaded", () => {
     if (ws.readyState === WebSocket.OPEN) ws.send(JSON.stringify({ forget_all: ["ticks"] }));
   };
 
+  // Change account handler
   accountSelector.addEventListener("change", (e) => {
     if (ws) ws.close();
     isBotRunning = false;
@@ -641,7 +702,36 @@ document.addEventListener("DOMContentLoaded", () => {
     renderTradeHistory();
     connectToDeriv(e.target.value);
   });
+
+  // Initialize LightweightCharts price chart
+  function initChart() {
+    const chartContainer = document.getElementById("chart");
+    chart = LightweightCharts.createChart(chartContainer, {
+      width: chartContainer.clientWidth,
+      height: chartContainer.clientHeight,
+      layout: {
+        backgroundColor: "#0f172a",
+        textColor: "#94a3b8",
+      },
+      grid: {
+        vertLines: { color: "#334155" },
+        horzLines: { color: "#334155" },
+      },
+      crosshair: { mode: LightweightCharts.CrosshairMode.Normal },
+      priceScale: { borderColor: "#334155" },
+    });
+
+    lineSeries = chart.addLineSeries({ color: "#4ade80", lineWidth: 2 });
+    lineSeries.setData([]); // start empty
+
+    window.addEventListener("resize", () => {
+      if (chart) {
+        chart.resize(chartContainer.clientWidth, chartContainer.clientHeight);
+      }
+    });
+  }
 });
+
 
   </script>
 
