@@ -563,28 +563,29 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     // Places the trade according to current strategy contract type and stake
-    function placeTrade(contractType) {
-      if (!ws || ws.readyState !== WebSocket.OPEN) return;
+function placeTrade(contractType) {
+  if (!ws || ws.readyState !== WebSocket.OPEN) return;
 
-      const amount = +currentStake.toFixed(2);
-      const buyRequest = {
-        buy: 1,
-        price: amount,
-        parameters: {
-          amount,
-          basis: "stake",
-          contract_type: contractType,
-          currency: "USD",
-          duration: 5,
-          duration_unit: "t",
-          symbol: selectedSymbol,
-        }
-      };
+  const amount = +currentStake.toFixed(2);
 
-      ws.send(JSON.stringify(buyRequest));
-      botStatusEl.textContent = `Placing trade: ${contractType} for $${amount.toFixed(2)}`;
-      waitingForResult = true;
-    }
+  const buyRequest = {
+    buy: 1,
+    amount: amount,
+    basis: "stake",
+    contract_type: contractType,
+    currency: "USD",
+    duration: 5,
+    duration_unit: "t",
+    symbol: selectedSymbol,
+  };
+
+  console.log("Sending buy request:", buyRequest);
+
+  ws.send(JSON.stringify(buyRequest));
+  botStatusEl.textContent = `Placing trade: ${contractType} for $${amount.toFixed(2)}`;
+  waitingForResult = true;
+}
+
 
     // Updates the digit frequency bar chart
     function updateDigitChart() {
