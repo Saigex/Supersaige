@@ -25,9 +25,10 @@ document.addEventListener("DOMContentLoaded", () => {
   let lastKnownBalance = 0;
 
   // Strategy variables
-  let stakePercent = 0.01;           // starting stake as 1% of balance
-  let startingBalance = 0;
-  let totalProfitUSD = 0;
+  let stakePercent = 0.01;           // starting stake as 1% of balance (used only for display)
+  let startingBalance = 0;           // balance when bot started (used to calculate fixed stake step)
+  let currentStake = 0;              // actual stake in USD amount for next trade
+  let totalProfitUSD = 0;            // total profit accumulated
 
   connectBtn.onclick = () => {
     const loginUrl = `https://oauth.deriv.com/oauth2/authorize?app_id=${app_id}&redirect_uri=${redirect_uri}`;
@@ -85,6 +86,7 @@ document.addEventListener("DOMContentLoaded", () => {
         // Reset strategy variables on login
         startingBalance = 0;
         stakePercent = 0.01;
+        currentStake = 0;
         totalProfitUSD = 0;
 
         const chartContainer = document.getElementById("chart");
@@ -103,7 +105,10 @@ document.addEventListener("DOMContentLoaded", () => {
         let balance = parseFloat(data.balance.balance);
         lastKnownBalance = balance;
 
-        if (startingBalance === 0) startingBalance = balance;
+        if (startingBalance === 0) {
+          startingBalance = balance;
+          currentStake = startingBalance * stakePercent; // initial 1% stake in USD
+        }
 
         balanceEl.textContent = `Balance: $${balance.toFixed(2)}`;
         botBalanceEl.textContent = `Balance: $${balance.toFixed(2)}`;
@@ -123,8 +128,8 @@ document.addEventListener("DOMContentLoaded", () => {
         if (lineSeries) lineSeries.update({ time: Math.floor(tick.epoch), value: price });
         if (!isBotRunning) return;
 
-        if (lastDigit % 2 === 0) {
-          const stakeAmount = +(lastKnownBalance * stakePercent).toFixed(2);
+        if (lastDigit % 2 === 0) {  // only trade on even last digit as per your strategy
+          const stakeAmount = +currentStake.toFixed(2);
           console.log("Attempting trade with stake:", stakeAmount);
 
           if (stakeAmount < 1) {
@@ -151,14 +156,16 @@ document.addEventListener("DOMContentLoaded", () => {
 
         totalProfitUSD += profit;
 
-        // Update stakePercent after win or loss:
+        // Update stake after win or loss
         if (profit > 0) {
-          stakePercent += 0.01; // add 1% more after a win
+          // Win → add 1% of starting balance USD to current stake (linear increase)
+          currentStake += startingBalance * 0.01;
         } else {
-          stakePercent = 0.01;  // reset to 1% after loss
+          // Loss → reset to initial 1% stake
+          currentStake = startingBalance * 0.01;
         }
 
-        // Calculate total profit/loss percent
+        // Calculate total profit/loss percent relative to starting balance
         const profitPercent = (totalProfitUSD / startingBalance) * 100;
 
         // Stop bot on profit or loss thresholds
