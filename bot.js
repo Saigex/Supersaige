@@ -24,7 +24,6 @@ document.addEventListener("DOMContentLoaded", () => {
   let chart, lineSeries;
   let trades = [];
   let lastKnownBalance = 0;
-  let isSwitchingAccount = false;  // <-- NEW FLAG
 
   connectBtn.onclick = () => {
     const loginUrl = `https://oauth.deriv.com/oauth2/authorize?app_id=${app_id}&redirect_uri=${redirect_uri}`;
@@ -66,6 +65,12 @@ document.addEventListener("DOMContentLoaded", () => {
 
   function connectToDeriv(selectedToken) {
     token = selectedToken;
+
+    // Close previous connection if open
+    if (ws && ws.readyState === WebSocket.OPEN) {
+      ws.close();
+    }
+
     ws = new WebSocket(`wss://ws.derivws.com/websockets/v3?app_id=${app_id}`);
 
     ws.onopen = () => {
@@ -137,12 +142,10 @@ document.addEventListener("DOMContentLoaded", () => {
     };
 
     ws.onclose = () => {
-      if (!isSwitchingAccount) {  // <-- ONLY update UI if NOT switching account
-        statusEl.textContent = "Disconnected.";
-        botStatusEl.textContent = "Disconnected.";
-        startBtn.disabled = true;
-        stopBtn.disabled = true;
-      }
+      statusEl.textContent = "Disconnected.";
+      botStatusEl.textContent = "Disconnected.";
+      startBtn.disabled = true;
+      stopBtn.disabled = true;
     };
 
     function getBalance() {
@@ -230,37 +233,40 @@ document.addEventListener("DOMContentLoaded", () => {
         time: new Date().toLocaleTimeString(),
       });
     }
+  }
 
-    function addTradeToHistory(trade) {
-      trades.unshift(trade);
-      if (trades.length > 50) trades.pop();
+  // === Moved functions out here for global access ===
+
+  function addTradeToHistory(trade) {
+    trades.unshift(trade);
+    if (trades.length > 50) trades.pop();
+    renderTradeHistory();
+  }
+
+  function updateTradeProfit(contract_id, profit) {
+    const trade = trades.find(t => t.contract_id === contract_id);
+    if (trade) {
+      trade.profit = profit.toFixed(2);
       renderTradeHistory();
-    }
-
-    function updateTradeProfit(contract_id, profit) {
-      const trade = trades.find(t => t.contract_id === contract_id);
-      if (trade) {
-        trade.profit = profit.toFixed(2);
-        renderTradeHistory();
-      }
-    }
-
-    function renderTradeHistory() {
-      tradeHistoryBody.innerHTML = "";
-      trades.forEach(trade => {
-        const tr = document.createElement("tr");
-        tr.innerHTML = `
-          <td>${trade.contract_id}</td>
-          <td>${trade.type}</td>
-          <td>${trade.amount}</td>
-          <td>${trade.profit !== null ? trade.profit : "-"}</td>
-          <td>${trade.time}</td>
-        `;
-        tradeHistoryBody.appendChild(tr);
-      });
     }
   }
 
+  function renderTradeHistory() {
+    tradeHistoryBody.innerHTML = "";
+    trades.forEach(trade => {
+      const tr = document.createElement("tr");
+      tr.innerHTML = `
+        <td>${trade.contract_id}</td>
+        <td>${trade.type}</td>
+        <td>${trade.amount}</td>
+        <td>${trade.profit !== null ? trade.profit : "-"}</td>
+        <td>${trade.time}</td>
+      `;
+      tradeHistoryBody.appendChild(tr);
+    });
+  }
+
+  // 🟩 Start/Stop bot handlers
   startBtn.onclick = () => {
     if (lastKnownBalance <= 0) {
       botStatusEl.textContent = "Cannot start: Balance is zero.";
@@ -284,9 +290,8 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   };
 
+  // ✅ Switching accounts correctly
   accountSelector.addEventListener("change", (e) => {
-    isSwitchingAccount = true;   // <--- Set flag BEFORE closing
-
     if (ws) {
       ws.close();
     }
@@ -306,11 +311,6 @@ document.addEventListener("DOMContentLoaded", () => {
     stopBtn.disabled = true;
 
     const newToken = e.target.value;
-
-    // Wait briefly for socket to close cleanly, then reconnect
-    setTimeout(() => {
-      connectToDeriv(newToken);
-      isSwitchingAccount = false;  // Reset flag after reconnect
-    }, 300);
+    connectToDeriv(newToken);
   });
 });
