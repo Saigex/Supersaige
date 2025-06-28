@@ -6,7 +6,6 @@
   <title>Supersaige Deriv Bot</title>
   
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet" />
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
     :root {
       --bg-color: #0f172a;
@@ -41,12 +40,13 @@
       text-align: center;
       width: 100%;
       max-width: 1200px;
-      min-height: 600px;
+      min-height: 700px;
       display: flex;
       flex-direction: column;
       gap: 20px;
     }
 
+    /* Initial Connect Screen */
     #connectSection {
       display: flex;
       flex-direction: column;
@@ -83,7 +83,6 @@
       color: var(--secondary);
       font-size: 16px;
     }
-
     #dashboard {
       display: none;
       flex-direction: column;
@@ -117,7 +116,7 @@
       display: flex;
       gap: 20px;
       flex-grow: 1;
-      min-height: 400px;
+      min-height: 450px;
     }
 
     .chart-section {
@@ -125,7 +124,6 @@
       background: var(--card-bg);
       border-radius: 16px;
       padding: 20px;
-      min-height: 400px;
       display: flex;
       flex-direction: column;
     }
@@ -133,6 +131,16 @@
     .chart {
       flex-grow: 1;
       min-height: 360px;
+      margin-bottom: 20px;
+    }
+
+    #digitChartContainer {
+      background: #152a3a;
+      padding: 15px;
+      border-radius: 12px;
+      color: var(--secondary);
+      font-weight: 600;
+      user-select: none;
     }
 
     .control-panel {
@@ -159,14 +167,15 @@
       color: var(--primary);
     }
 
-    .strategy label {
+    .strategy label, .stake label {
       display: block;
       margin-bottom: 6px;
       font-weight: 600;
       color: var(--secondary);
+      text-align: left;
     }
 
-    .strategy select {
+    .stake input {
       width: 100%;
       padding: 8px;
       border-radius: 8px;
@@ -174,7 +183,9 @@
       background: var(--bg-color);
       color: var(--text-color);
       font-weight: 600;
-      cursor: pointer;
+      font-size: 16px;
+      text-align: center;
+      box-sizing: border-box;
     }
 
     .buttons {
@@ -212,6 +223,7 @@
       background: #dc2626;
     }
 
+    /* Trade History */
     #tradeHistorySection {
       margin-top: 30px;
       background: var(--card-bg);
@@ -259,6 +271,8 @@
 </head>
 <body>
   <div class="container">
+
+    <!-- Initial Connect Section -->
     <section id="connectSection">
       <h1>Supersaige Deriv Bot</h1>
       <button id="connectBtn">Connect to Deriv</button>
@@ -266,25 +280,26 @@
       <p id="balance"></p>
     </section>
 
+    <!-- Dashboard Section - hidden initially -->
     <section id="dashboard">
       <header>
         <h1>Supersaige Bot Dashboard</h1>
         <select id="accountSelector" title="Select Account"></select>
       </header>
-
       <main>
         <section class="chart-section">
           <div id="chart" class="chart"></div>
+          <div id="digitChartContainer">
+            <canvas id="digitChart" height="120"></canvas>
+            <small>Digit Frequency (%) - Last 100 Ticks</small>
+          </div>
         </section>
         <section class="control-panel">
           <div class="status" id="botStatus">Not started</div>
           <div class="balance" id="botBalance">Balance: -</div>
-          <div class="strategy">
-            <label for="strategySelect">Strategy:</label>
-            <select id="strategySelect">
-              <option value="even">Even Digit</option>
-              <option value="odd">Odd Digit</option>
-            </select>
+          <div class="stake">
+            <label for="stakeInput">Initial Stake Amount (USD, min $1):</label>
+            <input type="number" id="stakeInput" min="1" step="0.01" value="1" />
           </div>
           <div class="buttons">
             <button id="startBot" disabled>Start Bot</button>
@@ -292,12 +307,6 @@
           </div>
         </section>
       </main>
-
-      <section style="margin-top: 20px; background: var(--card-bg); border-radius: 16px; padding: 20px;">
-        <h2 style="color: var(--primary); margin-bottom: 12px;">Last Digit Frequency</h2>
-        <canvas id="digitChart" height="120"></canvas>
-      </section>
-
       <section id="tradeHistorySection">
         <h2>Trade History</h2>
         <table>
@@ -316,9 +325,11 @@
         </table>
       </section>
     </section>
+
   </div>
 
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/lightweight-charts@3.8.0/dist/lightweight-charts.standalone.production.js"></script>
-  <script src="bot.js"></script>
+
 </body>
 </html>
