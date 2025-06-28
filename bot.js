@@ -77,7 +77,7 @@ document.addEventListener("DOMContentLoaded", () => {
       ws.send(JSON.stringify({ authorize: token }));
     };
 
-    ws.onmessage = (msg) => {
+    ws.onmessage = async (msg) => {
       const data = JSON.parse(msg.data);
 
       if (data.msg_type === "authorize") {
@@ -85,11 +85,19 @@ document.addEventListener("DOMContentLoaded", () => {
         botStatusEl.textContent = `Logged in as: ${data.authorize.loginid}`;
         getBalance();
 
-        // Clear previous chart container content to avoid stacking charts
+        // Clear previous chart container content
         const chartContainer = document.getElementById("chart");
         chartContainer.innerHTML = "";
 
         initChart();
+
+        // Load historical data AFTER chart init and WebSocket open
+        try {
+          const historicalData = await loadHistoricalData(selectedSymbol);
+          lineSeries.setData(historicalData);
+        } catch (err) {
+          console.error("Error loading historical data:", err);
+        }
       }
 
       if (data.msg_type === "balance") {
@@ -108,31 +116,30 @@ document.addEventListener("DOMContentLoaded", () => {
       }
 
       if (data.msg_type === "tick" && data.tick) {
-  const tick = data.tick;
-  const price = parseFloat(tick.quote);
-  const lastDigit = parseInt(price.toString().slice(-1));
+        const tick = data.tick;
+        const price = parseFloat(tick.quote);
+        const lastDigit = parseInt(price.toString().slice(-1));
 
-  botStatusEl.textContent = `Last digit: ${lastDigit}`;
+        botStatusEl.textContent = `Last digit: ${lastDigit}`;
 
-  if (lineSeries) {
-    lineSeries.update({ time: Math.floor(tick.epoch), value: price });
-  }
+        if (lineSeries) {
+          lineSeries.update({ time: Math.floor(tick.epoch), value: price });
+        }
 
-  if (!isBotRunning) {
-    // If bot is not started, do nothing here
-    return;
-  }
+        if (!isBotRunning) {
+          // Prevent trading when bot is not running
+          return;
+        }
 
-  const strategy = strategySelect.value;
-  if (
-    (strategy === "even" && lastDigit % 2 === 0) ||
-    (strategy === "odd" && lastDigit % 2 !== 0)
-  ) {
-    botStatusEl.textContent = `Last digit: ${lastDigit} → Buying DIGIT${strategy.toUpperCase()}`;
-    makeDigitTrade(`DIGIT${strategy.toUpperCase()}`, selectedSymbol);
-  }
-}
-
+        const strategy = strategySelect.value;
+        if (
+          (strategy === "even" && lastDigit % 2 === 0) ||
+          (strategy === "odd" && lastDigit % 2 !== 0)
+        ) {
+          botStatusEl.textContent = `Last digit: ${lastDigit} → Buying DIGIT${strategy.toUpperCase()}`;
+          makeDigitTrade(`DIGIT${strategy.toUpperCase()}`, selectedSymbol);
+        }
+      }
 
       if (data.msg_type === "buy" && data.buy) {
         handleBuy(data.buy);
@@ -219,6 +226,7 @@ document.addEventListener("DOMContentLoaded", () => {
         lineWidth: 2,
       });
 
+      // Initially empty, replaced by historical data on authorize
       lineSeries.setData([]);
 
       window.addEventListener("resize", () => {
@@ -232,6 +240,42 @@ document.addEventListener("DOMContentLoaded", () => {
       }, 100);
 
       subscribeTicks(selectedSymbol);
+    }
+
+    // NEW function to load historical candles data from Deriv API
+    function loadHistoricalData(symbol) {
+      return new Promise((resolve, reject) => {
+        const req_id = 1;
+        // Send candles request
+        ws.send(JSON.stringify({
+          ticks_history: symbol,
+          end: "latest",
+          count: 100,
+          granularity: 60,
+          style: "candles",
+          req_id: req_id
+        }));
+
+        function onMessage(event) {
+          const data = JSON.parse(event.data);
+          if (data.req_id === req_id) {
+            if (data.history) {
+              ws.removeEventListener("message", onMessage);
+              // Map candles to {time, value}
+              const candleData = data.history.candles.map(candle => ({
+                time: candle.epoch,
+                value: candle.close
+              }));
+              resolve(candleData);
+            } else if (data.error) {
+              ws.removeEventListener("message", onMessage);
+              reject(data.error.message);
+            }
+          }
+        }
+
+        ws.addEventListener("message", onMessage);
+      });
     }
 
     function handleBuy(buyData) {
@@ -252,7 +296,6 @@ document.addEventListener("DOMContentLoaded", () => {
           tradeType = buyData.contract_type;
         }
       } else if (buyData.longcode) {
-        // Fallback: parse from longcode for simpler type
         if (/rise/i.test(buyData.longcode) || /call/i.test(buyData.longcode)) {
           tradeType = "Rise";
         } else if (/fall/i.test(buyData.longcode) || /put/i.test(buyData.longcode)) {
