@@ -229,21 +229,25 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     function handleBuy(buyData) {
-      console.log("Buy Data:", buyData);  // For debugging to see actual data shape
+      console.log("Buy Data:", buyData); // Debug log to inspect buy object
 
       botStatusEl.textContent = `Trade Placed: ${buyData.contract_id}`;
 
+      // Use fallback for type and amount if undefined
+      const tradeType = buyData.contract_type || buyData.longcode || "-";
+      const amount = buyData.buy_price || buyData.amount || "-";
+
       addTradeToHistory({
         contract_id: buyData.contract_id,
-        type: buyData.contract_type,
-        amount: buyData.buy_price,
+        type: tradeType,
+        amount: amount,
         profit: null,
         time: new Date().toLocaleTimeString(),
       });
     }
   }
 
-  // === Moved functions out here for global access ===
+  // === Global functions ===
 
   function addTradeToHistory(trade) {
     trades.unshift(trade);
@@ -256,6 +260,8 @@ document.addEventListener("DOMContentLoaded", () => {
     if (trade) {
       trade.profit = profit.toFixed(2);
       renderTradeHistory();
+    } else {
+      console.warn("Trade not found for contract_id:", contract_id);
     }
   }
 
@@ -265,8 +271,8 @@ document.addEventListener("DOMContentLoaded", () => {
       const tr = document.createElement("tr");
       tr.innerHTML = `
         <td>${trade.contract_id}</td>
-        <td>${trade.type !== undefined ? trade.type : "-"}</td>
-        <td>${trade.amount !== undefined ? trade.amount : "-"}</td>
+        <td>${trade.type}</td>
+        <td>${trade.amount}</td>
         <td>${trade.profit !== null ? trade.profit : "-"}</td>
         <td>${trade.time}</td>
       `;
