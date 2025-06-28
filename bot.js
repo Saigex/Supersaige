@@ -20,13 +20,13 @@ document.addEventListener("DOMContentLoaded", () => {
   let ws;
   let token;
   let isBotRunning = false;
-  let selectedSymbol = "R_75"; // Volatility 75 1s
+  let selectedSymbol = "R_100";
   let chart, lineSeries;
   let trades = [];
   let lastKnownBalance = 0;
 
   connectBtn.onclick = () => {
-    const loginUrl = `https://oauth.deriv.com/oauth2/authorize?app_id=${app_id}&redirect_uri=${redirect_uri}`;
+    const loginUrl = https://oauth.deriv.com/oauth2/authorize?app_id=${app_id}&redirect_uri=${redirect_uri};
     window.location.href = loginUrl;
   };
 
@@ -35,12 +35,12 @@ document.addEventListener("DOMContentLoaded", () => {
   const accounts = [];
 
   for (let i = 1; i <= 20; i++) {
-    const acct = urlParams.get(`acct${i}`);
-    const tok = urlParams.get(`token${i}`);
-    const currency = urlParams.get(`cur${i}`) || "";
+    const acct = urlParams.get(acct${i});
+    const tok = urlParams.get(token${i});
+    const currency = urlParams.get(cur${i}) || "";
     if (acct && tok) {
       accounts.push({ loginid: acct, token: tok, currency });
-      console.log(`Account ${i}:`, acct, tok, currency);
+      console.log(Account ${i}:, acct, tok, currency);
     }
   }
 
@@ -56,7 +56,7 @@ document.addEventListener("DOMContentLoaded", () => {
     accounts.forEach(acc => {
       const option = document.createElement("option");
       option.value = acc.token;
-      option.textContent = `${acc.loginid} (${acc.currency})`;
+      option.textContent = ${acc.loginid} (${acc.currency});
       accountSelector.appendChild(option);
     });
 
@@ -65,7 +65,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   function connectToDeriv(selectedToken) {
     token = selectedToken;
-    ws = new WebSocket(`wss://ws.derivws.com/websockets/v3?app_id=${app_id}`);
+    ws = new WebSocket(wss://ws.derivws.com/websockets/v3?app_id=${app_id});
 
     ws.onopen = () => {
       ws.send(JSON.stringify({ authorize: token }));
@@ -75,8 +75,8 @@ document.addEventListener("DOMContentLoaded", () => {
       const data = JSON.parse(msg.data);
 
       if (data.msg_type === "authorize") {
-        statusEl.textContent = `Logged in as: ${data.authorize.loginid}`;
-        botStatusEl.textContent = `Logged in as: ${data.authorize.loginid}`;
+        statusEl.textContent = Logged in as: ${data.authorize.loginid};
+        botStatusEl.textContent = Logged in as: ${data.authorize.loginid};
         getBalance();
         initChart();
       }
@@ -85,8 +85,8 @@ document.addEventListener("DOMContentLoaded", () => {
         let balance = parseFloat(data.balance.balance);
         lastKnownBalance = balance;
 
-        balanceEl.textContent = `Balance: $${balance.toFixed(2)}`;
-        botBalanceEl.textContent = `Balance: $${balance.toFixed(2)}`;
+        balanceEl.textContent = Balance: $${balance.toFixed(2)};
+        botBalanceEl.textContent = Balance: $${balance.toFixed(2)};
 
         if (balance <= 0) {
           startBtn.disabled = true;
@@ -100,7 +100,7 @@ document.addEventListener("DOMContentLoaded", () => {
         const tick = data.tick;
         const price = parseFloat(tick.quote);
         const lastDigit = parseInt(price.toString().slice(-1));
-        botStatusEl.textContent = `Last digit: ${lastDigit}`;
+        botStatusEl.textContent = Last digit: ${lastDigit};
 
         if (lineSeries) {
           lineSeries.update({ time: Math.floor(tick.epoch), value: price });
@@ -108,8 +108,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
         const strategy = strategySelect.value;
         if ((strategy === "even" && lastDigit % 2 === 0) || (strategy === "odd" && lastDigit % 2 !== 0)) {
-          botStatusEl.textContent = `Last digit: ${lastDigit} → Buying DIGIT${strategy.toUpperCase()}`;
-          makeDigitTrade(`DIGIT${strategy.toUpperCase()}`, selectedSymbol);
+          botStatusEl.textContent = Last digit: ${lastDigit} → Buying DIGIT${strategy.toUpperCase()};
+          makeDigitTrade(DIGIT${strategy.toUpperCase()}, selectedSymbol);
         }
       }
 
@@ -120,7 +120,7 @@ document.addEventListener("DOMContentLoaded", () => {
       if (data.msg_type === "proposal_open_contract") {
         if (data.proposal_open_contract.is_sold) {
           const profit = data.proposal_open_contract.profit;
-          botStatusEl.textContent = `Trade ended. Profit: $${profit.toFixed(2)}`;
+          botStatusEl.textContent = Trade ended. Profit: $${profit.toFixed(2)};
           updateTradeProfit(data.proposal_open_contract.contract_id, profit);
         }
       }
@@ -167,57 +167,55 @@ document.addEventListener("DOMContentLoaded", () => {
     }));
   }
 
-  function initChart() {
-    const chartContainer = document.getElementById("chart");
+function initChart() {
+  const chartContainer = document.getElementById("chart");
 
-    if (!window.LightweightCharts) {
-      console.error("LightweightCharts library is not loaded!");
-      return;
-    }
-
-    chart = LightweightCharts.createChart(chartContainer, {
-      width: chartContainer.clientWidth,
-      height: chartContainer.clientHeight,
-      layout: {
-        backgroundColor: "#0f172a",
-        textColor: "#94a3b8",
-      },
-      grid: {
-        vertLines: { color: '#334155' },
-        horzLines: { color: '#334155' },
-      },
-      crosshair: {
-        mode: LightweightCharts.CrosshairMode.Normal,
-      },
-      priceScale: {
-        borderColor: '#334155',
-      },
-    });
-
-    lineSeries = chart.addLineSeries({
-      color: '#4ade80',
-      lineWidth: 2,
-    });
-
-    lineSeries.setData([]); // Initially empty data.
-
-    // Resize chart when window size changes
-    window.addEventListener("resize", () => {
-      if (chart) {
-        chart.resize(chartContainer.clientWidth, chartContainer.clientHeight);
-      }
-    });
-
-    setTimeout(() => {
-      chart.resize(chartContainer.clientWidth, chartContainer.clientHeight);
-    }, 100);
-
-    // Subscribe to Volatility 75 (1s) ticks
-    subscribeTicks(selectedSymbol);
+  if (!window.LightweightCharts) {
+    console.error("LightweightCharts library is not loaded!");
+    return;
   }
 
+  chart = LightweightCharts.createChart(chartContainer, {
+    width: chartContainer.clientWidth,
+    height: chartContainer.clientHeight,
+    layout: {
+      backgroundColor: "#0f172a",
+      textColor: "#94a3b8",
+    },
+    grid: {
+      vertLines: { color: '#334155' },
+      horzLines: { color: '#334155' },
+    },
+    crosshair: {
+      mode: LightweightCharts.CrosshairMode.Normal,
+    },
+    priceScale: {
+      borderColor: '#334155',
+    },
+  });
+
+  lineSeries = chart.addLineSeries({
+    color: '#4ade80',
+    lineWidth: 2,
+  });
+
+  lineSeries.setData([]);
+
+  // Resize chart when window size changes
+  window.addEventListener("resize", () => {
+    if (chart) {
+      chart.resize(chartContainer.clientWidth, chartContainer.clientHeight);
+    }
+  });
+
+  setTimeout(() => {
+    chart.resize(chartContainer.clientWidth, chartContainer.clientHeight);
+  }, 100);
+}
+
+
   function handleBuy(buyData) {
-    botStatusEl.textContent = `Trade Placed: ${buyData.contract_id}`;
+    botStatusEl.textContent = Trade Placed: ${buyData.contract_id};
     addTradeToHistory({
       contract_id: buyData.contract_id,
       type: buyData.contract_type,
@@ -245,13 +243,13 @@ document.addEventListener("DOMContentLoaded", () => {
     tradeHistoryBody.innerHTML = "";
     trades.forEach(trade => {
       const tr = document.createElement("tr");
-      tr.innerHTML = `
+      tr.innerHTML = 
         <td>${trade.contract_id}</td>
         <td>${trade.type}</td>
         <td>${trade.amount}</td>
         <td>${trade.profit !== null ? trade.profit : "-"}</td>
         <td>${trade.time}</td>
-      `;
+      ;
       tradeHistoryBody.appendChild(tr);
     });
   }
@@ -274,9 +272,21 @@ document.addEventListener("DOMContentLoaded", () => {
     if (isBotRunning) {
       isBotRunning = false;
       botStatusEl.textContent = "Bot stopped.";
-      stopBtn.disabled = true;
       startBtn.disabled = false;
+      stopBtn.disabled = true;
       forgetTicks();
     }
   };
+
+  window.addEventListener("resize", () => {
+    if (chart) {
+      chart.applyOptions({ width: document.getElementById("chart").clientWidth });
+    }
+  });
+
+  accountSelector.addEventListener("change", (e) => {
+    if (ws) ws.close();
+    const newToken = e.target.value;
+    connectToDeriv(newToken);
+  });
 });
