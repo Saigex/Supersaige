@@ -12,7 +12,6 @@ document.addEventListener("DOMContentLoaded", () => {
   const accountSelector = document.getElementById("accountSelector");
   const botStatusEl = document.getElementById("botStatus");
   const botBalanceEl = document.getElementById("botBalance");
-  const strategySelect = document.getElementById("strategySelect");
   const startBtn = document.getElementById("startBot");
   const stopBtn = document.getElementById("stopBot");
   const tradeHistoryBody = document.getElementById("tradeHistoryBody");
@@ -24,6 +23,12 @@ document.addEventListener("DOMContentLoaded", () => {
   let chart, lineSeries;
   let trades = [];
   let lastKnownBalance = 0;
+
+  // Guardian strategy variables
+  let stakePercent = 0.01;           // Start at 1%
+  let consecutiveWins = 0;
+  let startingBalance = 0;
+  let totalProfitUSD = 0;
 
   connectBtn.onclick = () => {
     const loginUrl = `https://oauth.deriv.com/oauth2/authorize?app_id=${app_id}&redirect_uri=${redirect_uri}`;
@@ -77,12 +82,15 @@ document.addEventListener("DOMContentLoaded", () => {
         botStatusEl.textContent = `Logged in as: ${data.authorize.loginid}`;
         getBalance();
 
+        // Reset Guardian strategy vars on new login
+        startingBalance = 0;
+        stakePercent = 0.01;
+        consecutiveWins = 0;
+        totalProfitUSD = 0;
+
         const chartContainer = document.getElementById("chart");
         chartContainer.innerHTML = "";
         initChart();
-
-        // ✅ Always subscribe to ticks — even before bot starts
-        subscribeTicks(selectedSymbol);
 
         try {
           const historicalData = await loadHistoricalData(selectedSymbol);
@@ -95,6 +103,8 @@ document.addEventListener("DOMContentLoaded", () => {
       if (data.msg_type === "balance") {
         let balance = parseFloat(data.balance.balance);
         lastKnownBalance = balance;
+
+        if (startingBalance === 0) startingBalance = balance;
 
         balanceEl.textContent = `Balance: $${balance.toFixed(2)}`;
         botBalanceEl.textContent = `Balance: $${balance.toFixed(2)}`;
@@ -113,19 +123,55 @@ document.addEventListener("DOMContentLoaded", () => {
 
         if (!isBotRunning) return;
 
-        const strategy = strategySelect.value;
-        if ((strategy === "even" && lastDigit % 2 === 0) || (strategy === "odd" && lastDigit % 2 !== 0)) {
-          botStatusEl.textContent = `Last digit: ${lastDigit} → Buying DIGIT${strategy.toUpperCase()}`;
-          makeDigitTrade(`DIGIT${strategy.toUpperCase()}`, selectedSymbol);
+        // Guardian strategy: trade only on even last digits
+        if (lastDigit % 2 === 0) {
+          const stakeAmount = +(lastKnownBalance * stakePercent).toFixed(2);
+          botStatusEl.textContent = `Last digit: ${lastDigit} → Buying DIGITEVEN with stake $${stakeAmount}`;
+
+          makeDigitTradeWithAmount("DIGITEVEN", selectedSymbol, stakeAmount);
         }
       }
 
-      if (data.msg_type === "buy" && data.buy) handleBuy(data.buy);
+      if (data.msg_type === "buy" && data.buy) {
+        handleBuy(data.buy);
+      }
 
       if (data.msg_type === "proposal_open_contract" && data.proposal_open_contract.is_sold) {
         const profit = data.proposal_open_contract.profit;
+        const contract_id = data.proposal_open_contract.contract_id;
+
         botStatusEl.textContent = `Trade ended. Profit: $${profit.toFixed(2)}`;
-        updateTradeProfit(data.proposal_open_contract.contract_id, profit);
+
+        updateTradeProfit(contract_id, profit);
+
+        // Update total profit in USD
+        totalProfitUSD += profit;
+
+        // Update stakePercent according to win/loss
+        if (profit > 0) {
+          consecutiveWins++;
+          if (consecutiveWins > 3) consecutiveWins = 3;  // max 3 consecutive doubles
+          stakePercent = Math.min(0.01 * Math.pow(2, consecutiveWins), 0.2); // cap max stake to 20%
+        } else {
+          consecutiveWins = 0;
+          stakePercent = 0.01; // reset to 1%
+        }
+
+        // Calculate profit/loss in % relative to starting balance
+        const profitPercent = (totalProfitUSD / startingBalance) * 100;
+
+        // Stop conditions
+        if (profitPercent >= 15) {
+          botStatusEl.textContent = `Profit target reached (${profitPercent.toFixed(2)}%). Stopping bot.`;
+          isBotRunning = false;
+          startBtn.disabled = false;
+          stopBtn.disabled = true;
+        } else if (profitPercent <= -10) {
+          botStatusEl.textContent = `Loss limit reached (${profitPercent.toFixed(2)}%). Stopping bot.`;
+          isBotRunning = false;
+          startBtn.disabled = false;
+          stopBtn.disabled = true;
+        }
       }
     };
 
@@ -145,16 +191,12 @@ document.addEventListener("DOMContentLoaded", () => {
       ws.send(JSON.stringify({ balance: 1, subscribe: 1 }));
     }
 
-    function subscribeTicks(symbol) {
-      ws.send(JSON.stringify({ ticks: symbol, subscribe: 1 }));
-    }
-
-    function makeDigitTrade(contractType, symbol) {
+    function makeDigitTradeWithAmount(contractType, symbol, amount) {
       ws.send(JSON.stringify({
         buy: 1,
         price: 1,
         parameters: {
-          amount: 1,
+          amount: amount,
           basis: "stake",
           contract_type: contractType,
           currency: "USD",
@@ -272,11 +314,7 @@ document.addEventListener("DOMContentLoaded", () => {
     botStatusEl.textContent = "Bot started.";
     startBtn.disabled = true;
     stopBtn.disabled = false;
-
-    // Still sending ticks subscription just in case
-    if (ws.readyState === WebSocket.OPEN) {
-      ws.send(JSON.stringify({ ticks: selectedSymbol, subscribe: 1 }));
-    }
+    if (ws.readyState === WebSocket.OPEN) ws.send(JSON.stringify({ ticks: selectedSymbol, subscribe: 1 }));
   };
 
   stopBtn.onclick = () => {
@@ -284,11 +322,7 @@ document.addEventListener("DOMContentLoaded", () => {
     botStatusEl.textContent = "Bot stopped.";
     startBtn.disabled = false;
     stopBtn.disabled = true;
-
-    // ✅ Removed forget_all → keep ticks for chart live
-    // if (ws.readyState === WebSocket.OPEN) {
-    //   ws.send(JSON.stringify({ forget_all: ["ticks"] }));
-    // }
+    if (ws.readyState === WebSocket.OPEN) ws.send(JSON.stringify({ forget_all: ["ticks"] }));
   };
 
   accountSelector.addEventListener("change", (e) => {
