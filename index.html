@@ -331,6 +331,7 @@
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/lightweight-charts@3.8.0/dist/lightweight-charts.standalone.production.js"></script>
   <script>
+// === FULL UPDATED SCRIPT WITH COLORED TRADE HISTORY ===
 document.addEventListener("DOMContentLoaded", () => {
   const app_id = "82467";
   const redirect_uri = "https://saigex.github.io/Supersaige";
@@ -338,19 +339,17 @@ document.addEventListener("DOMContentLoaded", () => {
   const connectBtn = document.getElementById("connectBtn");
   const statusEl = document.getElementById("status");
   const balanceEl = document.getElementById("balance");
-
   const connectSection = document.getElementById("connectSection");
   const dashboardSection = document.getElementById("dashboard");
-
   const accountSelector = document.getElementById("accountSelector");
   const botStatusEl = document.getElementById("botStatus");
   const botBalanceEl = document.getElementById("botBalance");
   const startBtn = document.getElementById("startBot");
   const stopBtn = document.getElementById("stopBot");
-  const tradeHistoryBody = document.getElementById("tradeHistoryBody");
   const stakeInput = document.getElementById("stakeInput");
-
+  const tradeHistoryBody = document.getElementById("tradeHistoryBody");
   const digitCanvas = document.getElementById("digitChart");
+
   const digitChart = new Chart(digitCanvas, {
     type: 'bar',
     data: {
@@ -388,8 +387,7 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 
   const last100Digits = [];
-  let ws;
-  let token;
+  let ws, token;
   let isBotRunning = false;
   let selectedSymbol = "R_100";
   let chart, lineSeries;
@@ -402,13 +400,21 @@ document.addEventListener("DOMContentLoaded", () => {
   let currentContractType = "DIGITUNDER9";
 
   connectBtn.onclick = () => {
-    const loginUrl = `https://oauth.deriv.com/oauth2/authorize?app_id=${app_id}&redirect_uri=${redirect_uri}`;
-    window.location.href = loginUrl;
+    window.location.href = `https://oauth.deriv.com/oauth2/authorize?app_id=${app_id}&redirect_uri=${redirect_uri}`;
   };
+
+  if (stakeInput) {
+    stakeInput.value = initialStake.toFixed(2);
+    stakeInput.addEventListener("change", () => {
+      let val = parseFloat(stakeInput.value);
+      if (isNaN(val) || val < 1) val = 1;
+      stakeInput.value = val.toFixed(2);
+      initialStake = currentStake = val;
+    });
+  }
 
   const urlParams = new URLSearchParams(window.location.search);
   const accounts = [];
-
   for (let i = 1; i <= 20; i++) {
     const acct = urlParams.get(`acct${i}`);
     const tok = urlParams.get(`token${i}`);
@@ -443,36 +449,46 @@ document.addEventListener("DOMContentLoaded", () => {
 
     ws.onmessage = async (msg) => {
       const data = JSON.parse(msg.data);
+
       if (data.msg_type === "authorize") {
         statusEl.textContent = `Logged in as: ${data.authorize.loginid}`;
-        botStatusEl.textContent = statusEl.textContent;
+        botStatusEl.textContent = `Logged in as: ${data.authorize.loginid}`;
         getBalance();
+
         currentStake = initialStake;
         waitingForResult = false;
         currentContractType = "DIGITUNDER9";
+
         document.getElementById("chart").innerHTML = "";
         initChart();
-        const history = await loadHistoricalData(selectedSymbol);
-        lineSeries.setData(history);
+        try {
+          const historical = await loadHistoricalData(selectedSymbol);
+          lineSeries.setData(historical);
+        } catch (e) {
+          console.error("Chart load error:", e);
+        }
+
         ws.send(JSON.stringify({ ticks: selectedSymbol, subscribe: 1 }));
       }
 
       if (data.msg_type === "balance") {
-        const balance = parseFloat(data.balance.balance);
+        let balance = parseFloat(data.balance.balance);
         lastKnownBalance = balance;
         balanceEl.textContent = botBalanceEl.textContent = `Balance: $${balance.toFixed(2)}`;
-        startBtn.disabled = balance < 1;
       }
 
       if (data.msg_type === "tick" && data.tick) {
-        const price = parseFloat(data.tick.quote);
-        const lastDigit = extractLastDigit(price);
-        if (lastDigit === null) return;
+        const tick = data.tick;
+        const price = parseFloat(tick.quote);
+        const lastDigit = parseInt(price.toString().slice(-1));
+
         last100Digits.push(lastDigit);
         if (last100Digits.length > 100) last100Digits.shift();
         updateDigitChart();
-        if (lineSeries) lineSeries.update({ time: Math.floor(data.tick.epoch), value: price });
+
         botStatusEl.textContent = `Last digit: ${lastDigit}`;
+        if (lineSeries) lineSeries.update({ time: Math.floor(tick.epoch), value: price });
+
         if (!isBotRunning || waitingForResult) return;
         placeTrade(currentContractType);
       }
@@ -481,134 +497,128 @@ document.addEventListener("DOMContentLoaded", () => {
 
       if (data.msg_type === "proposal_open_contract" && data.proposal_open_contract.is_sold) {
         const profit = data.proposal_open_contract.profit;
-        const id = data.proposal_open_contract.contract_id;
-        updateTradeProfit(id, profit);
+        const contract_id = data.proposal_open_contract.contract_id;
+        updateTradeProfit(contract_id, profit);
+
         waitingForResult = false;
         if (profit > 0) {
           currentStake = initialStake;
           currentContractType = "DIGITUNDER9";
-          botStatusEl.textContent = `Win! Stake reset.`;
         } else {
           currentStake = +(currentStake * 1.25).toFixed(2);
-          if (currentContractType === "DIGITUNDER9") {
-            currentContractType = "DIGITUNDER5";
-          }
-          botStatusEl.textContent = `Loss. Stake increased to $${currentStake.toFixed(2)}`;
+          if (currentContractType === "DIGITUNDER9") currentContractType = "DIGITUNDER5";
         }
       }
     };
 
-    ws.onerror = () => botStatusEl.textContent = statusEl.textContent = "WebSocket error.";
-    ws.onclose = () => {
-      statusEl.textContent = "Disconnected.";
-      botStatusEl.textContent = "Disconnected.";
-      startBtn.disabled = stopBtn.disabled = true;
-    };
+    function placeTrade(contractType) {
+      if (!ws || ws.readyState !== WebSocket.OPEN) return;
+
+      const amount = +currentStake.toFixed(2);
+      const buyRequest = {
+        buy: 1,
+        price: amount,
+        parameters: {
+          amount,
+          basis: "stake",
+          contract_type: contractType,
+          currency: "USD",
+          duration: 5,
+          duration_unit: "t",
+          symbol: selectedSymbol,
+        }
+      };
+
+      ws.send(JSON.stringify(buyRequest));
+      botStatusEl.textContent = `Placing trade: ${contractType} for $${amount.toFixed(2)}`;
+      waitingForResult = true;
+    }
+
+    function updateDigitChart() {
+      const counts = Array(10).fill(0);
+      last100Digits.forEach(d => counts[d]++);
+      const total = last100Digits.length;
+      digitChart.data.datasets[0].data = counts.map(c => (c / total) * 100);
+      digitChart.update();
+    }
 
     function getBalance() {
       ws.send(JSON.stringify({ balance: 1, subscribe: 1 }));
     }
 
-    function placeTrade(type) {
-      if (!ws || ws.readyState !== WebSocket.OPEN) return;
-      if (currentStake < 1) {
-        stopBtn.click();
-        return;
-      }
-      const buyRequest = {
-        buy: 1,
-        price: +currentStake.toFixed(2),
-        parameters: {
-          amount: +currentStake.toFixed(2),
-          basis: "stake",
-          contract_type: type,
-          currency: "USD",
-          duration: 5,
-          duration_unit: "t",
-          symbol: selectedSymbol
+    function handleBuy(buyData) {
+      addTradeToHistory({
+        contract_id: buyData.contract_id,
+        type: buyData.contract_type,
+        amount: buyData.buy_price,
+        profit: null,
+        time: new Date().toLocaleTimeString(),
+      });
+    }
+
+    function loadHistoricalData(symbol) {
+      return new Promise((resolve, reject) => {
+        const req_id = 12345;
+        ws.send(JSON.stringify({
+          ticks_history: symbol,
+          end: "latest",
+          count: 100,
+          granularity: 60,
+          style: "candles",
+          req_id: req_id
+        }));
+
+        function onMessage(event) {
+          const data = JSON.parse(event.data);
+          if (data.req_id === req_id) {
+            ws.removeEventListener("message", onMessage);
+            if (data.candles) {
+              const candles = data.candles.map(c => ({ time: c.epoch, value: c.close }));
+              resolve(candles);
+            } else reject("No candles returned.");
+          }
         }
-      };
-      ws.send(JSON.stringify(buyRequest));
-      waitingForResult = true;
+
+        ws.addEventListener("message", onMessage);
+      });
     }
   }
 
-  function initChart() {
-    const chartContainer = document.getElementById("chart");
-    chart = LightweightCharts.createChart(chartContainer, {
-      width: chartContainer.clientWidth,
-      height: chartContainer.clientHeight,
-      layout: { backgroundColor: "#0f172a", textColor: "#94a3b8" },
-      grid: { vertLines: { color: "#334155" }, horzLines: { color: "#334155" } },
-    });
-    lineSeries = chart.addLineSeries({ color: "#4ade80", lineWidth: 2 });
-    window.addEventListener("resize", () => {
-      chart.resize(chartContainer.clientWidth, chartContainer.clientHeight);
-    });
-  }
-
-  function extractLastDigit(price) {
-    const str = price.toString();
-    for (let i = str.length - 1; i >= 0; i--) {
-      if ("0123456789".includes(str[i])) return parseInt(str[i]);
-    }
-    return null;
-  }
-
-  function updateDigitChart() {
-    const counts = Array(10).fill(0);
-    last100Digits.forEach(d => counts[d]++);
-    const percentages = counts.map(c => (c / last100Digits.length) * 100);
-    digitChart.data.datasets[0].data = percentages;
-    digitChart.update();
-  }
-
-  function handleBuy(buy) {
-    addTradeToHistory({
-      contract_id: buy.contract_id,
-      type: buy.contract_type,
-      amount: buy.buy_price,
-      profit: null,
-      time: new Date().toLocaleTimeString()
-    });
-  }
-
-  function updateTradeProfit(id, profit) {
-    const t = trades.find(t => t.contract_id === id);
-    if (t) {
-      t.profit = profit.toFixed(2);
-      renderTradeHistory();
-    }
-  }
-
-  function addTradeToHistory(t) {
-    trades.unshift(t);
+  function addTradeToHistory(trade) {
+    trades.unshift(trade);
     if (trades.length > 50) trades.pop();
     renderTradeHistory();
   }
 
+  function updateTradeProfit(contract_id, profit) {
+    const trade = trades.find(t => t.contract_id === contract_id);
+    if (trade) {
+      trade.profit = profit.toFixed(2);
+      renderTradeHistory();
+    }
+  }
+
   function renderTradeHistory() {
     tradeHistoryBody.innerHTML = "";
-    trades.forEach(t => {
+    trades.forEach(trade => {
+      const profit = parseFloat(trade.profit);
+      const profitClass = isNaN(profit) ? "" : profit >= 0 ? "profit" : "loss";
       const tr = document.createElement("tr");
       tr.innerHTML = `
-        <td>${t.contract_id}</td>
-        <td>${t.type}</td>
-        <td>${t.amount}</td>
-        <td>${t.profit ?? "-"}</td>
-        <td>${t.time}</td>
+        <td>${trade.contract_id}</td>
+        <td>${trade.type}</td>
+        <td>$${parseFloat(trade.amount).toFixed(2)}</td>
+        <td class="${profitClass}">${trade.profit !== null ? `$${parseFloat(trade.profit).toFixed(2)}` : "-"}</td>
+        <td>${trade.time}</td>
       `;
       tradeHistoryBody.appendChild(tr);
     });
   }
 
   startBtn.onclick = () => {
-    if (lastKnownBalance < 1) return;
-    const val = parseFloat(stakeInput.value);
-    initialStake = isNaN(val) || val < 1 ? 1 : val;
-    currentStake = initialStake;
     isBotRunning = true;
     waitingForResult = false;
+    botStatusEl.textContent = "Bot started.";
     startBtn.disabled = true;
     stopBtn.disabled = false;
   };
@@ -616,51 +626,21 @@ document.addEventListener("DOMContentLoaded", () => {
   stopBtn.onclick = () => {
     isBotRunning = false;
     waitingForResult = false;
-    currentContractType = "DIGITUNDER9";
     currentStake = initialStake;
+    currentContractType = "DIGITUNDER9";
+    botStatusEl.textContent = "Bot stopped.";
     startBtn.disabled = false;
     stopBtn.disabled = true;
-    if (ws?.readyState === WebSocket.OPEN) ws.send(JSON.stringify({ forget_all: ["ticks"] }));
+    if (ws.readyState === WebSocket.OPEN) ws.send(JSON.stringify({ forget_all: ["ticks"] }));
   };
 
-  accountSelector.addEventListener("change", e => {
+  accountSelector.addEventListener("change", (e) => {
     if (ws) ws.close();
     isBotRunning = false;
-    lastKnownBalance = 0;
     trades = [];
     renderTradeHistory();
-    balanceEl.textContent = botBalanceEl.textContent = "Balance: --";
-    botStatusEl.textContent = statusEl.textContent = "Switching accounts...";
-    startBtn.disabled = stopBtn.disabled = true;
     connectToDeriv(e.target.value);
   });
-
-  async function loadHistoricalData(symbol) {
-    return new Promise((resolve, reject) => {
-      const req_id = 1234;
-      ws.send(JSON.stringify({
-        ticks_history: symbol,
-        end: "latest",
-        count: 100,
-        granularity: 60,
-        style: "candles",
-        req_id
-      }));
-
-      function onMessage(event) {
-        const data = JSON.parse(event.data);
-        if (data.req_id === req_id) {
-          ws.removeEventListener("message", onMessage);
-          if (data.candles) {
-            const candles = data.candles.map(c => ({ time: c.epoch, value: c.close }));
-            resolve(candles);
-          } else reject("No candle data");
-        }
-      }
-
-      ws.addEventListener("message", onMessage);
-    });
-  }
 });
 
   </script>
