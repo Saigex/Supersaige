@@ -24,9 +24,8 @@ document.addEventListener("DOMContentLoaded", () => {
   let trades = [];
   let lastKnownBalance = 0;
 
-  // Guardian strategy variables
-  let stakePercent = 0.01;           // Start at 1%
-  let consecutiveWins = 0;
+  // Strategy variables
+  let stakePercent = 0.01;           // starting stake as 1% of balance
   let startingBalance = 0;
   let totalProfitUSD = 0;
 
@@ -77,15 +76,15 @@ document.addEventListener("DOMContentLoaded", () => {
     ws.onmessage = async (msg) => {
       const data = JSON.parse(msg.data);
       console.log("WS message received:", data);
+
       if (data.msg_type === "authorize") {
         statusEl.textContent = `Logged in as: ${data.authorize.loginid}`;
         botStatusEl.textContent = `Logged in as: ${data.authorize.loginid}`;
         getBalance();
 
-        // Reset Guardian strategy vars on new login
+        // Reset strategy variables on login
         startingBalance = 0;
         stakePercent = 0.01;
-        consecutiveWins = 0;
         totalProfitUSD = 0;
 
         const chartContainer = document.getElementById("chart");
@@ -114,32 +113,29 @@ document.addEventListener("DOMContentLoaded", () => {
       }
 
       if (data.msg_type === "tick" && data.tick) {
-  const tick = data.tick;
-  const price = parseFloat(tick.quote);
-  const lastDigit = parseInt(price.toString().slice(-1));
+        const tick = data.tick;
+        const price = parseFloat(tick.quote);
+        const lastDigit = parseInt(price.toString().slice(-1));
 
-  console.log("Tick received - lastDigit:", lastDigit);
+        console.log("Tick received - lastDigit:", lastDigit);
+        botStatusEl.textContent = `Last digit: ${lastDigit}`;
 
-  botStatusEl.textContent = `Last digit: ${lastDigit}`;
+        if (lineSeries) lineSeries.update({ time: Math.floor(tick.epoch), value: price });
+        if (!isBotRunning) return;
 
-  if (lineSeries) lineSeries.update({ time: Math.floor(tick.epoch), value: price });
+        if (lastDigit % 2 === 0) {
+          const stakeAmount = +(lastKnownBalance * stakePercent).toFixed(2);
+          console.log("Attempting trade with stake:", stakeAmount);
 
-  if (!isBotRunning) return;
+          if (stakeAmount < 1) {
+            console.warn("Stake too low to place trade, must be at least 1 USD");
+            return;
+          }
 
-  if (lastDigit % 2 === 0) {
-    const stakeAmount = +(lastKnownBalance * stakePercent).toFixed(2);
-    console.log("Attempting trade with stake:", stakeAmount);
-
-    if (stakeAmount < 1) {
-      console.warn("Stake too low to place trade, must be at least 1 USD");
-      return;
-    }
-
-    botStatusEl.textContent = `Last digit: ${lastDigit} → Buying DIGITEVEN with stake $${stakeAmount}`;
-
-    makeDigitTradeWithAmount("DIGITEVEN", selectedSymbol, stakeAmount);
-  }
-}
+          botStatusEl.textContent = `Last digit: ${lastDigit} → Buying DIGITEVEN with stake $${stakeAmount}`;
+          makeDigitTradeWithAmount("DIGITEVEN", selectedSymbol, stakeAmount);
+        }
+      }
 
       if (data.msg_type === "buy" && data.buy) {
         console.log("Buy response:", data.buy);
@@ -151,26 +147,21 @@ document.addEventListener("DOMContentLoaded", () => {
         const contract_id = data.proposal_open_contract.contract_id;
 
         botStatusEl.textContent = `Trade ended. Profit: $${profit.toFixed(2)}`;
-
         updateTradeProfit(contract_id, profit);
 
-        // Update total profit in USD
         totalProfitUSD += profit;
 
-        // Adjust stakePercent according to win/loss
+        // Update stakePercent after win or loss:
         if (profit > 0) {
-          consecutiveWins++;
-          if (consecutiveWins > 3) consecutiveWins = 3;  // max 3 consecutive doubles
-          stakePercent = Math.min(0.01 * Math.pow(2, consecutiveWins), 0.2); // max 20%
+          stakePercent += 0.01; // add 1% more after a win
         } else {
-          consecutiveWins = 0;
-          stakePercent = 0.01; // reset to 1%
+          stakePercent = 0.01;  // reset to 1% after loss
         }
 
-        // Calculate profit/loss in % relative to starting balance
+        // Calculate total profit/loss percent
         const profitPercent = (totalProfitUSD / startingBalance) * 100;
 
-        // Stop conditions
+        // Stop bot on profit or loss thresholds
         if (profitPercent >= 15) {
           botStatusEl.textContent = `Profit target reached (${profitPercent.toFixed(2)}%). Stopping bot.`;
           isBotRunning = false;
@@ -204,22 +195,22 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     function makeDigitTradeWithAmount(contractType, symbol, amount) {
-  const tradeRequest = {
-    buy: 1,
-    price: amount,
-    parameters: {
-      amount: amount,
-      basis: "stake",
-      contract_type: contractType,
-      currency: "USD",
-      duration: 1,
-      duration_unit: "t",
-      symbol: symbol
+      const tradeRequest = {
+        buy: 1,
+        price: amount,
+        parameters: {
+          amount: amount,
+          basis: "stake",
+          contract_type: contractType,
+          currency: "USD",
+          duration: 1,
+          duration_unit: "t",
+          symbol: symbol
+        }
+      };
+      console.log("Sending trade request:", tradeRequest);
+      ws.send(JSON.stringify(tradeRequest));
     }
-  };
-  console.log("Sending trade request:", tradeRequest);
-  ws.send(JSON.stringify(tradeRequest));
-}
 
     function initChart() {
       const chartContainer = document.getElementById("chart");
@@ -246,35 +237,34 @@ document.addEventListener("DOMContentLoaded", () => {
       });
     }
 
-function loadHistoricalData(symbol) {
-  return new Promise((resolve, reject) => {
-    const req_id = 9999;
-    ws.send(JSON.stringify({
-      ticks_history: symbol,
-      end: "latest",
-      count: 100,
-      granularity: 60,
-      style: "candles",
-      req_id: req_id
-    }));
+    function loadHistoricalData(symbol) {
+      return new Promise((resolve, reject) => {
+        const req_id = 9999;
+        ws.send(JSON.stringify({
+          ticks_history: symbol,
+          end: "latest",
+          count: 100,
+          granularity: 60,
+          style: "candles",
+          req_id: req_id
+        }));
 
-    function onMessage(event) {
-      const data = JSON.parse(event.data);
-      if (data.req_id === req_id) {
-        ws.removeEventListener("message", onMessage);
-        if (data.candles) {
-          const candles = data.candles.map(c => ({ time: c.epoch, value: c.close }));
-          resolve(candles);
-        } else {
-          reject(data.error?.message || "No candle data returned");
+        function onMessage(event) {
+          const data = JSON.parse(event.data);
+          if (data.req_id === req_id) {
+            ws.removeEventListener("message", onMessage);
+            if (data.candles) {
+              const candles = data.candles.map(c => ({ time: c.epoch, value: c.close }));
+              resolve(candles);
+            } else {
+              reject(data.error?.message || "No candle data returned");
+            }
+          }
         }
-      }
+
+        ws.addEventListener("message", onMessage);
+      });
     }
-
-    ws.addEventListener("message", onMessage);
-  });
-}
-
 
     function handleBuy(buyData) {
       const type = buyData.contract_type?.includes("DIGIT") ? buyData.contract_type :
