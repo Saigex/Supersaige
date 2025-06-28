@@ -114,29 +114,35 @@ document.addEventListener("DOMContentLoaded", () => {
       }
 
       if (data.msg_type === "tick" && data.tick) {
-        const tick = data.tick;
-        const price = parseFloat(tick.quote);
-        const lastDigit = parseInt(price.toString().slice(-1));
+  const tick = data.tick;
+  const price = parseFloat(tick.quote);
+  const lastDigit = parseInt(price.toString().slice(-1));
 
-        // Show last digit always
-        botStatusEl.textContent = `Last digit: ${lastDigit}`;
+  console.log("Tick received - lastDigit:", lastDigit);
 
-        if (lineSeries) lineSeries.update({ time: Math.floor(tick.epoch), value: price });
+  botStatusEl.textContent = `Last digit: ${lastDigit}`;
 
-        if (!isBotRunning) return;
+  if (lineSeries) lineSeries.update({ time: Math.floor(tick.epoch), value: price });
 
-        // Guardian strategy: trade only on even last digits
-        if (lastDigit % 2 === 0) {
-          // Calculate stake amount based on balance and stakePercent
-          const stakeAmount = +(lastKnownBalance * stakePercent).toFixed(2);
+  if (!isBotRunning) return;
 
-          botStatusEl.textContent = `Last digit: ${lastDigit} → Buying DIGITEVEN with stake $${stakeAmount}`;
+  if (lastDigit % 2 === 0) {
+    const stakeAmount = +(lastKnownBalance * stakePercent).toFixed(2);
+    console.log("Attempting trade with stake:", stakeAmount);
 
-          makeDigitTradeWithAmount("DIGITEVEN", selectedSymbol, stakeAmount);
-        }
-      }
+    if (stakeAmount < 1) {
+      console.warn("Stake too low to place trade, must be at least 1 USD");
+      return;
+    }
+
+    botStatusEl.textContent = `Last digit: ${lastDigit} → Buying DIGITEVEN with stake $${stakeAmount}`;
+
+    makeDigitTradeWithAmount("DIGITEVEN", selectedSymbol, stakeAmount);
+  }
+}
 
       if (data.msg_type === "buy" && data.buy) {
+        console.log("Buy response:", data.buy);
         handleBuy(data.buy);
       }
 
