@@ -144,7 +144,7 @@ function connectToDeriv(selectedToken) {
       startBtn.disabled = true;
       stopBtn.disabled = true;
     };
-  }
+
 
   function getBalance() {
     ws.send(JSON.stringify({ balance: 1, subscribe: 1 }));
