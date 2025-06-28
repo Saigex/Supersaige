@@ -567,34 +567,33 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     // Places the trade according to current strategy contract type and stake
-    function placeTrade(contractType) {
-      if (!ws || ws.readyState !== WebSocket.OPEN) return;
+    function placeTrade() {
+  if (!ws || ws.readyState !== WebSocket.OPEN) return;
 
-      const amount = +currentStake.toFixed(2);
+  const amount = +currentStake.toFixed(2);
+  const barrier = currentContractType === "DIGITUNDER9" ? 9 : 5;
 
-      // Determine barrier based on contract type
-      let barrier = 9; // default for DIGITUNDER9
-      if (contractType === "DIGITUNDER5") barrier = 5;
-
-      const buyRequest = {
-        buy: 1,
-        amount: amount,
-        basis: "stake",
-        contract_type: "DIGITUNDER",
-        currency: "USD",
-        duration: 5,
-        duration_unit: "t",
-        symbol: selectedSymbol,
-        barrier: barrier,  // IMPORTANT: barrier defines the digit under value
-        subscribe: 1
-      };
-
-      console.log("Sending buy request:", buyRequest);
-
-      ws.send(JSON.stringify(buyRequest));
-      botStatusEl.textContent = `Placing trade: DIGITUNDER${barrier} for $${amount.toFixed(2)}`;
-      waitingForResult = true;
+  const buyRequest = {
+    buy: 1,
+    price: amount,
+    parameters: {
+      amount: amount,
+      basis: "stake",
+      contract_type: "DIGITUNDER",
+      currency: "USD",
+      duration: 5,
+      duration_unit: "t",
+      symbol: selectedSymbol,
+      barrier: barrier
     }
+  };
+
+  console.log("Sending buy request:", buyRequest);
+  ws.send(JSON.stringify(buyRequest));
+  botStatusEl.textContent = `Placing trade: DIGITUNDER${barrier} for $${amount.toFixed(2)}`;
+  waitingForResult = true;
+}
+
 
     // Updates the digit frequency bar chart
     function updateDigitChart() {
