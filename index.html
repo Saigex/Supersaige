@@ -1,338 +1,319 @@
-document.addEventListener("DOMContentLoaded", () => {
-  const app_id = "82467";
-  const redirect_uri = "https://saigex.github.io/Supersaige";
-
-  const connectBtn = document.getElementById("connectBtn");
-  const statusEl = document.getElementById("status");
-  const balanceEl = document.getElementById("balance");
-
-  const connectSection = document.getElementById("connectSection");
-  const dashboardSection = document.getElementById("dashboard");
-
-  const accountSelector = document.getElementById("accountSelector");
-  const botStatusEl = document.getElementById("botStatus");
-  const botBalanceEl = document.getElementById("botBalance");
-  const strategySelect = document.getElementById("strategySelect");
-  const startBtn = document.getElementById("startBot");
-  const stopBtn = document.getElementById("stopBot");
-  const tradeHistoryBody = document.getElementById("tradeHistoryBody");
-
-  let ws;
-  let token;
-  let isBotRunning = false;
-  let selectedSymbol = "R_100";
-  let chart, lineSeries;
-  let trades = [];
-  let lastKnownBalance = 0;
-
-  connectBtn.onclick = () => {
-    const loginUrl = `https://oauth.deriv.com/oauth2/authorize?app_id=${app_id}&redirect_uri=${redirect_uri}`;
-    window.location.href = loginUrl;
-  };
-
-  // Extract access tokens from URL
-  const urlParams = new URLSearchParams(window.location.search);
-  const accounts = [];
-
-  for (let i = 1; i <= 20; i++) {
-    const acct = urlParams.get(`acct${i}`);
-    const tok = urlParams.get(`token${i}`);
-    const currency = urlParams.get(`cur${i}`) || "";
-    if (acct && tok) {
-      accounts.push({ loginid: acct, token: tok, currency });
-      console.log(`Account ${i}:`, acct, tok, currency);
-    }
-  }
-
-  if (accounts.length === 0) {
-    connectSection.style.display = "flex";
-    dashboardSection.style.display = "none";
-    statusEl.textContent = "No accounts found. Please connect again.";
-  } else {
-    connectSection.style.display = "none";
-    dashboardSection.style.display = "flex";
-
-    accountSelector.innerHTML = "";
-    accounts.forEach(acc => {
-      const option = document.createElement("option");
-      option.value = acc.token;
-      option.textContent = `${acc.loginid} (${acc.currency})`;
-      accountSelector.appendChild(option);
-    });
-
-    connectToDeriv(accounts[0].token);
-  }
-
-  function connectToDeriv(selectedToken) {
-    token = selectedToken;
-
-    // Close previous connection if open
-    if (ws && ws.readyState === WebSocket.OPEN) {
-      ws.close();
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Supersaige Deriv Bot</title>
+  
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg-color: #0f172a;
+      --primary: #4ade80;
+      --secondary: #94a3b8;
+      --text-color: white;
+      --card-bg: #1e293b;
     }
 
-    ws = new WebSocket(`wss://ws.derivws.com/websockets/v3?app_id=${app_id}`);
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
 
-    ws.onopen = () => {
-      ws.send(JSON.stringify({ authorize: token }));
-    };
+    body {
+      font-family: 'Poppins', sans-serif;
+      background: var(--bg-color);
+      color: var(--text-color);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      padding: 20px;
+    }
 
-    ws.onmessage = (msg) => {
-      const data = JSON.parse(msg.data);
+    .container {
+      background: var(--card-bg);
+      border-radius: 16px;
+      box-shadow: 0 0 20px rgba(0, 0, 0, 0.4);
+      padding: 40px;
+      text-align: center;
+      width: 100%;
+      max-width: 1200px;
+      min-height: 600px;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
 
-      if (data.msg_type === "authorize") {
-        statusEl.textContent = `Logged in as: ${data.authorize.loginid}`;
-        botStatusEl.textContent = `Logged in as: ${data.authorize.loginid}`;
-        getBalance();
+    /* Initial Connect Screen */
+    #connectSection {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      flex-grow: 1;
+    }
 
-        // Clear previous chart container content to avoid stacking charts
-        const chartContainer = document.getElementById("chart");
-        chartContainer.innerHTML = "";
+    #connectSection h1 {
+      font-size: 28px;
+      color: var(--primary);
+      margin-bottom: 24px;
+    }
 
-        initChart();
+    #connectBtn {
+      background: var(--primary);
+      color: var(--bg-color);
+      border: none;
+      border-radius: 8px;
+      padding: 12px 24px;
+      font-size: 16px;
+      cursor: pointer;
+      font-weight: 600;
+      transition: background 0.3s ease;
+      width: 180px;
+    }
+
+    #connectBtn:hover {
+      background: #22c55e;
+    }
+
+    #status, #balance {
+      margin-top: 20px;
+      color: var(--secondary);
+      font-size: 16px;
+    }
+    #dashboard {
+      display: none;
+      flex-direction: column;
+      height: 100%;
+    }
+
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 20px;
+    }
+
+    header h1 {
+      color: var(--primary);
+      font-weight: 600;
+      font-size: 28px;
+    }
+
+    #accountSelector {
+      background: var(--bg-color);
+      color: var(--text-color);
+      border: 1px solid var(--secondary);
+      border-radius: 8px;
+      padding: 8px 12px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    main {
+      display: flex;
+      gap: 20px;
+      flex-grow: 1;
+      min-height: 400px;
+    }
+
+    .chart-section {
+      flex: 2;
+      background: var(--card-bg);
+      border-radius: 16px;
+      padding: 20px;
+      min-height: 400px;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .chart {
+      flex-grow: 1;
+      min-height: 360px;
+    }
+
+    .control-panel {
+      flex: 1;
+      background: var(--card-bg);
+      border-radius: 16px;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+      color: var(--secondary);
+      font-weight: 600;
+    }
+
+    .status {
+      font-size: 16px;
+      min-height: 20px;
+      color: var(--secondary);
+    }
+
+    .balance {
+      font-size: 20px;
+      font-weight: 600;
+      color: var(--primary);
+    }
+
+    .strategy label {
+      display: block;
+      margin-bottom: 6px;
+      font-weight: 600;
+      color: var(--secondary);
+    }
+
+    .strategy select {
+      width: 100%;
+      padding: 8px;
+      border-radius: 8px;
+      border: none;
+      background: var(--bg-color);
+      color: var(--text-color);
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    .buttons {
+      display: flex;
+      gap: 10px;
+    }
+
+    .buttons button {
+      flex: 1;
+      padding: 12px;
+      border-radius: 8px;
+      font-weight: 600;
+      border: none;
+      cursor: pointer;
+      background: var(--primary);
+      color: var(--bg-color);
+      transition: background 0.3s ease;
+    }
+
+    .buttons button:hover:not(:disabled) {
+      background: #22c55e;
+    }
+
+    .buttons button:disabled {
+      background: #22c55e80;
+      cursor: not-allowed;
+    }
+
+    #stopBot {
+      background: #ef4444;
+      color: white;
+    }
+
+    #stopBot:hover:not(:disabled) {
+      background: #dc2626;
+    }
+
+    /* Trade History */
+    #tradeHistorySection {
+      margin-top: 30px;
+      background: var(--card-bg);
+      border-radius: 16px;
+      padding: 20px;
+      max-height: 280px;
+      overflow-y: auto;
+      color: var(--secondary);
+      font-weight: 600;
+    }
+
+    #tradeHistorySection h2 {
+      color: var(--primary);
+      margin-bottom: 12px;
+      font-weight: 600;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    th, td {
+      text-align: left;
+      padding: 8px;
+      font-size: 14px;
+      border-bottom: 1px solid #334155;
+    }
+
+    tr:hover {
+      background: #334155;
+    }
+
+    @media (max-width: 900px) {
+      main {
+        flex-direction: column;
+        min-height: auto;
       }
 
-      if (data.msg_type === "balance") {
-        let balance = parseFloat(data.balance.balance);
-        lastKnownBalance = balance;
-
-        balanceEl.textContent = `Balance: $${balance.toFixed(2)}`;
-        botBalanceEl.textContent = `Balance: $${balance.toFixed(2)}`;
-
-        if (balance <= 0) {
-          startBtn.disabled = true;
-          botStatusEl.textContent = "Cannot trade: Balance is zero.";
-        } else {
-          startBtn.disabled = false;
-        }
-      }
-
-      if (data.msg_type === "tick" && data.tick) {
-        const tick = data.tick;
-        const price = parseFloat(tick.quote);
-        const lastDigit = parseInt(price.toString().slice(-1));
-
-        botStatusEl.textContent = `Last digit: ${lastDigit}`;
-
-        if (lineSeries) {
-          lineSeries.update({ time: Math.floor(tick.epoch), value: price });
-        }
-
-        const strategy = strategySelect.value;
-        if (
-          (strategy === "even" && lastDigit % 2 === 0) ||
-          (strategy === "odd" && lastDigit % 2 !== 0)
-        ) {
-          botStatusEl.textContent = `Last digit: ${lastDigit} → Buying DIGIT${strategy.toUpperCase()}`;
-          makeDigitTrade(`DIGIT${strategy.toUpperCase()}`, selectedSymbol);
-        }
-      }
-
-      if (data.msg_type === "buy" && data.buy) {
-        handleBuy(data.buy);
-      }
-
-      if (data.msg_type === "proposal_open_contract") {
-        if (data.proposal_open_contract.is_sold) {
-          const profit = data.proposal_open_contract.profit;
-          botStatusEl.textContent = `Trade ended. Profit: $${profit.toFixed(2)}`;
-          updateTradeProfit(data.proposal_open_contract.contract_id, profit);
-        }
-      }
-    };
-
-    ws.onerror = () => {
-      statusEl.textContent = "WebSocket error.";
-      botStatusEl.textContent = "WebSocket error.";
-    };
-
-    ws.onclose = () => {
-      statusEl.textContent = "Disconnected.";
-      botStatusEl.textContent = "Disconnected.";
-      startBtn.disabled = true;
-      stopBtn.disabled = true;
-    };
-
-    function getBalance() {
-      ws.send(JSON.stringify({ balance: 1, subscribe: 1 }));
-    }
-
-    function subscribeTicks(symbol) {
-      ws.send(JSON.stringify({ ticks: symbol, subscribe: 1 }));
-    }
-
-    function forgetTicks() {
-      ws.send(JSON.stringify({ forget_all: ["ticks"] }));
-    }
-
-    function makeDigitTrade(contractType, symbol) {
-      ws.send(JSON.stringify({
-        buy: 1,
-        price: 1,
-        parameters: {
-          amount: 1,
-          basis: "stake",
-          contract_type: contractType,
-          currency: "USD",
-          duration: 1,
-          duration_unit: "t",
-          symbol: symbol
-        }
-      }));
-    }
-
-    function initChart() {
-      const chartContainer = document.getElementById("chart");
-
-      if (!window.LightweightCharts) {
-        console.error("LightweightCharts library is not loaded!");
-        return;
-      }
-
-      chart = LightweightCharts.createChart(chartContainer, {
-        width: chartContainer.clientWidth,
-        height: chartContainer.clientHeight,
-        layout: {
-          backgroundColor: "#0f172a",
-          textColor: "#94a3b8",
-        },
-        grid: {
-          vertLines: { color: "#334155" },
-          horzLines: { color: "#334155" },
-        },
-        crosshair: {
-          mode: LightweightCharts.CrosshairMode.Normal,
-        },
-        priceScale: {
-          borderColor: "#334155",
-        },
-      });
-
-      lineSeries = chart.addLineSeries({
-        color: "#4ade80",
-        lineWidth: 2,
-      });
-
-      lineSeries.setData([]);
-
-      window.addEventListener("resize", () => {
-        if (chart) {
-          chart.resize(chartContainer.clientWidth, chartContainer.clientHeight);
-        }
-      });
-
-      setTimeout(() => {
-        chart.resize(chartContainer.clientWidth, chartContainer.clientHeight);
-      }, 100);
-
-      subscribeTicks(selectedSymbol);
-    }
-
-    function handleBuy(buyData) {
-      console.log("Buy Data:", buyData); // Debug log to inspect buy object
-
-      botStatusEl.textContent = `Trade Placed: ${buyData.contract_id}`;
-
-      // Use fallback for type and amount if undefined
-      const tradeType = buyData.contract_type || buyData.longcode || "-";
-      const amount = buyData.buy_price || buyData.amount || "-";
-
-      addTradeToHistory({
-        contract_id: buyData.contract_id,
-        type: tradeType,
-        amount: amount,
-        profit: null,
-        time: new Date().toLocaleTimeString(),
-      });
-    }
-  }
-
-  // === Global functions ===
-
-  function addTradeToHistory(trade) {
-    trades.unshift(trade);
-    if (trades.length > 50) trades.pop();
-    renderTradeHistory();
-  }
-
-  function updateTradeProfit(contract_id, profit) {
-    const trade = trades.find(t => t.contract_id === contract_id);
-    if (trade) {
-      trade.profit = profit.toFixed(2);
-      renderTradeHistory();
-    } else {
-      console.warn("Trade not found for contract_id:", contract_id);
-    }
-  }
-
-  function renderTradeHistory() {
-    tradeHistoryBody.innerHTML = "";
-    trades.forEach(trade => {
-      const tr = document.createElement("tr");
-      tr.innerHTML = `
-        <td>${trade.contract_id}</td>
-        <td>${trade.type}</td>
-        <td>${trade.amount}</td>
-        <td>${trade.profit !== null ? trade.profit : "-"}</td>
-        <td>${trade.time}</td>
-      `;
-      tradeHistoryBody.appendChild(tr);
-    });
-  }
-
-  // 🟩 Start/Stop bot handlers
-  startBtn.onclick = () => {
-    if (lastKnownBalance <= 0) {
-      botStatusEl.textContent = "Cannot start: Balance is zero.";
-      return;
-    }
-    if (!isBotRunning) {
-      isBotRunning = true;
-      botStatusEl.textContent = "Bot started.";
-      startBtn.disabled = true;
-      stopBtn.disabled = false;
-
-      // Subscribe to ticks for the selected symbol
-      if (ws && ws.readyState === WebSocket.OPEN) {
-        ws.send(JSON.stringify({ ticks: selectedSymbol, subscribe: 1 }));
+      .chart-section, .control-panel {
+        min-height: 300px;
       }
     }
-  };
+  </style>
+</head>
+<body>
+  <div class="container">
 
-  stopBtn.onclick = () => {
-    if (isBotRunning) {
-      isBotRunning = false;
-      botStatusEl.textContent = "Bot stopped.";
-      startBtn.disabled = false;
-      stopBtn.disabled = true;
+    <!-- Initial Connect Section -->
+    <section id="connectSection">
+      <h1>Supersaige Deriv Bot</h1>
+      <button id="connectBtn">Connect to Deriv</button>
+      <p id="status"></p>
+      <p id="balance"></p>
+    </section>
 
-      if (ws && ws.readyState === WebSocket.OPEN) {
-        ws.send(JSON.stringify({ forget_all: ["ticks"] }));
-      }
-    }
-  };
+    <!-- Dashboard Section - hidden initially -->
+    <section id="dashboard">
+      <header>
+        <h1>Supersaige Bot Dashboard</h1>
+        <select id="accountSelector" title="Select Account"></select>
+      </header>
+      <main>
+        <section class="chart-section">
+          <div id="chart" class="chart"></div>
+        </section>
+        <section class="control-panel">
+          <div class="status" id="botStatus">Not started</div>
+          <div class="balance" id="botBalance">Balance: -</div>
+          <div class="strategy">
+            <label for="strategySelect">Strategy:</label>
+            <select id="strategySelect">
+              <option value="even">Even Digit</option>
+              <option value="odd">Odd Digit</option>
+            </select>
+          </div>
+          <div class="buttons">
+            <button id="startBot" disabled>Start Bot</button>
+            <button id="stopBot" disabled>Stop Bot</button>
+          </div>
+        </section>
+      </main>
+      <section id="tradeHistorySection">
+        <h2>Trade History</h2>
+        <table>
+          <thead>
+            <tr>
+              <th>Contract ID</th>
+              <th>Type</th>
+              <th>Amount</th>
+              <th>Profit/Loss</th>
+              <th>Time</th>
+            </tr>
+          </thead>
+          <tbody id="tradeHistoryBody">
+            <!-- Trades appended here -->
+          </tbody>
+        </table>
+      </section>
+    </section>
 
-  // ✅ Switching accounts correctly
-  accountSelector.addEventListener("change", (e) => {
-    if (ws) {
-      ws.close();
-    }
-
-    // Reset state
-    isBotRunning = false;
-    lastKnownBalance = 0;
-    trades = [];
-    renderTradeHistory();
-
-    // Reset UI
-    balanceEl.textContent = "Balance: --";
-    botBalanceEl.textContent = "Balance: --";
-    botStatusEl.textContent = "Switching accounts...";
-    statusEl.textContent = "Switching accounts...";
-    startBtn.disabled = true;
-    stopBtn.disabled = true;
-
-    const newToken = e.target.value;
-    connectToDeriv(newToken);
-  });
-});
+  </div>
+  <script src="https://cdn.jsdelivr.net/npm/lightweight-charts@3.8.0/dist/lightweight-charts.standalone.production.js"></script>
+  <script src="bot.js"></script>
+</html>
