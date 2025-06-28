@@ -167,37 +167,24 @@ document.addEventListener("DOMContentLoaded", () => {
     }));
   }
 
-function initChart() {
-    if (chart) {
-        console.log("Chart already initialized.");
-        return;  // Exit if chart is already initialized
+  function initChart() {
+    const chartContainer = document.getElementById("chart");
+
+    if (!window.LightweightCharts) {
+      console.error("LightweightCharts library is not loaded!");
+      return;
     }
 
-    const chartContainer = document.getElementById("chart");
     chart = LightweightCharts.createChart(chartContainer, {
-        width: chartContainer.clientWidth,
-        height: chartContainer.clientHeight,
-        layout: {
-            backgroundColor: "#0f172a",
-            textColor: "#94a3b8",
-        },
-        grid: {
-            vertLines: { color: '#334155' },
-            horzLines: { color: '#334155' },
-        },
-        crosshair: {
-            mode: LightweightCharts.CrosshairMode.Normal,
-        },
-        priceScale: {
-            borderColor: '#334155',
-        },
-    });
-
-    lineSeries = chart.addLineSeries({
-        color: '#4ade80',
-        lineWidth: 2,
-    });
-
-    lineSeries.setData([]);
-    console.log("Chart initialized.");
-}
+      width: chartContainer.clientWidth,
+      height: chartContainer.clientHeight,
+      layout: {
+        backgroundColor: "#0f172a",
+        textColor: "#94a3b8",
+      },
+      grid: {
+        vertLines: { color: '#334155' },
+        horzLines: { color: '#334155' },
+      },
+      crosshair: {
+        mode: LightweightCharts.CrosshairMode
