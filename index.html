@@ -349,11 +349,9 @@ document.addEventListener("DOMContentLoaded", () => {
   const tradeHistoryBody = document.getElementById("tradeHistoryBody");
   const digitCanvas = document.getElementById("digitChart");
 
-  // Disable buttons initially
   startBtn.disabled = true;
   stopBtn.disabled = true;
 
-  // Chart.js bar chart for digit frequency
   const digitChart = new Chart(digitCanvas, {
     type: 'bar',
     data: {
@@ -390,7 +388,6 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 
-  // Variables for bot logic
   const last100Digits = [];
   let ws, token;
   let isBotRunning = false;
@@ -418,7 +415,6 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  // Get accounts from URL params
   const urlParams = new URLSearchParams(window.location.search);
   const accounts = [];
   for (let i = 1; i <= 20; i++) {
@@ -458,7 +454,6 @@ document.addEventListener("DOMContentLoaded", () => {
       console.log('Received:', data);
 
       if (data.msg_type === "authorize") {
-        console.log("Authorized:", data.authorize.loginid);
         statusEl.textContent = `Logged in as: ${data.authorize.loginid}`;
         botStatusEl.textContent = `Logged in as: ${data.authorize.loginid}`;
         getBalance();
@@ -467,7 +462,6 @@ document.addEventListener("DOMContentLoaded", () => {
         waitingForResult = false;
         currentContractType = "DIGITUNDER9";
 
-        // Init/clear price chart container and create chart
         document.getElementById("chart").innerHTML = "";
         initChart();
 
@@ -478,7 +472,6 @@ document.addEventListener("DOMContentLoaded", () => {
           console.error("Chart load error:", e);
         }
 
-        // Subscribe to ticks stream
         if (ws.readyState === WebSocket.OPEN) {
           ws.send(JSON.stringify({ ticks: selectedSymbol, subscribe: 1 }));
         }
@@ -488,8 +481,6 @@ document.addEventListener("DOMContentLoaded", () => {
         let balance = parseFloat(data.balance.balance);
         lastKnownBalance = balance;
         balanceEl.textContent = botBalanceEl.textContent = `Balance: $${balance.toFixed(2)}`;
-
-        // Enable start button after getting balance if bot not running
         if (!isBotRunning) {
           startBtn.disabled = false;
           stopBtn.disabled = true;
@@ -497,11 +488,9 @@ document.addEventListener("DOMContentLoaded", () => {
       }
 
       if (data.msg_type === "tick" && data.tick) {
-        console.log("Tick subscription response:", data);
         const tick = data.tick;
         const price = parseFloat(tick.quote);
 
-        // Extract last digit correctly (handle decimals)
         const priceStr = price.toString();
         let lastDigit = null;
         for (let i = priceStr.length - 1; i >= 0; i--) {
@@ -518,10 +507,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
         botStatusEl.textContent = `Last digit: ${lastDigit}`;
         if (lineSeries) lineSeries.update({ time: Math.floor(tick.epoch), value: price });
-
-        if (!isBotRunning || waitingForResult) return;
-        placeTrade(currentContractType);
-        console.log(`Placing trade of type ${currentContractType} with stake ${currentStake}`);
       }
 
       if (data.msg_type === "buy" && data.buy) handleBuy(data.buy);
@@ -534,14 +519,19 @@ document.addEventListener("DOMContentLoaded", () => {
         waitingForResult = false;
 
         if (profit > 0) {
-          // On win: reset stake and contract type
           currentStake = initialStake;
           currentContractType = "DIGITUNDER9";
         } else {
-          // On loss: increase stake by 25%
           currentStake = +(currentStake * 1.25).toFixed(2);
-          // Switch contract type from DIGITUNDER9 to DIGITUNDER5 on first loss
           if (currentContractType === "DIGITUNDER9") currentContractType = "DIGITUNDER5";
+        }
+
+        if (isBotRunning) {
+          setTimeout(() => {
+            if (!waitingForResult && ws.readyState === WebSocket.OPEN) {
+              placeTrade();
+            }
+          }, 100);
         }
       }
     };
@@ -559,43 +549,39 @@ document.addEventListener("DOMContentLoaded", () => {
       stopBtn.disabled = true;
     };
 
-    // Sends request to get account balance updates
     function getBalance() {
       if (ws && ws.readyState === WebSocket.OPEN) {
         ws.send(JSON.stringify({ balance: 1, subscribe: 1 }));
       }
     }
 
-    // Places the trade according to current strategy contract type and stake
     function placeTrade() {
-  if (!ws || ws.readyState !== WebSocket.OPEN) return;
+      if (!ws || ws.readyState !== WebSocket.OPEN) return;
 
-  const amount = +currentStake.toFixed(2);
-  const barrier = currentContractType === "DIGITUNDER9" ? 9 : 5;
+      const amount = +currentStake.toFixed(2);
+      const barrier = currentContractType === "DIGITUNDER9" ? 9 : 5;
 
-  const buyRequest = {
-    buy: 1,
-    price: amount,
-    parameters: {
-      amount: amount,
-      basis: "stake",
-      contract_type: "DIGITUNDER",
-      currency: "USD",
-      duration: 5,
-      duration_unit: "t",
-      symbol: selectedSymbol,
-      barrier: barrier
+      const buyRequest = {
+        buy: 1,
+        price: amount,
+        parameters: {
+          amount: amount,
+          basis: "stake",
+          contract_type: "DIGITUNDER",
+          currency: "USD",
+          duration: 5,
+          duration_unit: "t",
+          symbol: selectedSymbol,
+          barrier: barrier
+        }
+      };
+
+      console.log("Sending buy request:", buyRequest);
+      ws.send(JSON.stringify(buyRequest));
+      botStatusEl.textContent = `Placing trade: DIGITUNDER${barrier} for $${amount.toFixed(2)}`;
+      waitingForResult = true;
     }
-  };
 
-  console.log("Sending buy request:", buyRequest);
-  ws.send(JSON.stringify(buyRequest));
-  botStatusEl.textContent = `Placing trade: DIGITUNDER${barrier} for $${amount.toFixed(2)}`;
-  waitingForResult = true;
-}
-
-
-    // Updates the digit frequency bar chart
     function updateDigitChart() {
       const counts = Array(10).fill(0);
       last100Digits.forEach(d => counts[d]++);
@@ -604,7 +590,6 @@ document.addEventListener("DOMContentLoaded", () => {
       digitChart.update();
     }
 
-    // Handle new trade data for trade history display
     function handleBuy(buyData) {
       addTradeToHistory({
         contract_id: buyData.contract_id,
@@ -615,7 +600,6 @@ document.addEventListener("DOMContentLoaded", () => {
       });
     }
 
-    // Load historical candle data for the chart
     function loadHistoricalData(symbol) {
       return new Promise((resolve, reject) => {
         const req_id = Date.now();
@@ -644,14 +628,12 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
-  // Adds a trade to history and keeps max 50 trades
   function addTradeToHistory(trade) {
     trades.unshift(trade);
     if (trades.length > 50) trades.pop();
     renderTradeHistory();
   }
 
-  // Updates trade profit and rerenders history
   function updateTradeProfit(contract_id, profit) {
     const trade = trades.find(t => t.contract_id === contract_id);
     if (trade) {
@@ -660,7 +642,6 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
-  // Render trade history table with colored profit/loss cells
   function renderTradeHistory() {
     tradeHistoryBody.innerHTML = "";
     trades.forEach(trade => {
@@ -678,13 +659,11 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  // Starts the bot
   startBtn.onclick = () => {
     isBotRunning = true;
     waitingForResult = false;
 
-    // Update stake from input (validate)
-    if(stakeInput){
+    if (stakeInput) {
       let val = parseFloat(stakeInput.value);
       if (isNaN(val) || val < 1) {
         stakeInput.value = "1.00";
@@ -699,13 +678,12 @@ document.addEventListener("DOMContentLoaded", () => {
     startBtn.disabled = true;
     stopBtn.disabled = false;
 
-    // Resubscribe to ticks (if needed)
     if (ws && ws.readyState === WebSocket.OPEN) {
       ws.send(JSON.stringify({ ticks: selectedSymbol, subscribe: 1 }));
     }
+    placeTrade();
   };
 
-  // Stops the bot and resets state
   stopBtn.onclick = () => {
     isBotRunning = false;
     waitingForResult = false;
@@ -717,23 +695,18 @@ document.addEventListener("DOMContentLoaded", () => {
     if (ws && ws.readyState === WebSocket.OPEN) ws.send(JSON.stringify({ forget_all: ["ticks"] }));
   };
 
-  // Change account handler
   accountSelector.addEventListener("change", (e) => {
     if (ws) ws.close();
     isBotRunning = false;
     trades = [];
     renderTradeHistory();
-
-    // Disable buttons and clear balance/status on account switch
     startBtn.disabled = true;
     stopBtn.disabled = true;
     balanceEl.textContent = botBalanceEl.textContent = "Balance: --";
     botStatusEl.textContent = statusEl.textContent = "Switching accounts...";
-
     connectToDeriv(e.target.value);
   });
 
-  // Initialize LightweightCharts price chart
   function initChart() {
     const chartContainer = document.getElementById("chart");
     chart = LightweightCharts.createChart(chartContainer, {
@@ -752,7 +725,7 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 
     lineSeries = chart.addLineSeries({ color: "#4ade80", lineWidth: 2 });
-    lineSeries.setData([]); // start empty
+    lineSeries.setData([]);
 
     window.addEventListener("resize", () => {
       if (chart) {
@@ -761,7 +734,6 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 });
-
 
   </script>
 
