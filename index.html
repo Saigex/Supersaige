@@ -455,8 +455,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
     ws.onmessage = async (msg) => {
       const data = JSON.parse(msg.data);
-
+      console.log('Received:', data);
       if (data.msg_type === "authorize") {
+        console.log("Authorized:", data.authorize.loginid);
         statusEl.textContent = `Logged in as: ${data.authorize.loginid}`;
         botStatusEl.textContent = `Logged in as: ${data.authorize.loginid}`;
         getBalance();
@@ -495,6 +496,7 @@ document.addEventListener("DOMContentLoaded", () => {
       }
 
       if (data.msg_type === "tick" && data.tick) {
+        console.log("Tick subscription response:", data);
         const tick = data.tick;
         const price = parseFloat(tick.quote);
 
@@ -518,6 +520,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
         if (!isBotRunning || waitingForResult) return;
         placeTrade(currentContractType);
+        console.log(`Placing trade of type ${currentContractType} with stake ${currentStake}`);
+
       }
 
       if (data.msg_type === "buy" && data.buy) handleBuy(data.buy);
