@@ -22,6 +22,7 @@ document.addEventListener("DOMContentLoaded", () => {
   let isBotRunning = false;
   let selectedSymbol = "R_100";
   let chart, lineSeries;
+  // Keep trades persistent across accounts
   let trades = [];
   let lastKnownBalance = 0;
 
@@ -66,7 +67,6 @@ document.addEventListener("DOMContentLoaded", () => {
   function connectToDeriv(selectedToken) {
     token = selectedToken;
 
-    // Close previous connection if open
     if (ws && ws.readyState === WebSocket.OPEN) {
       ws.close();
     }
@@ -85,9 +85,8 @@ document.addEventListener("DOMContentLoaded", () => {
         botStatusEl.textContent = `Logged in as: ${data.authorize.loginid}`;
         getBalance();
 
-        // Clear previous chart container content to avoid stacking charts
         const chartContainer = document.getElementById("chart");
-        chartContainer.innerHTML = "";
+        chartContainer.innerHTML = ""; // Clear previous chart container
 
         initChart();
       }
@@ -134,6 +133,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
       if (data.msg_type === "proposal_open_contract") {
         if (data.proposal_open_contract.is_sold) {
+          console.log("Contract sold data:", data.proposal_open_contract); // Debug log
+
           const profit = data.proposal_open_contract.profit;
           botStatusEl.textContent = `Trade ended. Profit: $${profit.toFixed(2)}`;
           updateTradeProfit(data.proposal_open_contract.contract_id, profit);
@@ -229,25 +230,46 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     function handleBuy(buyData) {
-      console.log("Buy Data:", buyData); // Debug log to inspect buy object
-
       botStatusEl.textContent = `Trade Placed: ${buyData.contract_id}`;
-
-      // Use fallback for type and amount if undefined
-      const tradeType = buyData.contract_type || buyData.longcode || "-";
-      const amount = buyData.buy_price || buyData.amount || "-";
-
       addTradeToHistory({
         contract_id: buyData.contract_id,
-        type: tradeType,
-        amount: amount,
+        type: getSimpleContractType(buyData.contract_type),
+        amount: buyData.amount,
         profit: null,
         time: new Date().toLocaleTimeString(),
       });
     }
   }
 
-  // === Global functions ===
+  // Helper: Convert contract_type string to simple friendly names
+  function getSimpleContractType(fullType) {
+    // Map of common contract types to simplified names
+    const map = {
+      CALL: "Rise",
+      PUT: "Fall",
+      DIGITMATCH: "Digit Match",
+      DIGITDIFF: "Digit Diff",
+      DIGITEVEN: "Even",
+      DIGITODD: "Odd",
+      DIGITOVER: "Digit Over",
+      DIGITUNDER: "Digit Under",
+      ASIANDUET: "Asian Duet",
+      ASIANUET: "Asian Uet",
+      // Add more if needed
+    };
+
+    // Check if fullType contains keys and return mapped or fallback
+    for (const key in map) {
+      if (fullType.includes(key)) {
+        return map[key];
+      }
+    }
+    // Fallback: return the full type as is, truncated if too long
+    if (fullType.length > 20) {
+      return fullType.slice(0, 17) + "...";
+    }
+    return fullType;
+  }
 
   function addTradeToHistory(trade) {
     trades.unshift(trade);
@@ -256,7 +278,7 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   function updateTradeProfit(contract_id, profit) {
-    const trade = trades.find(t => t.contract_id === contract_id);
+    const trade = trades.find(t => t.contract_id.toString() === contract_id.toString());
     if (trade) {
       trade.profit = profit.toFixed(2);
       renderTradeHistory();
@@ -318,10 +340,10 @@ document.addEventListener("DOMContentLoaded", () => {
       ws.close();
     }
 
-    // Reset state
+    // Reset state except trades (keep history)
     isBotRunning = false;
     lastKnownBalance = 0;
-    trades = [];
+
     renderTradeHistory();
 
     // Reset UI
