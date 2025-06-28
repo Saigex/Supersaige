@@ -16,6 +16,46 @@ document.addEventListener("DOMContentLoaded", () => {
   const stopBtn = document.getElementById("stopBot");
   const tradeHistoryBody = document.getElementById("tradeHistoryBody");
 
+  const digitCanvas = document.getElementById("digitChart");
+  const digitChart = new Chart(digitCanvas, {
+    type: 'bar',
+    data: {
+      labels: [...Array(10).keys()].map(String),
+      datasets: [{
+        label: 'Digit Frequency (%)',
+        data: Array(10).fill(0),
+        backgroundColor: '#4ade80'
+      }]
+    },
+    options: {
+      responsive: true,
+      scales: {
+        y: {
+          beginAtZero: true,
+          max: 100,
+          ticks: {
+            color: '#94a3b8',
+            callback: value => value + '%'
+          }
+        },
+        x: {
+          ticks: { color: '#94a3b8' }
+        }
+      },
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          callbacks: {
+            label: ctx => `${ctx.dataset.label}: ${ctx.raw.toFixed(2)}%`
+          }
+        }
+      }
+    }
+  });
+
+  const digitCounts = Array(10).fill(0);
+  let digitTotal = 0;
+
   let ws;
   let token;
   let isBotRunning = false;
@@ -24,11 +64,10 @@ document.addEventListener("DOMContentLoaded", () => {
   let trades = [];
   let lastKnownBalance = 0;
 
-  // Strategy variables
-  let stakePercent = 0.01;           // starting stake as 1% of balance (used only for display)
-  let startingBalance = 0;           // balance when bot started (used to calculate fixed stake step)
-  let currentStake = 0;              // actual stake in USD amount for next trade
-  let totalProfitUSD = 0;            // total profit accumulated
+  let stakePercent = 0.01;
+  let startingBalance = 0;
+  let currentStake = 0;
+  let totalProfitUSD = 0;
 
   connectBtn.onclick = () => {
     const loginUrl = `https://oauth.deriv.com/oauth2/authorize?app_id=${app_id}&redirect_uri=${redirect_uri}`;
@@ -83,7 +122,6 @@ document.addEventListener("DOMContentLoaded", () => {
         botStatusEl.textContent = `Logged in as: ${data.authorize.loginid}`;
         getBalance();
 
-        // Reset strategy variables on login
         startingBalance = 0;
         stakePercent = 0.01;
         currentStake = 0;
@@ -99,9 +137,10 @@ document.addEventListener("DOMContentLoaded", () => {
         } catch (err) {
           console.error("Error loading historical data:", err);
         }
-         if (ws.readyState === WebSocket.OPEN) {
-         ws.send(JSON.stringify({ ticks: selectedSymbol, subscribe: 1 }));
-      }
+
+        if (ws.readyState === WebSocket.OPEN) {
+          ws.send(JSON.stringify({ ticks: selectedSymbol, subscribe: 1 }));
+        }
       }
 
       if (data.msg_type === "balance") {
@@ -110,7 +149,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
         if (startingBalance === 0) {
           startingBalance = balance;
-          currentStake = startingBalance * stakePercent; // initial 1% stake in USD
+          currentStake = startingBalance * stakePercent;
         }
 
         balanceEl.textContent = `Balance: $${balance.toFixed(2)}`;
@@ -125,28 +164,31 @@ document.addEventListener("DOMContentLoaded", () => {
         const price = parseFloat(tick.quote);
         const lastDigit = parseInt(price.toString().slice(-1));
 
-        console.log("Tick received - lastDigit:", lastDigit);
-        botStatusEl.textContent = `Last digit: ${lastDigit}`;
+        digitCounts[lastDigit]++;
+        digitTotal++;
 
+        const freqs = digitCounts.map(c => (c / digitTotal) * 100);
+        digitChart.data.datasets[0].data = freqs;
+        digitChart.update();
+
+        botStatusEl.textContent = `Last digit: ${lastDigit}`;
         if (lineSeries) lineSeries.update({ time: Math.floor(tick.epoch), value: price });
+
         if (!isBotRunning) return;
 
-        if (lastDigit % 2 === 0) {  // only trade on even last digit as per your strategy
+        if (lastDigit % 2 === 0) {
           const stakeAmount = +currentStake.toFixed(2);
-          console.log("Attempting trade with stake:", stakeAmount);
-
           if (stakeAmount < 1) {
-            console.warn("Stake too low to place trade, must be at least 1 USD");
+            console.warn("Stake too low to place trade");
             return;
           }
 
-          botStatusEl.textContent = `Last digit: ${lastDigit} → Buying DIGITEVEN with stake $${stakeAmount}`;
+          botStatusEl.textContent = `Buying DIGITEVEN with $${stakeAmount}`;
           makeDigitTradeWithAmount("DIGITEVEN", selectedSymbol, stakeAmount);
         }
       }
 
       if (data.msg_type === "buy" && data.buy) {
-        console.log("Buy response:", data.buy);
         handleBuy(data.buy);
       }
 
@@ -156,30 +198,18 @@ document.addEventListener("DOMContentLoaded", () => {
 
         botStatusEl.textContent = `Trade ended. Profit: $${profit.toFixed(2)}`;
         updateTradeProfit(contract_id, profit);
-
         totalProfitUSD += profit;
 
-        // Update stake after win or loss
         if (profit > 0) {
-          // Win → add 1% of starting balance USD to current stake (linear increase)
           currentStake += startingBalance * 0.01;
         } else {
-          // Loss → reset to initial 1% stake
           currentStake = startingBalance * 0.01;
         }
 
-        // Calculate total profit/loss percent relative to starting balance
         const profitPercent = (totalProfitUSD / startingBalance) * 100;
 
-        // Stop bot on profit or loss thresholds
-        if (profitPercent >= 15) {
-          botStatusEl.textContent = `Profit target reached (${profitPercent.toFixed(2)}%). Stopping bot.`;
-          isBotRunning = false;
-          startBtn.disabled = false;
-          stopBtn.disabled = true;
-          if (ws.readyState === WebSocket.OPEN) ws.send(JSON.stringify({ forget_all: ["ticks"] }));
-        } else if (profitPercent <= -10) {
-          botStatusEl.textContent = `Loss limit reached (${profitPercent.toFixed(2)}%). Stopping bot.`;
+        if (profitPercent >= 15 || profitPercent <= -10) {
+          botStatusEl.textContent = `Threshold reached (${profitPercent.toFixed(2)}%). Stopping.`;
           isBotRunning = false;
           startBtn.disabled = false;
           stopBtn.disabled = true;
@@ -218,7 +248,6 @@ document.addEventListener("DOMContentLoaded", () => {
           symbol: symbol
         }
       };
-      console.log("Sending trade request:", tradeRequest);
       ws.send(JSON.stringify(tradeRequest));
     }
 
