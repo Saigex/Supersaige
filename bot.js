@@ -167,180 +167,37 @@ document.addEventListener("DOMContentLoaded", () => {
     }));
   }
 
-let chart;  // Declare chart at the top
-let lineSeries;  // Declare lineSeries globally
-let ws;  // WebSocket connection
-
-// Function to initialize the chart (only once)
 function initChart() {
-  const chartContainer = document.getElementById("chart");
+    if (chart) {
+        console.log("Chart already initialized.");
+        return;  // Exit if chart is already initialized
+    }
 
-  if (!window.LightweightCharts) {
-    console.error("LightweightCharts library is not loaded!");
-    return;
-  }
+    const chartContainer = document.getElementById("chart");
+    chart = LightweightCharts.createChart(chartContainer, {
+        width: chartContainer.clientWidth,
+        height: chartContainer.clientHeight,
+        layout: {
+            backgroundColor: "#0f172a",
+            textColor: "#94a3b8",
+        },
+        grid: {
+            vertLines: { color: '#334155' },
+            horzLines: { color: '#334155' },
+        },
+        crosshair: {
+            mode: LightweightCharts.CrosshairMode.Normal,
+        },
+        priceScale: {
+            borderColor: '#334155',
+        },
+    });
 
-  chart = LightweightCharts.createChart(chartContainer, {
-    width: chartContainer.clientWidth,
-    height: chartContainer.clientHeight,
-    layout: {
-      backgroundColor: "#0f172a",
-      textColor: "#94a3b8",
-    },
-    grid: {
-      vertLines: { color: '#334155' },
-      horzLines: { color: '#334155' },
-    },
-    crosshair: {
-      mode: LightweightCharts.CrosshairMode.Normal,
-    },
-    priceScale: {
-      borderColor: '#334155',
-    },
-  });
+    lineSeries = chart.addLineSeries({
+        color: '#4ade80',
+        lineWidth: 2,
+    });
 
-  lineSeries = chart.addLineSeries({
-    color: '#4ade80',
-    lineWidth: 2,
-  });
-
-  lineSeries.setData([]);  // Initialize with empty data
-
-  // Resize chart on window size change
-  window.addEventListener("resize", () => {
-    chart.resize(chartContainer.clientWidth, chartContainer.clientHeight);
-  });
-
-  setTimeout(() => {
-    chart.resize(chartContainer.clientWidth, chartContainer.clientHeight);
-  }, 100);
+    lineSeries.setData([]);
+    console.log("Chart initialized.");
 }
-
-// Function to subscribe to ticks for the selected symbol
-function subscribeTicks(symbol) {
-  if (ws) {
-    ws.send(JSON.stringify({ ticks: symbol, subscribe: 1 }));
-  }
-}
-
-// Function to forget all tick subscriptions
-function forgetTicks() {
-  if (ws) {
-    ws.send(JSON.stringify({ forget_all: ["ticks"] }));
-  }
-}
-
-// Function to connect to Deriv using WebSocket
-function connectToDeriv(token) {
-  if (ws) {
-    ws.close(); // Close the previous WebSocket connection if any
-  }
-
-  ws = new WebSocket(`wss://ws.derivws.com/websockets/v3?app_id=${app_id}`);
-
-  ws.onopen = () => {
-    ws.send(JSON.stringify({ authorize: token }));
-  };
-
-  ws.onmessage = (msg) => {
-    const data = JSON.parse(msg.data);
-
-    // Handle responses (e.g., authorization, balance, ticks)
-    if (data.msg_type === "authorize") {
-      statusEl.textContent = `Logged in as: ${data.authorize.loginid}`;
-      botStatusEl.textContent = `Logged in as: ${data.authorize.loginid}`;
-      getBalance();
-    }
-
-    if (data.msg_type === "balance") {
-      let balance = parseFloat(data.balance.balance);
-      lastKnownBalance = balance;
-      balanceEl.textContent = `Balance: $${balance.toFixed(2)}`;
-      botBalanceEl.textContent = `Balance: $${balance.toFixed(2)}`;
-
-      if (balance <= 0) {
-        startBtn.disabled = true;
-        botStatusEl.textContent = "Cannot trade: Balance is zero.";
-      } else {
-        startBtn.disabled = false;
-      }
-    }
-
-    if (data.msg_type === "tick" && isBotRunning) {
-      const tick = data.tick;
-      const price = parseFloat(tick.quote);
-      const lastDigit = parseInt(price.toString().slice(-1));
-
-      botStatusEl.textContent = `Last digit: ${lastDigit}`;
-
-      if (lineSeries) {
-        lineSeries.update({ time: Math.floor(tick.epoch), value: price });
-      }
-
-      const strategy = strategySelect.value;
-      if ((strategy === "even" && lastDigit % 2 === 0) || (strategy === "odd" && lastDigit % 2 !== 0)) {
-        botStatusEl.textContent = `Last digit: ${lastDigit} → Buying DIGIT${strategy.toUpperCase()}`;
-        makeDigitTrade(`DIGIT${strategy.toUpperCase()}`, selectedSymbol);
-      }
-    }
-
-    if (data.msg_type === "buy" && data.buy) {
-      handleBuy(data.buy);
-    }
-
-    if (data.msg_type === "proposal_open_contract") {
-      if (data.proposal_open_contract.is_sold) {
-        const profit = data.proposal_open_contract.profit;
-        botStatusEl.textContent = `Trade ended. Profit: $${profit.toFixed(2)}`;
-        updateTradeProfit(data.proposal_open_contract.contract_id, profit);
-      }
-    }
-  };
-
-  ws.onerror = () => {
-    statusEl.textContent = "WebSocket error.";
-    botStatusEl.textContent = "WebSocket error.";
-  };
-
-  ws.onclose = () => {
-    statusEl.textContent = "Disconnected.";
-    botStatusEl.textContent = "Disconnected.";
-    startBtn.disabled = true;
-    stopBtn.disabled = true;
-  };
-}
-
-// Initial chart setup
-initChart(); // Initialize the chart only once when the page loads
-
-// Handle account selection change
-accountSelector.onchange = () => {
-  const selectedToken = accountSelector.value;
-  connectToDeriv(selectedToken);  // Connect to the new account
-  subscribeTicks(selectedSymbol); // Start subscribing to ticks
-};
-
-// Start/Stop Bot
-startBtn.onclick = () => {
-  if (lastKnownBalance <= 0) {
-    botStatusEl.textContent = "Cannot start: Balance is zero.";
-    return;
-  }
-  if (!isBotRunning) {
-    isBotRunning = true;
-    botStatusEl.textContent = "Bot started.";
-    startBtn.disabled = true;
-    stopBtn.disabled = false;
-    subscribeTicks(selectedSymbol);
-  }
-};
-
-stopBtn.onclick = () => {
-  if (isBotRunning) {
-    isBotRunning = false;
-    botStatusEl.textContent = "Bot stopped.";
-    startBtn.disabled = false;
-    stopBtn.disabled = true;
-    forgetTicks();
-  }
-};
