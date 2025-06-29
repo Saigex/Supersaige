@@ -386,7 +386,7 @@ document.addEventListener("DOMContentLoaded", () => {
       datasets: [{
         label: "Digit Frequency (%)",
         data: Array(10).fill(0),
-        backgroundColor: "#4ade80"
+        backgroundColor: Array(10).fill("#ffffff")
       }]
     },
     options: {
@@ -394,7 +394,7 @@ document.addEventListener("DOMContentLoaded", () => {
       scales: {
         y: {
           beginAtZero: true,
-          max: 100,
+          max: 25,
           ticks: {
             color: "#94a3b8",
             callback: value => `${value}%`
@@ -512,7 +512,14 @@ document.addEventListener("DOMContentLoaded", () => {
         } catch (e) {
           console.error("Chart load error:", e);
         }
-
+          try {
+    const last25 = await loadLast25Digits(selectedSymbol);
+    last100Digits.length = 0;
+    last25.forEach(d => last100Digits.push(d));
+    updateDigitChart();
+  } catch (e) {
+    console.error("Error loading last 25 digits:", e);
+  }
         if (ws.readyState === WebSocket.OPEN) {
           ws.send(JSON.stringify({ ticks: selectedSymbol, subscribe: 1 }));
         }
@@ -657,12 +664,27 @@ if (profit > 0) {
 
     // Update digit frequency chart
     function updateDigitChart() {
-      const counts = Array(10).fill(0);
-      last100Digits.forEach(d => counts[d]++);
-      const total = last100Digits.length;
-      digitChart.data.datasets[0].data = counts.map(c => (c / total) * 100);
-      digitChart.update();
-    }
+  const counts = Array(10).fill(0);
+  last100Digits.forEach(d => counts[d]++);
+  const total = last100Digits.length;
+  const percentages = counts.map(c => (c / total) * 100);
+
+  // Find highest and lowest
+  const maxVal = Math.max(...percentages);
+  const minVal = Math.min(...percentages);
+
+  // Assign colors
+  const colors = percentages.map(p => {
+    if (p === maxVal) return "#4ade80"; // green
+    if (p === minVal) return "#ef4444"; // red
+    return "#ffffff";                   // white
+  });
+
+  digitChart.data.datasets[0].data = percentages;
+  digitChart.data.datasets[0].backgroundColor = colors;
+  digitChart.update();
+}
+
 
     // Add trade to history with profit = null initially
     function handleBuy(buyData) {
@@ -709,6 +731,42 @@ if (profit > 0) {
         ws.addEventListener("message", onMessage);
       });
     }
+    async function loadLast25Digits(symbol) {
+  return new Promise((resolve, reject) => {
+    const req_id = Date.now();
+    ws.send(JSON.stringify({
+      ticks_history: symbol,
+      end: "latest",
+      count: 25,
+      style: "ticks",
+      req_id: req_id
+    }));
+
+    function onMessage(event) {
+      const data = JSON.parse(event.data);
+      if (data.req_id === req_id) {
+        ws.removeEventListener("message", onMessage);
+        if (data.history && data.history.prices) {
+          const digits = data.history.prices.map(price => {
+            const priceStr = price.toString();
+            for (let i = priceStr.length - 1; i >= 0; i--) {
+              if ("0123456789".includes(priceStr[i])) {
+                return parseInt(priceStr[i]);
+              }
+            }
+            return 0;
+          });
+          resolve(digits);
+        } else {
+          reject("No tick history returned.");
+        }
+      }
+    }
+
+    ws.addEventListener("message", onMessage);
+  });
+}
+
   }
 
   // Add trade to array and refresh history table
