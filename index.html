@@ -373,7 +373,6 @@ document.addEventListener("DOMContentLoaded", () => {
   `;
   configDiv.appendChild(lossLimitDiv);
 
-
   controlPanel.insertBefore(configDiv, controlPanel.querySelector(".buttons"));
 
   const dailyProfitTargetInput = document.getElementById("dailyProfitTargetInput");
@@ -435,7 +434,6 @@ document.addEventListener("DOMContentLoaded", () => {
   let lossCount = 0;
   let totalLoss = 0;
 
-
   connectBtn.onclick = () => {
     window.location.href = `https://oauth.deriv.com/oauth2/authorize?app_id=${app_id}&redirect_uri=${redirect_uri}`;
   };
@@ -480,6 +478,12 @@ document.addEventListener("DOMContentLoaded", () => {
     connectToDeriv(accounts[0].token);
   }
 
+  // ✅ NEW helper to extract second digit after decimal
+  function getSecondDecimalDigit(price) {
+    const parts = price.toFixed(2).split(".");
+    return parseInt(parts[1][1], 10);
+  }
+
   function connectToDeriv(selectedToken) {
     token = selectedToken;
     if (ws && ws.readyState === WebSocket.OPEN) ws.close();
@@ -512,14 +516,16 @@ document.addEventListener("DOMContentLoaded", () => {
         } catch (e) {
           console.error("Chart load error:", e);
         }
-          try {
-    const last25 = await loadLast25Digits(selectedSymbol);
-    last100Digits.length = 0;
-    last25.forEach(d => last100Digits.push(d));
-    updateDigitChart();
-  } catch (e) {
-    console.error("Error loading last 25 digits:", e);
-  }
+
+        try {
+          const last25 = await loadLast25Digits(selectedSymbol);
+          last100Digits.length = 0;
+          last25.forEach(d => last100Digits.push(d));
+          updateDigitChart();
+        } catch (e) {
+          console.error("Error loading last 25 digits:", e);
+        }
+
         if (ws.readyState === WebSocket.OPEN) {
           ws.send(JSON.stringify({ ticks: selectedSymbol, subscribe: 1 }));
         }
@@ -538,15 +544,7 @@ document.addEventListener("DOMContentLoaded", () => {
       if (data.msg_type === "tick" && data.tick) {
         const tick = data.tick;
         const price = parseFloat(tick.quote);
-        const priceStr = price.toString();
-        let lastDigit = null;
-        for (let i = priceStr.length - 1; i >= 0; i--) {
-          if ("0123456789".includes(priceStr[i])) {
-            lastDigit = parseInt(priceStr[i]);
-            break;
-          }
-        }
-        if (lastDigit === null) return;
+        const lastDigit = getSecondDecimalDigit(price);
 
         if (lastDigit > 4) ticksAbove4Count++;
         else ticksAbove4Count = 0;
@@ -559,23 +557,22 @@ document.addEventListener("DOMContentLoaded", () => {
         if (lineSeries) lineSeries.update({ time: Math.floor(tick.epoch), value: price });
 
         if (isBotRunning && !waitingForResult) {
-  const profitTarget = parseFloat(dailyProfitTargetInput.value) || 10;
-  const lossLimit = parseFloat(dailyLossLimitInput.value) || 999;
+          const profitTarget = parseFloat(dailyProfitTargetInput.value) || 10;
+          const lossLimit = parseFloat(dailyLossLimitInput.value) || 999;
 
-  if (dailyProfit >= profitTarget) {
-    botStatusEl.textContent = `Daily profit target reached ($${dailyProfit.toFixed(2)}). Bot paused.`;
-    stopBotExecution();
-    return;
-  }
-  if (dailyLoss >= lossLimit) {
-    botStatusEl.textContent = `Daily loss limit reached ($${dailyLoss.toFixed(2)}). Bot paused.`;
-    stopBotExecution();
-    return;
-  }
+          if (dailyProfit >= profitTarget) {
+            botStatusEl.textContent = `Daily profit target reached ($${dailyProfit.toFixed(2)}). Bot paused.`;
+            stopBotExecution();
+            return;
+          }
+          if (dailyLoss >= lossLimit) {
+            botStatusEl.textContent = `Daily loss limit reached ($${dailyLoss.toFixed(2)}). Bot paused.`;
+            stopBotExecution();
+            return;
+          }
 
-  placeTrade();
-}
-
+          placeTrade();
+        }
       }
 
       if (data.msg_type === "buy" && data.buy) {
@@ -583,30 +580,26 @@ document.addEventListener("DOMContentLoaded", () => {
       }
 
       if (data.msg_type === "proposal_open_contract" && data.proposal_open_contract.is_sold) {
-        console.log("Trade sold, result received:", data.proposal_open_contract);
         const profit = data.proposal_open_contract.profit;
         const contract_id = data.proposal_open_contract.contract_id;
-        console.log(`Trade result received. Contract ID: ${contract_id}, Profit: ${profit}`);
 
         updateTradeProfit(contract_id, profit);
 
-        // Update daily profit and loss trackers
-if (profit > 0) {
-  dailyProfit += profit;
-  currentStake = initialStake;
-  currentContractType = "DIGITUNDER9";
-  totalLoss = 0;
-  lossCount = 0;
-} else {
-  dailyLoss += Math.abs(profit);
-  totalLoss += currentStake;
-  lossCount++;
-  const targetProfit = initialStake * 0.25;
-  currentStake = +(totalLoss + targetProfit).toFixed(2);
+        if (profit > 0) {
+          dailyProfit += profit;
+          currentStake = initialStake;
+          currentContractType = "DIGITUNDER9";
+          totalLoss = 0;
+          lossCount = 0;
+        } else {
+          dailyLoss += Math.abs(profit);
+          totalLoss += currentStake;
+          lossCount++;
+          const targetProfit = initialStake * 0.25;
+          currentStake = +(totalLoss + targetProfit).toFixed(2);
 
-  if (currentContractType === "DIGITUNDER9") currentContractType = "DIGITUNDER5";
-}
-
+          if (currentContractType === "DIGITUNDER9") currentContractType = "DIGITUNDER5";
+        }
 
         waitingForResult = false;
       }
@@ -625,19 +618,15 @@ if (profit > 0) {
       stopBtn.disabled = true;
     };
 
-    // Request balance subscription
     function getBalance() {
       if (ws && ws.readyState === WebSocket.OPEN) {
         ws.send(JSON.stringify({ balance: 1, subscribe: 1 }));
       }
     }
 
-    // Place trade request
     function placeTrade() {
-      if (!ws || ws.readyState !== WebSocket.OPEN || waitingForResult) {
-        console.log("Skipping placeTrade, waitingForResult:", waitingForResult);
-        return;
-      }
+      if (!ws || ws.readyState !== WebSocket.OPEN || waitingForResult) return;
+
       const amount = +currentStake.toFixed(2);
       const barrier = currentContractType === "DIGITUNDER9" ? 9 : 5;
 
@@ -656,55 +645,47 @@ if (profit > 0) {
         }
       };
 
-      console.log("Sending buy request:", buyRequest);
       ws.send(JSON.stringify(buyRequest));
       botStatusEl.textContent = `Placing trade: DIGITUNDER${barrier} for $${amount.toFixed(2)}`;
       waitingForResult = true;
     }
 
-    // Update digit frequency chart
     function updateDigitChart() {
-  const counts = Array(10).fill(0);
-  last100Digits.forEach(d => counts[d]++);
-  const total = last100Digits.length;
-  const percentages = counts.map(c => (c / total) * 100);
+      const counts = Array(10).fill(0);
+      last100Digits.forEach(d => counts[d]++);
+      const total = last100Digits.length;
+      const percentages = counts.map(c => (c / total) * 100);
 
-  // Find highest and lowest
-  const maxVal = Math.max(...percentages);
-  const minVal = Math.min(...percentages);
+      const maxVal = Math.max(...percentages);
+      const minVal = Math.min(...percentages);
 
-  // Assign colors
-  const colors = percentages.map(p => {
-    if (p === maxVal) return "#4ade80"; // green
-    if (p === minVal) return "#ef4444"; // red
-    return "#ffffff";                   // white
-  });
+      const colors = percentages.map(p => {
+        if (p === maxVal) return "#4ade80";
+        if (p === minVal) return "#ef4444";
+        return "#ffffff";
+      });
 
-  digitChart.data.datasets[0].data = percentages;
-  digitChart.data.datasets[0].backgroundColor = colors;
-  digitChart.update();
-}
+      digitChart.data.datasets[0].data = percentages;
+      digitChart.data.datasets[0].backgroundColor = colors;
+      digitChart.update();
+    }
 
-
-    // Add trade to history with profit = null initially
     function handleBuy(buyData) {
-  addTradeToHistory({
-    contract_id: buyData.contract_id,
-    type: currentContractType,
-    amount: buyData.buy_price,
-    profit: null,
-    time: new Date().toLocaleTimeString(),
-  });
+      addTradeToHistory({
+        contract_id: buyData.contract_id,
+        type: currentContractType,
+        amount: buyData.buy_price,
+        profit: null,
+        time: new Date().toLocaleTimeString(),
+      });
 
-  // 🛠 Subscribe to contract updates
-  ws.send(JSON.stringify({
-    proposal_open_contract: 1,
-    contract_id: buyData.contract_id,
-    subscribe: 1
-  }));
-}
+      ws.send(JSON.stringify({
+        proposal_open_contract: 1,
+        contract_id: buyData.contract_id,
+        subscribe: 1
+      }));
+    }
 
-    // Load historical candle data for line chart
     function loadHistoricalData(symbol) {
       return new Promise((resolve, reject) => {
         const req_id = Date.now();
@@ -731,52 +712,42 @@ if (profit > 0) {
         ws.addEventListener("message", onMessage);
       });
     }
+
     async function loadLast25Digits(symbol) {
-  return new Promise((resolve, reject) => {
-    const req_id = Date.now();
-    ws.send(JSON.stringify({
-      ticks_history: symbol,
-      end: "latest",
-      count: 25,
-      style: "ticks",
-      req_id: req_id
-    }));
+      return new Promise((resolve, reject) => {
+        const req_id = Date.now();
+        ws.send(JSON.stringify({
+          ticks_history: symbol,
+          end: "latest",
+          count: 25,
+          style: "ticks",
+          req_id: req_id
+        }));
 
-    function onMessage(event) {
-      const data = JSON.parse(event.data);
-      if (data.req_id === req_id) {
-        ws.removeEventListener("message", onMessage);
-        if (data.history && data.history.prices) {
-          const digits = data.history.prices.map(price => {
-            const priceStr = price.toString();
-            for (let i = priceStr.length - 1; i >= 0; i--) {
-              if ("0123456789".includes(priceStr[i])) {
-                return parseInt(priceStr[i]);
-              }
+        function onMessage(event) {
+          const data = JSON.parse(event.data);
+          if (data.req_id === req_id) {
+            ws.removeEventListener("message", onMessage);
+            if (data.history && data.history.prices) {
+              const digits = data.history.prices.map(price => getSecondDecimalDigit(price));
+              resolve(digits);
+            } else {
+              reject("No tick history returned.");
             }
-            return 0;
-          });
-          resolve(digits);
-        } else {
-          reject("No tick history returned.");
+          }
         }
-      }
+
+        ws.addEventListener("message", onMessage);
+      });
     }
-
-    ws.addEventListener("message", onMessage);
-  });
-}
-
   }
 
-  // Add trade to array and refresh history table
   function addTradeToHistory(trade) {
     trades.unshift(trade);
     if (trades.length > 50) trades.pop();
     renderTradeHistory();
   }
 
-  // Update trade profit and refresh table
   function updateTradeProfit(contract_id, profit) {
     const trade = trades.find(t => t.contract_id === contract_id);
     if (trade) {
@@ -785,7 +756,6 @@ if (profit > 0) {
     }
   }
 
-  // Render trade history table
   function renderTradeHistory() {
     tradeHistoryBody.innerHTML = "";
     trades.forEach(trade => {
@@ -803,41 +773,36 @@ if (profit > 0) {
     });
   }
 
-  // Start Bot Button Handler
-startBtn.onclick = () => {
-  isBotRunning = true;
-  waitingForResult = false;
-  ticksAbove4Count = 0;
+  startBtn.onclick = () => {
+    isBotRunning = true;
+    waitingForResult = false;
+    ticksAbove4Count = 0;
 
-  if (stakeInput) {
-    let val = parseFloat(stakeInput.value);
-    if (isNaN(val) || val < 1) {
-      stakeInput.value = "1.00";
-      initialStake = 1;
-    } else {
-      initialStake = val;
+    if (stakeInput) {
+      let val = parseFloat(stakeInput.value);
+      if (isNaN(val) || val < 1) {
+        stakeInput.value = "1.00";
+        initialStake = 1;
+      } else {
+        initialStake = val;
+      }
+      currentStake = initialStake;
+      stakeInput.disabled = true;
     }
-    currentStake = initialStake;
-    stakeInput.disabled = true;
-  }
 
-  botStatusEl.textContent = "Bot started.";
-  startBtn.disabled = true;
-  stopBtn.disabled = false;
+    botStatusEl.textContent = "Bot started.";
+    startBtn.disabled = true;
+    stopBtn.disabled = false;
 
-  // 🧠 KEY FIX: re-subscribe to tick stream
-  if (ws && ws.readyState === WebSocket.OPEN) {
-    ws.send(JSON.stringify({ ticks: selectedSymbol, subscribe: 1 }));
-  }
-};
+    if (ws && ws.readyState === WebSocket.OPEN) {
+      ws.send(JSON.stringify({ ticks: selectedSymbol, subscribe: 1 }));
+    }
+  };
 
-
-  // Stop Bot Button Handler
   stopBtn.onclick = () => {
     stopBotExecution();
   };
 
-  // Helper to stop bot safely
   function stopBotExecution() {
     isBotRunning = false;
     waitingForResult = false;
@@ -850,7 +815,6 @@ startBtn.onclick = () => {
     if (ws && ws.readyState === WebSocket.OPEN) ws.send(JSON.stringify({ forget_all: ["ticks"] }));
   }
 
-  // Account selector change handler
   accountSelector.addEventListener("change", (e) => {
     if (ws) ws.close();
     stopBotExecution();
@@ -861,7 +825,6 @@ startBtn.onclick = () => {
     connectToDeriv(e.target.value);
   });
 
-  // Initialize price chart
   function initChart() {
     const chartContainer = document.getElementById("chart");
     chart = LightweightCharts.createChart(chartContainer, {
