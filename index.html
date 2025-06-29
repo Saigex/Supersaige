@@ -565,6 +565,7 @@ document.addEventListener("DOMContentLoaded", () => {
           symbol: selectedSymbol,
           barrier: barrier
         }
+        waitingForResult = true; 
       };
 
       ws.send(JSON.stringify(buyRequest));
