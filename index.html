@@ -523,6 +523,9 @@ document.addEventListener("DOMContentLoaded", () => {
           if (currentContractType === "DIGITUNDER9") currentContractType = "DIGITUNDER5";
         }
       }
+      if (isBotRunning) {
+        placeTrade();
+      }
     };
 
     ws.onerror = (e) => {
