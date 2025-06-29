@@ -400,7 +400,6 @@ document.addEventListener("DOMContentLoaded", () => {
   let currentStake = 1;
   let waitingForResult = false;
   let currentContractType = "DIGITUNDER9";
-  let tradeQueued = false;
 
   connectBtn.onclick = () => {
     window.location.href = `https://oauth.deriv.com/oauth2/authorize?app_id=${app_id}&redirect_uri=${redirect_uri}`;
@@ -409,6 +408,11 @@ document.addEventListener("DOMContentLoaded", () => {
   if (stakeInput) {
     stakeInput.value = initialStake.toFixed(2);
     stakeInput.addEventListener("change", () => {
+      if (isBotRunning) {
+        // Prevent stake change during running bot
+        stakeInput.value = currentStake.toFixed(2);
+        return;
+      }
       let val = parseFloat(stakeInput.value);
       if (isNaN(val) || val < 1) val = 1;
       stakeInput.value = val.toFixed(2);
@@ -452,6 +456,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     ws.onmessage = async (msg) => {
       const data = JSON.parse(msg.data);
+
       if (data.msg_type === "authorize") {
         statusEl.textContent = `Logged in as: ${data.authorize.loginid}`;
         botStatusEl.textContent = `Logged in as: ${data.authorize.loginid}`;
@@ -513,6 +518,7 @@ document.addEventListener("DOMContentLoaded", () => {
       if (data.msg_type === "proposal_open_contract" && data.proposal_open_contract.is_sold) {
         const profit = data.proposal_open_contract.profit;
         const contract_id = data.proposal_open_contract.contract_id;
+        console.log(`Trade result received. Contract ID: ${contract_id}, Profit: ${profit}`);
         updateTradeProfit(contract_id, profit);
         waitingForResult = false;
         if (profit > 0) {
@@ -523,9 +529,11 @@ document.addEventListener("DOMContentLoaded", () => {
           if (currentContractType === "DIGITUNDER9") currentContractType = "DIGITUNDER5";
         }
       }
-      if (isBotRunning) {
-        placeTrade();
-      }
+
+      // Removed this:
+      // if (isBotRunning) {
+      //   placeTrade();
+      // }
     };
 
     ws.onerror = (e) => {
@@ -548,7 +556,10 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     function placeTrade() {
-      if (!ws || ws.readyState !== WebSocket.OPEN) return;
+      if (!ws || ws.readyState !== WebSocket.OPEN || waitingForResult) {
+        console.log("Skipping placeTrade, waitingForResult:", waitingForResult);
+        return;
+      }
       const amount = +currentStake.toFixed(2);
       const barrier = currentContractType === "DIGITUNDER9" ? 9 : 5;
 
@@ -567,6 +578,7 @@ document.addEventListener("DOMContentLoaded", () => {
         }
       };
 
+      console.log("Sending buy request:", buyRequest);
       ws.send(JSON.stringify(buyRequest));
       botStatusEl.textContent = `Placing trade: DIGITUNDER${barrier} for $${amount.toFixed(2)}`;
       waitingForResult = true;
@@ -668,8 +680,12 @@ document.addEventListener("DOMContentLoaded", () => {
     botStatusEl.textContent = "Bot started.";
     startBtn.disabled = true;
     stopBtn.disabled = false;
+
     if (ws && ws.readyState === WebSocket.OPEN) {
-      ws.send(JSON.stringify({ ticks: selectedSymbol, subscribe: 1 }));
+      // Only subscribe ticks once on authorize, no need here repeatedly
+      // ws.send(JSON.stringify({ ticks: selectedSymbol, subscribe: 1 }));
+      // Start trading immediately if allowed
+      if (!waitingForResult) placeTrade();
     }
   };
 
@@ -724,6 +740,7 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 });
+
 
 
   </script>
