@@ -350,52 +350,43 @@ document.addEventListener("DOMContentLoaded", () => {
   const tradeHistoryBody = document.getElementById("tradeHistoryBody");
   const digitCanvas = document.getElementById("digitChart");
 
-  // Create and inject the configuration panel elements (Entrada, Daily Profit Target, Loss Limit, X ticks above 4)
   const controlPanel = document.querySelector(".control-panel");
 
-  // Container for new config inputs
   const configDiv = document.createElement("div");
   configDiv.style.display = "flex";
   configDiv.style.flexDirection = "column";
   configDiv.style.gap = "16px";
 
-  // Entrada (Initial Stake) already exists as stakeInput, so no need to add it again
-
-  // Meta do Dia: Daily Profit Target
   const profitTargetDiv = document.createElement("div");
   profitTargetDiv.classList.add("profit-target");
-  profitTargetDiv.innerHTML = 
+  profitTargetDiv.innerHTML = `
     <label for="dailyProfitTargetInput">Daily Profit Target (USD): </label>
     <input type="number" id="dailyProfitTargetInput" min="0" step="0.01" value="10" />
-  ;
+  `;
   configDiv.appendChild(profitTargetDiv);
 
-  // Limite de Perda: Daily Loss Limit
   const lossLimitDiv = document.createElement("div");
   lossLimitDiv.classList.add("loss-limit");
-  lossLimitDiv.innerHTML = 
+  lossLimitDiv.innerHTML = `
     <label for="dailyLossLimitInput">Daily Loss Limit (USD):</label>
     <input type="number" id="dailyLossLimitInput" min="0" step="0.01" value="99999" />
-  ;
+  `;
   configDiv.appendChild(lossLimitDiv);
 
-  // X ticks acima de 4: Number of ticks > 4 before trading
   const ticksAbove4Div = document.createElement("div");
   ticksAbove4Div.classList.add("ticks-above-4");
-  ticksAbove4Div.innerHTML = 
+  ticksAbove4Div.innerHTML = `
     <label for="ticksAbove4Input">Minimum number of ticks above 4 before trading:</label>
     <input type="number" id="ticksAbove4Input" min="0" step="1" value="1" />
-  ;
+  `;
   configDiv.appendChild(ticksAbove4Div);
 
   controlPanel.insertBefore(configDiv, controlPanel.querySelector(".buttons"));
 
-  // Grab new inputs
   const dailyProfitTargetInput = document.getElementById("dailyProfitTargetInput");
   const dailyLossLimitInput = document.getElementById("dailyLossLimitInput");
   const ticksAbove4Input = document.getElementById("ticksAbove4Input");
 
-  // Initialize Chart.js digit frequency bar chart
   const digitChart = new Chart(digitCanvas, {
     type: "bar",
     data: {
@@ -414,7 +405,7 @@ document.addEventListener("DOMContentLoaded", () => {
           max: 100,
           ticks: {
             color: "#94a3b8",
-            callback: value => value + "%"
+            callback: value => `${value}%`
           }
         },
         x: {
@@ -425,14 +416,13 @@ document.addEventListener("DOMContentLoaded", () => {
         legend: { display: false },
         tooltip: {
           callbacks: {
-            label: ctx => ${ctx.dataset.label}: ${ctx.raw.toFixed(2)}%
+            label: ctx => `${ctx.dataset.label}: ${ctx.raw.toFixed(2)}%`
           }
         }
       }
     }
   });
 
-  // Variables
   const last100Digits = [];
   let ws, token;
   let isBotRunning = false;
@@ -441,25 +431,19 @@ document.addEventListener("DOMContentLoaded", () => {
   let trades = [];
   let lastKnownBalance = 0;
 
-  // Bot trading variables
   let initialStake = 1;
   let currentStake = 1;
   let waitingForResult = false;
   let currentContractType = "DIGITUNDER9";
 
-  // Tracking daily profit/loss
   let dailyProfit = 0;
   let dailyLoss = 0;
-
-  // To count ticks above 4
   let ticksAbove4Count = 0;
 
-  // Connect Button Handler
   connectBtn.onclick = () => {
-    window.location.href = https://oauth.deriv.com/oauth2/authorize?app_id=${app_id}&redirect_uri=${redirect_uri};
+    window.location.href = `https://oauth.deriv.com/oauth2/authorize?app_id=${app_id}&redirect_uri=${redirect_uri}`;
   };
 
-  // Stake Input Handler
   if (stakeInput) {
     stakeInput.value = initialStake.toFixed(2);
     stakeInput.addEventListener("change", () => {
@@ -474,17 +458,15 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  // Parse accounts from URL params
   const urlParams = new URLSearchParams(window.location.search);
   const accounts = [];
   for (let i = 1; i <= 20; i++) {
-    const acct = urlParams.get(acct${i});
-    const tok = urlParams.get(token${i});
-    const currency = urlParams.get(cur${i}) || "";
+    const acct = urlParams.get(`acct${i}`);
+    const tok = urlParams.get(`token${i}`);
+    const currency = urlParams.get(`cur${i}`) || "";
     if (acct && tok) accounts.push({ loginid: acct, token: tok, currency });
   }
 
-  // Show connect or dashboard
   if (accounts.length === 0) {
     connectSection.style.display = "flex";
     dashboardSection.style.display = "none";
@@ -496,18 +478,17 @@ document.addEventListener("DOMContentLoaded", () => {
     accounts.forEach(acc => {
       const option = document.createElement("option");
       option.value = acc.token;
-      option.textContent = ${acc.loginid} (${acc.currency});
+      option.textContent = `${acc.loginid} (${acc.currency})`;
       accountSelector.appendChild(option);
     });
     connectToDeriv(accounts[0].token);
   }
 
-  // Connect WebSocket and setup handlers
   function connectToDeriv(selectedToken) {
     token = selectedToken;
     if (ws && ws.readyState === WebSocket.OPEN) ws.close();
 
-    ws = new WebSocket(wss://ws.derivws.com/websockets/v3?app_id=${app_id});
+    ws = new WebSocket(`wss://ws.derivws.com/websockets/v3?app_id=${app_id}`);
 
     ws.onopen = () => ws.send(JSON.stringify({ authorize: token }));
 
@@ -515,8 +496,8 @@ document.addEventListener("DOMContentLoaded", () => {
       const data = JSON.parse(msg.data);
 
       if (data.msg_type === "authorize") {
-        statusEl.textContent = Logged in as: ${data.authorize.loginid};
-        botStatusEl.textContent = Logged in as: ${data.authorize.loginid};
+        statusEl.textContent = `Logged in as: ${data.authorize.loginid}`;
+        botStatusEl.textContent = `Logged in as: ${data.authorize.loginid}`;
         getBalance();
         currentStake = initialStake;
         waitingForResult = false;
@@ -544,7 +525,7 @@ document.addEventListener("DOMContentLoaded", () => {
       if (data.msg_type === "balance") {
         let balance = parseFloat(data.balance.balance);
         lastKnownBalance = balance;
-        balanceEl.textContent = botBalanceEl.textContent = Balance: $${balance.toFixed(2)};
+        balanceEl.textContent = botBalanceEl.textContent = `Balance: $${balance.toFixed(2)}`;
         if (!isBotRunning) {
           startBtn.disabled = false;
           stopBtn.disabled = true;
@@ -564,7 +545,6 @@ document.addEventListener("DOMContentLoaded", () => {
         }
         if (lastDigit === null) return;
 
-        // Track ticks above 4 count for trading condition
         if (lastDigit > 4) ticksAbove4Count++;
         else ticksAbove4Count = 0;
 
@@ -572,31 +552,30 @@ document.addEventListener("DOMContentLoaded", () => {
         if (last100Digits.length > 100) last100Digits.shift();
         updateDigitChart();
 
-        botStatusEl.textContent = Last digit: ${lastDigit};
+        botStatusEl.textContent = `Last digit: ${lastDigit}`;
         if (lineSeries) lineSeries.update({ time: Math.floor(tick.epoch), value: price });
 
-        // Only place trade if bot is running, not waiting for result, and X ticks above 4 condition met
         if (isBotRunning && !waitingForResult) {
           const requiredTicksAbove4 = parseInt(ticksAbove4Input.value) || 1;
           if (ticksAbove4Count >= requiredTicksAbove4) {
-            // Check daily profit/loss limits
             const profitTarget = parseFloat(dailyProfitTargetInput.value) || 10;
-            const lossLimit = parseFloat(dailyLossLimitInput.value) || 99999;
+            const lossLimit = parseFloat(dailyLossLimitInput.value) || 999
+
 
             if (dailyProfit >= profitTarget) {
-              botStatusEl.textContent = Daily profit target reached ($${dailyProfit.toFixed(2)}). Bot paused.;
+              botStatusEl.textContent = `Daily profit target reached ($${dailyProfit.toFixed(2)}). Bot paused.`;
               stopBotExecution();
               return;
             }
             if (dailyLoss >= lossLimit) {
-              botStatusEl.textContent = Daily loss limit reached ($${dailyLoss.toFixed(2)}). Bot paused.;
+              botStatusEl.textContent = `Daily loss limit reached ($${dailyLoss.toFixed(2)}). Bot paused.`;
               stopBotExecution();
               return;
             }
 
             placeTrade();
           } else {
-            botStatusEl.textContent = Waiting for ${parseInt(ticksAbove4Input.value)} ticks > 4. Current: ${ticksAbove4Count};
+            botStatusEl.textContent = `Waiting for ${parseInt(ticksAbove4Input.value)} ticks > 4. Current: ${ticksAbove4Count}`;
           }
         }
       }
@@ -608,7 +587,7 @@ document.addEventListener("DOMContentLoaded", () => {
       if (data.msg_type === "proposal_open_contract" && data.proposal_open_contract.is_sold) {
         const profit = data.proposal_open_contract.profit;
         const contract_id = data.proposal_open_contract.contract_id;
-        console.log(Trade result received. Contract ID: ${contract_id}, Profit: ${profit});
+        console.log(`Trade result received. Contract ID: ${contract_id}, Profit: ${profit}`);
 
         updateTradeProfit(contract_id, profit);
 
@@ -675,7 +654,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
       console.log("Sending buy request:", buyRequest);
       ws.send(JSON.stringify(buyRequest));
-      botStatusEl.textContent = Placing trade: DIGITUNDER${barrier} for $${amount.toFixed(2)};
+      botStatusEl.textContent = `Placing trade: DIGITUNDER${barrier} for $${amount.toFixed(2)}`;
       waitingForResult = true;
     }
 
@@ -751,13 +730,13 @@ document.addEventListener("DOMContentLoaded", () => {
       const profit = parseFloat(trade.profit);
       const profitClass = isNaN(profit) ? "" : profit >= 0 ? "profit" : "loss";
       const tr = document.createElement("tr");
-      tr.innerHTML = 
+      tr.innerHTML = `
         <td>${trade.contract_id}</td>
         <td>${trade.type}</td>
         <td>$${parseFloat(trade.amount).toFixed(2)}</td>
-        <td class="${profitClass}">${trade.profit !== null ? $${parseFloat(trade.profit).toFixed(2)} : "-"}</td>
+        <td class="${profitClass}">${trade.profit !== null ? `$${parseFloat(trade.profit).toFixed(2)}` : "-"}</td>
         <td>${trade.time}</td>
-      ;
+      `;
       tradeHistoryBody.appendChild(tr);
     });
   }
