@@ -432,6 +432,10 @@ document.addEventListener("DOMContentLoaded", () => {
   let dailyLoss = 0;
   let ticksAbove4Count = 0;
 
+  let lossCount = 0;
+  let totalLoss = 0;
+
+
   connectBtn.onclick = () => {
     window.location.href = `https://oauth.deriv.com/oauth2/authorize?app_id=${app_id}&redirect_uri=${redirect_uri}`;
   };
@@ -580,17 +584,22 @@ document.addEventListener("DOMContentLoaded", () => {
         updateTradeProfit(contract_id, profit);
 
         // Update daily profit and loss trackers
-        if (profit > 0) {
-          dailyProfit += profit;
-          // Reset stake and contract type on win
-          currentStake = initialStake;
-          currentContractType = "DIGITUNDER9";
-        } else {
-          dailyLoss += Math.abs(profit);
-          // Increase stake by 25% on loss, switch contract type if needed
-          currentStake = +(currentStake * 1.25).toFixed(2);
-          if (currentContractType === "DIGITUNDER9") currentContractType = "DIGITUNDER5";
-        }
+if (profit > 0) {
+  dailyProfit += profit;
+  currentStake = initialStake;
+  currentContractType = "DIGITUNDER9";
+  totalLoss = 0;
+  lossCount = 0;
+} else {
+  dailyLoss += Math.abs(profit);
+  totalLoss += currentStake;
+  lossCount++;
+  const targetProfit = initialStake * 0.25;
+  currentStake = +(totalLoss + targetProfit).toFixed(2);
+
+  if (currentContractType === "DIGITUNDER9") currentContractType = "DIGITUNDER5";
+}
+
 
         waitingForResult = false;
       }
