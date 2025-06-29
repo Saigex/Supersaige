@@ -373,19 +373,11 @@ document.addEventListener("DOMContentLoaded", () => {
   `;
   configDiv.appendChild(lossLimitDiv);
 
-  const ticksAbove4Div = document.createElement("div");
-  ticksAbove4Div.classList.add("ticks-above-4");
-  ticksAbove4Div.innerHTML = `
-    <label for="ticksAbove4Input">Minimum number of ticks above 4 before trading:</label>
-    <input type="number" id="ticksAbove4Input" min="0" step="1" value="1" />
-  `;
-  configDiv.appendChild(ticksAbove4Div);
 
   controlPanel.insertBefore(configDiv, controlPanel.querySelector(".buttons"));
 
   const dailyProfitTargetInput = document.getElementById("dailyProfitTargetInput");
   const dailyLossLimitInput = document.getElementById("dailyLossLimitInput");
-  const ticksAbove4Input = document.getElementById("ticksAbove4Input");
 
   const digitChart = new Chart(digitCanvas, {
     type: "bar",
@@ -556,28 +548,23 @@ document.addEventListener("DOMContentLoaded", () => {
         if (lineSeries) lineSeries.update({ time: Math.floor(tick.epoch), value: price });
 
         if (isBotRunning && !waitingForResult) {
-          const requiredTicksAbove4 = parseInt(ticksAbove4Input.value) || 1;
-          if (ticksAbove4Count >= requiredTicksAbove4) {
-            const profitTarget = parseFloat(dailyProfitTargetInput.value) || 10;
-            const lossLimit = parseFloat(dailyLossLimitInput.value) || 999
+  const profitTarget = parseFloat(dailyProfitTargetInput.value) || 10;
+  const lossLimit = parseFloat(dailyLossLimitInput.value) || 999;
 
+  if (dailyProfit >= profitTarget) {
+    botStatusEl.textContent = `Daily profit target reached ($${dailyProfit.toFixed(2)}). Bot paused.`;
+    stopBotExecution();
+    return;
+  }
+  if (dailyLoss >= lossLimit) {
+    botStatusEl.textContent = `Daily loss limit reached ($${dailyLoss.toFixed(2)}). Bot paused.`;
+    stopBotExecution();
+    return;
+  }
 
-            if (dailyProfit >= profitTarget) {
-              botStatusEl.textContent = `Daily profit target reached ($${dailyProfit.toFixed(2)}). Bot paused.`;
-              stopBotExecution();
-              return;
-            }
-            if (dailyLoss >= lossLimit) {
-              botStatusEl.textContent = `Daily loss limit reached ($${dailyLoss.toFixed(2)}). Bot paused.`;
-              stopBotExecution();
-              return;
-            }
+  placeTrade();
+}
 
-            placeTrade();
-          } else {
-            botStatusEl.textContent = `Waiting for ${parseInt(ticksAbove4Input.value)} ticks > 4. Current: ${ticksAbove4Count}`;
-          }
-        }
       }
 
       if (data.msg_type === "buy" && data.buy) {
@@ -742,31 +729,33 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   // Start Bot Button Handler
-  startBtn.onclick = () => {
-    isBotRunning = true;
-    waitingForResult = false;
+startBtn.onclick = () => {
+  isBotRunning = true;
+  waitingForResult = false;
+  ticksAbove4Count = 0;
 
-    // Validate and set stake
-    if (stakeInput) {
-      let val = parseFloat(stakeInput.value);
-      if (isNaN(val) || val < 1) {
-        stakeInput.value = "1.00";
-        initialStake = 1;
-      } else {
-        initialStake = val;
-      }
-      currentStake = initialStake;
-      stakeInput.disabled = true;
+  if (stakeInput) {
+    let val = parseFloat(stakeInput.value);
+    if (isNaN(val) || val < 1) {
+      stakeInput.value = "1.00";
+      initialStake = 1;
+    } else {
+      initialStake = val;
     }
+    currentStake = initialStake;
+    stakeInput.disabled = true;
+  }
 
-    botStatusEl.textContent = "Bot started.";
-    startBtn.disabled = true;
-    stopBtn.disabled = false;
+  botStatusEl.textContent = "Bot started.";
+  startBtn.disabled = true;
+  stopBtn.disabled = false;
 
-    if (ws && ws.readyState === WebSocket.OPEN) {
-      if (!waitingForResult) placeTrade();
-    }
-  };
+  // 🧠 KEY FIX: re-subscribe to tick stream
+  if (ws && ws.readyState === WebSocket.OPEN) {
+    ws.send(JSON.stringify({ ticks: selectedSymbol, subscribe: 1 }));
+  }
+};
+
 
   // Stop Bot Button Handler
   stopBtn.onclick = () => {
