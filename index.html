@@ -572,6 +572,7 @@ document.addEventListener("DOMContentLoaded", () => {
       }
 
       if (data.msg_type === "proposal_open_contract" && data.proposal_open_contract.is_sold) {
+        console.log("Trade sold, result received:", data.proposal_open_contract);
         const profit = data.proposal_open_contract.profit;
         const contract_id = data.proposal_open_contract.contract_id;
         console.log(`Trade result received. Contract ID: ${contract_id}, Profit: ${profit}`);
@@ -656,14 +657,21 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // Add trade to history with profit = null initially
     function handleBuy(buyData) {
-      addTradeToHistory({
-        contract_id: buyData.contract_id,
-        type: buyData.contract_type,
-        amount: buyData.buy_price,
-        profit: null,
-        time: new Date().toLocaleTimeString(),
-      });
-    }
+  addTradeToHistory({
+    contract_id: buyData.contract_id,
+    type: currentContractType,
+    amount: buyData.buy_price,
+    profit: null,
+    time: new Date().toLocaleTimeString(),
+  });
+
+  // 🛠 Subscribe to contract updates
+  ws.send(JSON.stringify({
+    proposal_open_contract: 1,
+    contract_id: buyData.contract_id,
+    subscribe: 1
+  }));
+}
 
     // Load historical candle data for line chart
     function loadHistoricalData(symbol) {
