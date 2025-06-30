@@ -115,40 +115,34 @@
     <select id="accountSelector" style="background: #0a0119; color: white; border: 1px solid #007bff; border-radius: 6px; padding: 6px;"></select>
   </header>
 
-  <main style="display: flex; gap: 20px; flex-wrap: wrap; min-height: 500px;">
-    <section style="flex: 2; display: flex; flex-direction: column; justify-content: space-between; background: #0a0119; border-radius: 12px; padding: 20px; min-width: 300px;">
-      <div id="chart" style="flex-grow: 1; min-height: 300px;"></div>
-      <div id="digitChartContainer" style="margin-top: 20px; background: #100028; padding: 10px; border-radius: 10px;">
-        <canvas id="digitChart" height="120"></canvas>
-        <small style="display: block; margin-top: 8px; color: #aaa;">Last 25 Ticks</small>
-      </div>
-    </section>
+  <main style="display: flex; gap: 20px; flex-wrap: wrap; min-height: 600px; align-items: stretch;">
+  <!-- Chart Section -->
+  <section style="flex: 2; display: flex; flex-direction: column; justify-content: space-between; background: #0a0119; border-radius: 12px; padding: 20px; min-width: 300px;">
+    <div id="chart" style="flex-grow: 1; min-height: 300px;"></div>
 
-    <section class="control-panel" style="flex: 1; background: #0a0119; border-radius: 12px; padding: 20px; color: #ccc; display: flex; flex-direction: column; gap: 16px;">
-      <div class="status" id="botStatus" style="color: #ccc;">Not started</div>
-      <div class="balance" id="botBalance" style="color: #007bff; font-weight: bold;">Balance: -</div>
+    <div id="digitChartContainer" style="margin-top: 20px; background: #100028; padding: 10px; border-radius: 10px;">
+      <canvas id="digitChart" height="120"></canvas>
+      <small style="display: block; margin-top: 8px; color: #aaa;">Last 25 Ticks</small>
+    </div>
+  </section>
 
-      <div class="stake">
-        <label for="stakeInput" style="margin-bottom: 4px; display: block;">Initial Stake Amount (USD, min $1):</label>
-        <input type="number" id="stakeInput" min="1" step="0.01" value="1" style="width: 100%; padding: 8px; background: #100028; color: white; border: none; border-radius: 8px; margin-top: 10px;">
-      </div>
+  <!-- Control Panel Section -->
+  <section class="control-panel" style="flex: 1; background: #0a0119; border-radius: 12px; padding: 20px; color: #ccc; display: flex; flex-direction: column; gap: 16px;">
+    <div class="status" id="botStatus" style="color: #ccc;">Not started</div>
+    <div class="balance" id="botBalance" style="color: #007bff; font-weight: bold;">Balance: -</div>
 
-      <div>
-        <label for="dailyProfitTargetInput" style="margin-bottom: 4px; display: block;">Daily Profit Target (USD):</label>
-        <input type="number" id="dailyProfitTargetInput" value="10" step="0.01" min="0" style="width: 100%; padding: 8px; background: #100028; color: white; border: none; border-radius: 8px; margin-top: 10px;">
-      </div>
+    <div class="stake">
+      <label for="stakeInput" style="margin-bottom: 4px; display: block;">Initial Stake Amount (USD, min $1):</label>
+      <input type="number" id="stakeInput" min="1" step="0.01" value="1" style="width: 100%; padding: 8px; background: #100028; color: white; border: none; border-radius: 8px; margin-top: 10px;">
+    </div>
 
-      <div>
-        <label for="dailyLossLimitInput" style="margin-bottom: 4px; display: block;">Daily Loss Limit (USD):</label>
-        <input type="number" id="dailyLossLimitInput" value="99999" step="0.01" min="0" style="width: 100%; padding: 8px; background: #100028; color: white; border: none; border-radius: 8px; margin-top: 10px;">
-      </div>
+    <div class="buttons" style="display: flex; gap: 10px;">
+      <button id="startBot" style="flex: 1; background: #007bff; color: white; border: none; border-radius: 8px; padding: 10px;">Start Bot</button>
+      <button id="stopBot" disabled style="flex: 1; background: #dc3545; color: white; border: none; border-radius: 8px; padding: 10px;">Stop Bot</button>
+    </div>
+  </section>
+</main>
 
-      <div class="buttons" style="display: flex; gap: 10px;">
-        <button id="startBot" style="flex: 1; background: #007bff; color: white; border: none; border-radius: 8px; padding: 10px;">Start Bot</button>
-        <button id="stopBot" disabled style="flex: 1; background: #dc3545; color: white; border: none; border-radius: 8px; padding: 10px;">Stop Bot</button>
-      </div>
-    </section>
-  </main>
 
   <section id="tradeHistorySection" style="margin-top: 20px; background: #0a0119; padding: 20px; border-radius: 12px;">
     <h2 style="color: #007bff; margin-bottom: 12px;">Trade History</h2>
