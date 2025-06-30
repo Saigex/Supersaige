@@ -130,17 +130,17 @@
 
       <div class="stake">
         <label for="stakeInput" style="margin-bottom: 4px; display: block;">Initial Stake Amount (USD, min $1):</label>
-        <input type="number" id="stakeInput" min="1" step="0.01" value="1" style="width: 100%; padding: 8px; background: #100028; color: white; border: none; border-radius: 8px;">
+        <input type="number" id="stakeInput" min="1" step="0.01" value="1" style="width: 100%; padding: 8px; background: #100028; color: white; border: none; border-radius: 8px; margin-top: 10px;">
       </div>
 
       <div>
         <label for="dailyProfitTargetInput" style="margin-bottom: 4px; display: block;">Daily Profit Target (USD):</label>
-        <input type="number" id="dailyProfitTargetInput" value="10" step="0.01" min="0" style="width: 100%; padding: 8px; background: #100028; color: white; border: none; border-radius: 8px;">
+        <input type="number" id="dailyProfitTargetInput" value="10" step="0.01" min="0" style="width: 100%; padding: 8px; background: #100028; color: white; border: none; border-radius: 8px; margin-top: 10px;">
       </div>
 
       <div>
         <label for="dailyLossLimitInput" style="margin-bottom: 4px; display: block;">Daily Loss Limit (USD):</label>
-        <input type="number" id="dailyLossLimitInput" value="99999" step="0.01" min="0" style="width: 100%; padding: 8px; background: #100028; color: white; border: none; border-radius: 8px;">
+        <input type="number" id="dailyLossLimitInput" value="99999" step="0.01" min="0" style="width: 100%; padding: 8px; background: #100028; color: white; border: none; border-radius: 8px; margin-top: 10px;">
       </div>
 
       <div class="buttons" style="display: flex; gap: 10px;">
@@ -202,28 +202,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
   const controlPanel = document.querySelector(".control-panel");
 
-  const configDiv = document.createElement("div");
-  configDiv.style.display = "flex";
-  configDiv.style.flexDirection = "column";
-  configDiv.style.gap = "16px";
-
-  const profitTargetDiv = document.createElement("div");
-  profitTargetDiv.classList.add("profit-target");
-  profitTargetDiv.innerHTML = `
-    <label for="dailyProfitTargetInput">Daily Profit Target (USD): </label>
-    <input type="number" id="dailyProfitTargetInput" min="0" step="0.01" value="10" />
-  `;
-  configDiv.appendChild(profitTargetDiv);
-
-  const lossLimitDiv = document.createElement("div");
-  lossLimitDiv.classList.add("loss-limit");
-  lossLimitDiv.innerHTML = `
-    <label for="dailyLossLimitInput">Daily Loss Limit (USD):</label>
-    <input type="number" id="dailyLossLimitInput" min="0" step="0.01" value="99999" />
-  `;
-  configDiv.appendChild(lossLimitDiv);
-
-  controlPanel.insertBefore(configDiv, controlPanel.querySelector(".buttons"));
 
   const dailyProfitTargetInput = document.getElementById("dailyProfitTargetInput");
   const dailyLossLimitInput = document.getElementById("dailyLossLimitInput");
