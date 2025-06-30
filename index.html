@@ -125,37 +125,36 @@
       </div>
     </section>
 
-    <section class="control-panel" style="flex: 1; background: #0a0119; border-radius: 12px; padding: 20px; color: #ccc; display: flex; flex-direction: column; justify-content: space-between; height: 100%;">
-  <div class="status-group" style="text-align: center; font-weight: 700; font-size: 20px; color: #ccc; margin-bottom: 20px;">
-    <div id="botStatus" style="margin-bottom: 8px;">Last digit: 0</div>
-    <div id="botBalance" style="color: #007bff; margin-bottom: 8px;">Balance: $0.00</div>
-  </div>
+    <section class="control-panel" style="flex: 1; background: #0a0119; border-radius: 12px; padding: 20px; color: #ccc; display: flex; flex-direction: column; gap: 20px;">
+      
+      <!-- Bigger + Centered Digit and Balance -->
+      <div style="text-align: center;">
+        <div class="status" id="botStatus" style="color: #ccc; font-size: 20px;">Last digit: 0</div>
+        <div class="balance" id="botBalance" style="color: #007bff; font-weight: bold; font-size: 20px;">Balance: $0.00</div>
+      </div>
 
-  <div class="inputs-buttons-group" style="display: flex; flex-direction: column; gap: 20px;">
-    <div class="stake">
-      <label for="stakeInput">Initial Stake Amount (USD, min $1):</label>
-      <input type="number" id="stakeInput" min="1" step="0.01" value="1" style="width: 100%; padding: 8px; background: #100028; color: white; border: none; border-radius: 8px;">
-    </div>
+      <!-- Inputs -->
+      <div class="stake">
+        <label for="stakeInput">Initial Stake Amount (USD, min $1):</label>
+        <input type="number" id="stakeInput" min="1" step="0.01" value="1" style="width: 100%; padding: 8px; background: #100028; color: white; border: none; border-radius: 8px;">
+      </div>
 
-    <div>
-      <label for="dailyProfitTargetInput">Daily Profit Target (USD):</label>
-      <input type="number" id="dailyProfitTargetInput" value="10" step="0.01" min="0" style="width: 100%; padding: 8px; background: #100028; color: white; border: none; border-radius: 8px;">
-    </div>
+      <div>
+        <label for="dailyProfitTargetInput">Daily Profit Target (USD):</label>
+        <input type="number" id="dailyProfitTargetInput" value="10" step="0.01" min="0" style="width: 100%; padding: 8px; background: #100028; color: white; border: none; border-radius: 8px;">
+      </div>
 
-    <div>
-      <label for="dailyLossLimitInput">Daily Loss Limit (USD):</label>
-      <input type="number" id="dailyLossLimitInput" value="99999" step="0.01" min="0" style="width: 100%; padding: 8px; background: #100028; color: white; border: none; border-radius: 8px;">
-    </div>
+      <div>
+        <label for="dailyLossLimitInput">Daily Loss Limit (USD):</label>
+        <input type="number" id="dailyLossLimitInput" value="99999" step="0.01" min="0" style="width: 100%; padding: 8px; background: #100028; color: white; border: none; border-radius: 8px;">
+      </div>
 
-    <div class="buttons" style="display: flex; gap: 10px;">
-      <button id="startBot" style="flex: 1; background: #007bff; color: white; border: none; border-radius: 8px; padding: 10px;">Start Bot</button>
-      <button id="stopBot" disabled style="flex: 1; background: #dc3545; color: white; border: none; border-radius: 8px; padding: 10px;">Stop Bot</button>
-    </div>
-  </div>
-
-  <div id="totalProfitLoss" style="font-weight: 700; font-size: 20px; text-align: center; color: #22c55e; margin-top: 20px;">Total Profit/Loss: $0.00</div>
-</section>
-
+      <!-- Buttons -->
+      <div class="buttons" style="display: flex; gap: 10px;">
+        <button id="startBot" style="flex: 1; background: #007bff; color: white; border: none; border-radius: 8px; padding: 10px;">Start Bot</button>
+        <button id="stopBot" disabled style="flex: 1; background: #dc3545; color: white; border: none; border-radius: 8px; padding: 10px;">Stop Bot</button>
+      </div>
+    </section>
   </main>
 
   <!-- Trade History -->
@@ -215,8 +214,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
   const dailyProfitTargetInput = document.getElementById("dailyProfitTargetInput");
   const dailyLossLimitInput = document.getElementById("dailyLossLimitInput");
-  const totalProfitLossEl = document.getElementById("totalProfitLoss");
-
 
   const digitChart = new Chart(digitCanvas, {
     type: "bar",
@@ -425,28 +422,19 @@ document.addEventListener("DOMContentLoaded", () => {
 
         updateTradeProfit(contract_id, profit);
 
-      if (profit !== null) {
-  if (profit > 0) {
-    dailyProfit += profit;
-    // Reset stake and contract type on win
-    currentStake = initialStake;
-    currentContractType = "DIGITUNDER9";
-    totalLoss = 0;
-    lossCount = 0;
-  } else {
-    dailyLoss += Math.abs(profit);
-    totalLoss += currentStake;
-    lossCount++;
-    const targetProfit = initialStake * 0.25;
-    currentStake = +(totalLoss + targetProfit).toFixed(2);
-    if (currentContractType === "DIGITUNDER9") currentContractType = "DIGITUNDER5";
-  }
-  
-const totalProfitLoss = dailyProfit - dailyLoss;
-totalProfitLossEl.textContent = `Total Profit/Loss: $${totalProfitLoss.toFixed(2)}`;
-totalProfitLossEl.style.color = totalProfitLoss >= 0 ? "#22c55e" : "#ef4444";
+        if (profit > 0) {
+          dailyProfit += profit;
+          currentStake = initialStake;
+          currentContractType = "DIGITUNDER9";
+          totalLoss = 0;
+          lossCount = 0;
+        } else {
+          dailyLoss += Math.abs(profit);
+          totalLoss += currentStake;
+          lossCount++;
+          const targetProfit = initialStake * 0.25;
+          currentStake = +(totalLoss + targetProfit).toFixed(2);
 
-}
           if (currentContractType === "DIGITUNDER9") currentContractType = "DIGITUNDER5";
         }
 
@@ -460,247 +448,245 @@ totalProfitLossEl.style.color = totalProfitLoss >= 0 ? "#22c55e" : "#ef4444";
       console.error("WebSocket error", e);
     };
 
-    ws.onclose = () => {
-      statusEl.textContent = "Disconnected.";
-      botStatusEl.textContent = "Disconnected.";
-      startBtn.disabled = true;
-      stopBtn.disabled = true;
-    };
+   ws.onclose = () => {
+  statusEl.textContent = "Disconnected.";
+  botStatusEl.textContent = "Disconnected.";
+  startBtn.disabled = true;
+  stopBtn.disabled = true;
+};
 
-    function getBalance() {
-      if (ws && ws.readyState === WebSocket.OPEN) {
-        ws.send(JSON.stringify({ balance: 1, subscribe: 1 }));
-      }
-    }
-
-    function placeTrade() {
-      if (!ws || ws.readyState !== WebSocket.OPEN || waitingForResult) return;
-
-      const amount = +currentStake.toFixed(2);
-      const barrier = currentContractType === "DIGITUNDER9" ? 9 : 5;
-
-      const buyRequest = {
-        buy: 1,
-        price: amount,
-        parameters: {
-          amount: amount,
-          basis: "stake",
-          contract_type: "DIGITUNDER",
-          currency: "USD",
-          duration: 1,
-          duration_unit: "t",
-          symbol: selectedSymbol,
-          barrier: barrier
-        }
-      };
-
-      ws.send(JSON.stringify(buyRequest));
-      botStatusEl.textContent = `Placing trade: DIGITUNDER${barrier} for $${amount.toFixed(2)}`;
-      waitingForResult = true;
-    }
-
-    function updateDigitChart() {
-      const counts = Array(10).fill(0);
-      last100Digits.forEach(d => counts[d]++);
-      const total = last100Digits.length;
-      const percentages = counts.map(c => (c / total) * 100);
-
-      const maxVal = Math.max(...percentages);
-      const minVal = Math.min(...percentages);
-
-      const colors = percentages.map(p => {
-        if (p === maxVal) return "#4ade80";
-        if (p === minVal) return "#ef4444";
-        return "#ffffff";
-      });
-
-      digitChart.data.datasets[0].data = percentages;
-      digitChart.data.datasets[0].backgroundColor = colors;
-      digitChart.update();
-    }
-
-    function handleBuy(buyData) {
-      addTradeToHistory({
-        contract_id: buyData.contract_id,
-        type: currentContractType,
-        amount: buyData.buy_price,
-        profit: null,
-        time: new Date().toLocaleTimeString(),
-      });
-
-      ws.send(JSON.stringify({
-        proposal_open_contract: 1,
-        contract_id: buyData.contract_id,
-        subscribe: 1
-      }));
-    }
-
-    function loadHistoricalData(symbol) {
-      return new Promise((resolve, reject) => {
-        const req_id = Date.now();
-        ws.send(JSON.stringify({
-          ticks_history: symbol,
-          end: "latest",
-          count: 100,
-          granularity: 60,
-          style: "candles",
-          req_id: req_id
-        }));
-
-        function onMessage(event) {
-          const data = JSON.parse(event.data);
-          if (data.req_id === req_id) {
-            ws.removeEventListener("message", onMessage);
-            if (data.candles) {
-              const candles = data.candles.map(c => ({ time: c.epoch, value: c.close }));
-              resolve(candles);
-            } else reject("No candles returned.");
-          }
-        }
-
-        ws.addEventListener("message", onMessage);
-      });
-    }
-
-    async function loadLast25Digits(symbol) {
-      return new Promise((resolve, reject) => {
-        const req_id = Date.now();
-        ws.send(JSON.stringify({
-          ticks_history: symbol,
-          end: "latest",
-          count: 25,
-          style: "ticks",
-          req_id: req_id
-        }));
-
-        function onMessage(event) {
-          const data = JSON.parse(event.data);
-          if (data.req_id === req_id) {
-            ws.removeEventListener("message", onMessage);
-            if (data.history && data.history.prices) {
-              const digits = data.history.prices.map(price => getSecondDecimalDigit(price));
-              resolve(digits);
-            } else {
-              reject("No tick history returned.");
-            }
-          }
-        }
-
-        ws.addEventListener("message", onMessage);
-      });
-    }
+function getBalance() {
+  if (ws && ws.readyState === WebSocket.OPEN) {
+    ws.send(JSON.stringify({ balance: 1, subscribe: 1 }));
   }
+}
 
-  function addTradeToHistory(trade) {
-    trades.unshift(trade);
-    if (trades.length > 50) trades.pop();
-    renderTradeHistory();
-  }
+function placeTrade() {
+  if (!ws || ws.readyState !== WebSocket.OPEN || waitingForResult) return;
 
-  function updateTradeProfit(contract_id, profit) {
-    const trade = trades.find(t => t.contract_id === contract_id);
-    if (trade) {
-      trade.profit = profit.toFixed(2);
-      renderTradeHistory();
-    }
-  }
+  const amount = +currentStake.toFixed(2);
+  const barrier = currentContractType === "DIGITUNDER9" ? 9 : 5;
 
-  function renderTradeHistory() {
-    tradeHistoryBody.innerHTML = "";
-    trades.forEach(trade => {
-      const profit = parseFloat(trade.profit);
-      const profitClass = isNaN(profit) ? "" : profit >= 0 ? "profit" : "loss";
-      const tr = document.createElement("tr");
-      tr.innerHTML = `
-        <td>${trade.contract_id}</td>
-        <td>${trade.type}</td>
-        <td>$${parseFloat(trade.amount).toFixed(2)}</td>
-        <td class="${profitClass}">${trade.profit !== null ? `$${parseFloat(trade.profit).toFixed(2)}` : "-"}</td>
-        <td>${trade.time}</td>
-      `;
-      tradeHistoryBody.appendChild(tr);
-    });
-  }
-
-  startBtn.onclick = () => {
-    isBotRunning = true;
-    waitingForResult = false;
-    ticksAbove4Count = 0;
-
-    if (stakeInput) {
-      let val = parseFloat(stakeInput.value);
-      if (isNaN(val) || val < 1) {
-        stakeInput.value = "1.00";
-        initialStake = 1;
-      } else {
-        initialStake = val;
-      }
-      currentStake = initialStake;
-      stakeInput.disabled = true;
-    }
-
-    botStatusEl.textContent = "Bot started.";
-    startBtn.disabled = true;
-    stopBtn.disabled = false;
-
-    if (ws && ws.readyState === WebSocket.OPEN) {
-      ws.send(JSON.stringify({ ticks: selectedSymbol, subscribe: 1 }));
+  const buyRequest = {
+    buy: 1,
+    price: amount,
+    parameters: {
+      amount: amount,
+      basis: "stake",
+      contract_type: "DIGITUNDER",
+      currency: "USD",
+      duration: 1,
+      duration_unit: "t",
+      symbol: selectedSymbol,
+      barrier: barrier
     }
   };
 
-  stopBtn.onclick = () => {
-    stopBotExecution();
-  };
+  ws.send(JSON.stringify(buyRequest));
+  botStatusEl.textContent = `Placing trade: DIGITUNDER${barrier} for $${amount.toFixed(2)}`;
+  waitingForResult = true;
+}
 
-  function stopBotExecution() {
-    isBotRunning = false;
-    waitingForResult = false;
-    currentStake = initialStake;
-    currentContractType = "DIGITUNDER9";
-    botStatusEl.textContent = "Bot stopped.";
-    startBtn.disabled = false;
-    stopBtn.disabled = true;
-    stakeInput.disabled = false;
-    if (ws && ws.readyState === WebSocket.OPEN) ws.send(JSON.stringify({ forget_all: ["ticks"] }));
-  }
+function updateDigitChart() {
+  const counts = Array(10).fill(0);
+  last100Digits.forEach(d => counts[d]++);
+  const total = last100Digits.length;
+  const percentages = counts.map(c => (c / total) * 100);
 
-  accountSelector.addEventListener("change", (e) => {
-    if (ws) ws.close();
-    stopBotExecution();
-    trades = [];
-    renderTradeHistory();
-    balanceEl.textContent = botBalanceEl.textContent = "Balance: --";
-    botStatusEl.textContent = statusEl.textContent = "Switching accounts...";
-    connectToDeriv(e.target.value);
+  const maxVal = Math.max(...percentages);
+  const minVal = Math.min(...percentages);
+
+  const colors = percentages.map(p => {
+    if (p === maxVal) return "#4ade80";
+    if (p === minVal) return "#ef4444";
+    return "#ffffff";
   });
 
-  function initChart() {
-    const chartContainer = document.getElementById("chart");
-    chart = LightweightCharts.createChart(chartContainer, {
-      width: chartContainer.clientWidth,
-      height: chartContainer.clientHeight,
-      layout: {
-        backgroundColor: "#0f172a",
-        textColor: "#94a3b8",
-      },
-      grid: {
-        vertLines: { color: "#334155" },
-        horzLines: { color: "#334155" },
-      },
-      crosshair: { mode: LightweightCharts.CrosshairMode.Normal },
-      priceScale: { borderColor: "#334155" },
-    });
+  digitChart.data.datasets[0].data = percentages;
+  digitChart.data.datasets[0].backgroundColor = colors;
+  digitChart.update();
+}
 
-    lineSeries = chart.addLineSeries({ color: "#4ade80", lineWidth: 2 });
-    lineSeries.setData([]);
+function handleBuy(buyData) {
+  addTradeToHistory({
+    contract_id: buyData.contract_id,
+    type: currentContractType,
+    amount: buyData.buy_price,
+    profit: null,
+    time: new Date().toLocaleTimeString(),
+  });
 
-    window.addEventListener("resize", () => {
-      if (chart) {
-        chart.resize(chartContainer.clientWidth, chartContainer.clientHeight);
+  ws.send(JSON.stringify({
+    proposal_open_contract: 1,
+    contract_id: buyData.contract_id,
+    subscribe: 1
+  }));
+}
+
+function loadHistoricalData(symbol) {
+  return new Promise((resolve, reject) => {
+    const req_id = Date.now();
+    ws.send(JSON.stringify({
+      ticks_history: symbol,
+      end: "latest",
+      count: 100,
+      granularity: 60,
+      style: "candles",
+      req_id: req_id
+    }));
+
+    function onMessage(event) {
+      const data = JSON.parse(event.data);
+      if (data.req_id === req_id) {
+        ws.removeEventListener("message", onMessage);
+        if (data.candles) {
+          const candles = data.candles.map(c => ({ time: c.epoch, value: c.close }));
+          resolve(candles);
+        } else reject("No candles returned.");
       }
-    });
+    }
+
+    ws.addEventListener("message", onMessage);
+  });
+}
+
+async function loadLast25Digits(symbol) {
+  return new Promise((resolve, reject) => {
+    const req_id = Date.now();
+    ws.send(JSON.stringify({
+      ticks_history: symbol,
+      end: "latest",
+      count: 25,
+      style: "ticks",
+      req_id: req_id
+    }));
+
+    function onMessage(event) {
+      const data = JSON.parse(event.data);
+      if (data.req_id === req_id) {
+        ws.removeEventListener("message", onMessage);
+        if (data.history && data.history.prices) {
+          const digits = data.history.prices.map(price => getSecondDecimalDigit(price));
+          resolve(digits);
+        } else {
+          reject("No tick history returned.");
+        }
+      }
+    }
+
+    ws.addEventListener("message", onMessage);
+  });
+}
+
+function addTradeToHistory(trade) {
+  trades.unshift(trade);
+  if (trades.length > 50) trades.pop();
+  renderTradeHistory();
+}
+
+function updateTradeProfit(contract_id, profit) {
+  const trade = trades.find(t => t.contract_id === contract_id);
+  if (trade) {
+    trade.profit = profit.toFixed(2);
+    renderTradeHistory();
   }
+}
+
+function renderTradeHistory() {
+  tradeHistoryBody.innerHTML = "";
+  trades.forEach(trade => {
+    const profit = parseFloat(trade.profit);
+    const profitClass = isNaN(profit) ? "" : profit >= 0 ? "profit" : "loss";
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td>${trade.contract_id}</td>
+      <td>${trade.type}</td>
+      <td>$${parseFloat(trade.amount).toFixed(2)}</td>
+      <td class="${profitClass}">${trade.profit !== null ? `$${parseFloat(trade.profit).toFixed(2)}` : "-"}</td>
+      <td>${trade.time}</td>
+    `;
+    tradeHistoryBody.appendChild(tr);
+  });
+}
+
+startBtn.onclick = () => {
+  isBotRunning = true;
+  waitingForResult = false;
+  ticksAbove4Count = 0;
+
+  if (stakeInput) {
+    let val = parseFloat(stakeInput.value);
+    if (isNaN(val) || val < 1) {
+      stakeInput.value = "1.00";
+      initialStake = 1;
+    } else {
+      initialStake = val;
+    }
+    currentStake = initialStake;
+    stakeInput.disabled = true;
+  }
+
+  botStatusEl.textContent = "Bot started.";
+  startBtn.disabled = true;
+  stopBtn.disabled = false;
+
+  if (ws && ws.readyState === WebSocket.OPEN) {
+    ws.send(JSON.stringify({ ticks: selectedSymbol, subscribe: 1 }));
+  }
+};
+
+stopBtn.onclick = () => {
+  stopBotExecution();
+};
+
+function stopBotExecution() {
+  isBotRunning = false;
+  waitingForResult = false;
+  currentStake = initialStake;
+  currentContractType = "DIGITUNDER9";
+  botStatusEl.textContent = "Bot stopped.";
+  startBtn.disabled = false;
+  stopBtn.disabled = true;
+  stakeInput.disabled = false;
+  if (ws && ws.readyState === WebSocket.OPEN) ws.send(JSON.stringify({ forget_all: ["ticks"] }));
+}
+
+accountSelector.addEventListener("change", (e) => {
+  if (ws) ws.close();
+  stopBotExecution();
+  trades = [];
+  renderTradeHistory();
+  balanceEl.textContent = botBalanceEl.textContent = "Balance: --";
+  botStatusEl.textContent = statusEl.textContent = "Switching accounts...";
+  connectToDeriv(e.target.value);
 });
+
+function initChart() {
+  const chartContainer = document.getElementById("chart");
+  chart = LightweightCharts.createChart(chartContainer, {
+    width: chartContainer.clientWidth,
+    height: chartContainer.clientHeight,
+    layout: {
+      backgroundColor: "#0f172a",
+      textColor: "#94a3b8",
+    },
+    grid: {
+      vertLines: { color: "#334155" },
+      horzLines: { color: "#334155" },
+    },
+    crosshair: { mode: LightweightCharts.CrosshairMode.Normal },
+    priceScale: { borderColor: "#334155" },
+  });
+
+  lineSeries = chart.addLineSeries({ color: "#4ade80", lineWidth: 2 });
+  lineSeries.setData([]);
+
+  window.addEventListener("resize", () => {
+    if (chart) {
+      chart.resize(chartContainer.clientWidth, chartContainer.clientHeight);
+    }
+  });
+}
 
 
 
