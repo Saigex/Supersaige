@@ -213,17 +213,19 @@ const configDiv = document.createElement("div");
   const profitTargetDiv = document.createElement("div");
   profitTargetDiv.classList.add("profit-target");
   profitTargetDiv.innerHTML = `
-    <label for="dailyProfitTargetInput">Daily Profit Target (USD): </label>
-    <input type="number" id="dailyProfitTargetInput" min="0" step="0.01" value="10" />
-  `;
+  <label for="dailyProfitTargetInput" style="margin-bottom: 4px; display: block;">Daily Profit Target (USD):</label>
+  <input type="number" id="dailyProfitTargetInput" min="0" step="0.01" value="10" 
+    style="width: 100%; padding: 8px; background: #100028; color: white; border: none; border-radius: 8px; margin-top: 10px;">
+`;
   configDiv.appendChild(profitTargetDiv);
 
   const lossLimitDiv = document.createElement("div");
   lossLimitDiv.classList.add("loss-limit");
   lossLimitDiv.innerHTML = `
-    <label for="dailyLossLimitInput">Daily Loss Limit (USD):</label>
-    <input type="number" id="dailyLossLimitInput" min="0" step="0.01" value="99999" />
-  `;
+  <label for="dailyLossLimitInput" style="margin-bottom: 4px; display: block;">Daily Loss Limit (USD):</label>
+  <input type="number" id="dailyLossLimitInput" min="0" step="0.01" value="99999"
+    style="width: 100%; padding: 8px; background: #100028; color: white; border: none; border-radius: 8px; margin-top: 10px;">
+`;
   configDiv.appendChild(lossLimitDiv);
 
   controlPanel.insertBefore(configDiv, controlPanel.querySelector(".buttons"));
