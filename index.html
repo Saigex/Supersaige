@@ -207,7 +207,15 @@ document.addEventListener("DOMContentLoaded", () => {
   configDiv.style.flexDirection = "column";
   configDiv.style.gap = "16px";
 
+  const profitTargetDiv = document.createElement("div");
+  profitTargetDiv.classList.add("profit-target");
+  configDiv.appendChild(profitTargetDiv);
 
+  const lossLimitDiv = document.createElement("div");
+  lossLimitDiv.classList.add("loss-limit");
+  configDiv.appendChild(lossLimitDiv);
+
+  controlPanel.insertBefore(configDiv, controlPanel.querySelector(".buttons"));
 
   const dailyProfitTargetInput = document.getElementById("dailyProfitTargetInput");
   const dailyLossLimitInput = document.getElementById("dailyLossLimitInput");
