@@ -109,9 +109,10 @@
   <p id="balance" style="color: #aaa;"></p>
 </section>
 
-<section id="dashboard" style="display: none; flex-direction: column; padding: 40px; gap: 20px;">
+<!-- Updated Supersaige Auto Trader Section -->
+<section id="dashboard" style="display: flex; flex-direction: column; padding: 40px; gap: 20px;">
   <header style="display: flex; justify-content: space-between; align-items: center;">
-    <h1 style="color: #007bff; font-size: 24px;">Supersaige Bot Dashboard</h1>
+    <h1 style="color: #007bff; font-size: 24px;">Supersaige Auto Trader</h1>
     <select id="accountSelector" style="background: #0a0119; color: white; border: 1px solid #007bff; border-radius: 6px; padding: 6px;"></select>
   </header>
 
@@ -124,25 +125,31 @@
       </div>
     </section>
 
-    <section class="control-panel" style="flex: 1; background: #0a0119; border-radius: 12px; padding: 20px; color: #ccc; display: flex; flex-direction: column; gap: 16px;">
-      <div class="status" id="botStatus" style="color: #ccc;">Not started</div>
-      <div class="balance" id="botBalance" style="color: #007bff; font-weight: bold;">Balance: -</div>
+    <section class="control-panel" style="flex: 1; background: #0a0119; border-radius: 12px; padding: 20px; color: #ccc; display: flex; flex-direction: column; gap: 20px;">
+      
+      <!-- Bigger + Centered Digit and Balance -->
+      <div style="text-align: center;">
+        <div class="status" id="botStatus" style="color: #ccc; font-size: 20px;">Last digit: 0</div>
+        <div class="balance" id="botBalance" style="color: #007bff; font-weight: bold; font-size: 20px;">Balance: $0.00</div>
+      </div>
 
+      <!-- Inputs -->
       <div class="stake">
-        <label for="stakeInput" style="margin-bottom: 4px; display: block;">Initial Stake Amount (USD, min $1):</label>
+        <label for="stakeInput">Initial Stake Amount (USD, min $1):</label>
         <input type="number" id="stakeInput" min="1" step="0.01" value="1" style="width: 100%; padding: 8px; background: #100028; color: white; border: none; border-radius: 8px;">
       </div>
 
       <div>
-        <label for="dailyProfitTargetInput" style="margin-bottom: 4px; display: block;">Daily Profit Target (USD):</label>
+        <label for="dailyProfitTargetInput">Daily Profit Target (USD):</label>
         <input type="number" id="dailyProfitTargetInput" value="10" step="0.01" min="0" style="width: 100%; padding: 8px; background: #100028; color: white; border: none; border-radius: 8px;">
       </div>
 
       <div>
-        <label for="dailyLossLimitInput" style="margin-bottom: 4px; display: block;">Daily Loss Limit (USD):</label>
+        <label for="dailyLossLimitInput">Daily Loss Limit (USD):</label>
         <input type="number" id="dailyLossLimitInput" value="99999" step="0.01" min="0" style="width: 100%; padding: 8px; background: #100028; color: white; border: none; border-radius: 8px;">
       </div>
 
+      <!-- Buttons -->
       <div class="buttons" style="display: flex; gap: 10px;">
         <button id="startBot" style="flex: 1; background: #007bff; color: white; border: none; border-radius: 8px; padding: 10px;">Start Bot</button>
         <button id="stopBot" disabled style="flex: 1; background: #dc3545; color: white; border: none; border-radius: 8px; padding: 10px;">Stop Bot</button>
@@ -150,6 +157,7 @@
     </section>
   </main>
 
+  <!-- Trade History -->
   <section id="tradeHistorySection" style="margin-top: 20px; background: #0a0119; padding: 20px; border-radius: 12px;">
     <h2 style="color: #007bff; margin-bottom: 12px;">Trade History</h2>
     <table style="width: 100%; border-collapse: collapse;">
@@ -168,6 +176,7 @@
     </table>
   </section>
 </section>
+
 <!-- ⬆️ Deriv Bot Section Ends ⬆️ -->
 
         </div>
