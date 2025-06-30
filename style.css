@@ -253,10 +253,8 @@ body.collapsed .expand-btn{
   color: #fff;
   margin: 0;
   font-family: 'Play', sans-serif;
-  white-space: nowrap; /* prevents breaking on small screens */
+  white-space: nowrap; 
 }
-
-/* Responsive adjustment for smaller screens */
 @media (max-width: 480px) {
   .soon h1 {
     font-size: 3rem; /* smaller font on phones */
