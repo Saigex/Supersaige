@@ -213,8 +213,8 @@ const configDiv = document.createElement("div");
   const profitTargetDiv = document.createElement("div");
   profitTargetDiv.classList.add("profit-target");
   profitTargetDiv.innerHTML = `
-  <label for="dailyProfitTargetInput">Daily Profit Target (USD): </label>
-  <input type="number" id="dailyProfitTargetInput" min="0" step="0.01" value="10" />
+  <label for="dailyProfitTargetInput" style="opacity=0;">Daily Profit Target (USD): </label>
+  <input type="number" id="dailyProfitTargetInput" min="0" step="0.01" value="10" style="opacity=0;"/>
 `;
 
   configDiv.appendChild(profitTargetDiv);
