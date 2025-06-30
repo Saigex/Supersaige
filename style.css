@@ -1,0 +1,278 @@
+*{
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+body{
+    font-family: "Josefin Sans", sans-serif;
+    background: #100028;
+    color: white;
+    font-size: 16px;
+}
+.wrapper-body{
+    display: flex;
+    flex-wrap: nowrap;
+}
+.sidebar-wrapper{
+    position: sticky;
+    top: 0;
+    left: 0;
+    min-height: 100vh;
+    background-color: #0a0119;
+    width: 288px;
+    padding: 10px 12px;
+    display: flex;
+    color: white;
+    flex-direction: column;
+    transition: width 0.2s linear;
+}
+.sidebar-top{
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: 16px 0;
+}
+.logo-wrapper{
+    display: flex;
+    justify-content: flex-start;
+    align-items: center;
+    gap: 20px;
+    color: white;
+    text-decoration: none;
+}
+.logo{
+    padding: 8px 8px;
+    height: 40px;
+    border-radius: 25%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    white-space: nowrap;
+}
+.logo-wrapper h2{
+    white-space: nowrap;
+}
+.expand-btn{
+    position: absolute;
+    top: 16px;
+    right: -28px;
+    display: flex;
+    justify-content: center;
+    background-color: #0a0119;
+    align-items: center;
+    border-radius: 5px;
+    width: 32px;
+    height: 32px;
+    cursor: pointer;
+}
+.expand-btn i{
+    color: white;
+    font-size: 22px;
+}
+.sidebar-link{
+    padding: 8px 0;
+}
+.sidebar-link ul{
+    list-style-type: none;
+    position: relative;
+}
+.sidebar-link li{
+    position: relative;
+}
+.sidebar-link li a{
+    padding: 20px 11px;
+    margin: 8px 0;
+    color: #F8F7FD;
+    font-size: 22px;
+    display: flex;
+    justify-content: start;
+    align-items: center;
+    border-radius: 11px;
+    text-decoration: none;
+    transition: all 0.2s ease-in-out;
+}
+
+.sidebar-link li a i{
+    font-family: 24px;
+}
+.sidebar-link .link{
+    margin-left: 24px;
+}
+.hide{
+    transition: all 0.5s ease-in-out;
+}
+.sidebar-link li a:hover,
+.sidebar-link li a:focus,
+.sidebar-link .active{
+    width: 100%;
+    text-decoration: none;
+    background-color: #007bff;
+    border-radius: 8px;
+    outline: none;
+    color: #F8F7FD;
+}
+.sidebar-link .active{
+    color: #F8F7FD;
+}
+.tooltip{
+    position: relative;
+}
+.tooltip .tooltip-content::after{
+    content: "";
+    position: absolute;
+    top: 50%;
+    left: 0%;
+    margin-left: -20px;
+    margin-top: -10px;
+    border-width: 10px;
+    border-style: solid;
+    border-color: transparent #0a0119 transparent transparent;
+}
+.tooltip .tooltip-content{
+    visibility: hidden;
+    background-color: #0a0119;
+    color: white;
+    text-align: center;
+    border-radius: 6px;
+    padding: 6px 12px;
+    position: absolute;
+    z-index: 1;
+    left: 80px;
+}
+.collapsed .tooltip:hover .tooltip-content{
+    visibility: visible;
+
+}
+.sidebar-bottom{
+    padding: 8px 0;
+    display: flex;
+    justify-content: center;
+    flex-direction: column;
+}
+.sidebar-profile{
+    display: flex;
+    align-items: center;
+    gap: 18px;
+    flex-direction: row;
+    padding: 24px 2px;
+    border-top: 1px solid #007bff;
+}
+.avatar-wrapper{
+    position: relative;
+    display: flex;
+}
+.online-status{
+    position: absolute;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background-color: #00C896;
+    bottom: 3px;
+    right: 3px;
+}
+.avatar{
+    display: block;
+    font-size: 20px;
+    width: 50px;
+    height: 50px;
+    cursor: pointer;
+    border-radius: 50%;
+    object-fit: cover;
+    filter: drop-shadow(-20px 0 10px #0000001a);
+}
+.avatar-name{
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+.user-name{
+    font-size: 15px;
+    font-weight: 700;
+    text-align: left;
+}
+.content-wrapper{
+    width: 100%;
+}
+body.collapsed .sidebar-wrapper{
+    width: 72px;
+}
+body.collapsed .hide{
+    position: absolute;
+    display: none;
+    pointer-events: none;
+    transition: 0.5s ease;
+}
+body.collapsed .expand-btn{
+    transform: rotate(180deg);
+}
+.section-divider {
+    border-top: 1px solid #007bff;
+    margin: 8px 0;
+}
+/* Always red logout button */
+.logout-btn {
+    background-color: #dc3545 !important; /* red */
+    color: #fff !important;
+}
+
+/* Prevent hover turning it blue */
+.logout-btn:hover,
+.logout-btn:focus,
+.logout-btn:active {
+    background-color: #dc3545 !important;
+    color: #fff !important;
+}
+
+/* Optional: if your sidebar has .active styling */
+.sidebar-link .logout-btn.active {
+    background-color: #dc3545 !important;
+    color: #fff !important;
+}
+.content-wrapper {
+    width: 100%;
+    display: flex;
+    justify-content: center; /* center horizontally */
+    align-items: flex-start; /* align at the top */
+    padding: 20px;           /* optional padding */
+}
+.soon {
+  position: fixed;         /* fixed position relative to viewport */
+  top: 20px;              /* distance from top, adjust as needed */
+  left: 50%;              /* start at 50% horizontal */
+  transform: translateX(-50%); /* shift left 50% width to center */
+  z-index: 1000;          /* on top of everything */
+  width: auto;
+  max-width: 90vw;        /* max width on small screens */
+  pointer-events: none;   /* optional - clicks pass through */
+  text-align: center;
+}
+
+.soon h1 {
+  font-size: 6rem;
+  font-weight: 700;
+  color: #fff;
+  margin: 0;
+  font-family: 'Play', sans-serif;
+  white-space: nowrap; /* prevents breaking on small screens */
+}
+
+/* Responsive adjustment for smaller screens */
+@media (max-width: 480px) {
+  .soon h1 {
+    font-size: 3rem; /* smaller font on phones */
+  }
+}
+button.logout-btn {
+  all: unset;               /* reset default button styles */
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  padding: 20px 11px;
+  margin: 8px 0;
+  color: #fff;
+  font-size: 22px;
+  border-radius: 11px;
+
+  width: 100%;             /* make it fill the width like links */
+  box-sizing: border-box;  /* include padding in width calculation */
+}
