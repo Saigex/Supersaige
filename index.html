@@ -6,188 +6,329 @@
   <title>Supersaige Deriv Bot</title>
   
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet" />
-  <link href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css" rel="stylesheet" >    
-  <link href="https://fonts.googleapis.com/css2?family=Play:wght@400;700&display=swap" rel="stylesheet">
-  <link href="https://fonts.googleapis.com/css2?family=Josefin+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css">
+  <style>
+    :root {
+      --bg-color: #0f172a;
+      --primary: #4ade80;
+      --secondary: #94a3b8;
+      --text-color: white;
+      --card-bg: #1e293b;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Poppins', sans-serif;
+      background: var(--bg-color);
+      color: var(--text-color);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      padding: 20px;
+    }
+
+    .container {
+      background: var(--card-bg);
+      border-radius: 16px;
+      box-shadow: 0 0 20px rgba(0, 0, 0, 0.4);
+      padding: 40px;
+      text-align: center;
+      width: 100%;
+      max-width: 1200px;
+      min-height: 700px;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    /* Initial Connect Screen */
+    #connectSection {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      flex-grow: 1;
+    }
+
+    #connectSection h1 {
+      font-size: 28px;
+      color: var(--primary);
+      margin-bottom: 24px;
+    }
+
+    #connectBtn {
+      background: var(--primary);
+      color: var(--bg-color);
+      border: none;
+      border-radius: 8px;
+      padding: 12px 24px;
+      font-size: 16px;
+      cursor: pointer;
+      font-weight: 600;
+      transition: background 0.3s ease;
+      width: 180px;
+    }
+
+    #connectBtn:hover {
+      background: #22c55e;
+    }
+
+    #status, #balance {
+      margin-top: 20px;
+      color: var(--secondary);
+      font-size: 16px;
+    }
+    #dashboard {
+      display: none;
+      flex-direction: column;
+      height: 100%;
+    }
+
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 20px;
+    }
+
+    header h1 {
+      color: var(--primary);
+      font-weight: 600;
+      font-size: 28px;
+    }
+
+    #accountSelector {
+      background: var(--bg-color);
+      color: var(--text-color);
+      border: 1px solid var(--secondary);
+      border-radius: 8px;
+      padding: 8px 12px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    main {
+      display: flex;
+      gap: 20px;
+      flex-grow: 1;
+      min-height: 450px;
+    }
+
+    .chart-section {
+      flex: 2;
+      background: var(--card-bg);
+      border-radius: 16px;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .chart {
+      flex-grow: 1;
+      min-height: 360px;
+      margin-bottom: 20px;
+    }
+
+    #digitChartContainer {
+      background: #152a3a;
+      padding: 15px;
+      border-radius: 12px;
+      color: var(--secondary);
+      font-weight: 600;
+      user-select: none;
+    }
+
+    .control-panel {
+      flex: 1;
+      background: var(--card-bg);
+      border-radius: 16px;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+      color: var(--secondary);
+      font-weight: 600;
+    }
+
+    .status {
+      font-size: 16px;
+      min-height: 20px;
+      color: var(--secondary);
+    }
+
+    .balance {
+      font-size: 20px;
+      font-weight: 600;
+      color: var(--primary);
+    }
+
+    .strategy label, .stake label {
+      display: block;
+      margin-bottom: 6px;
+      font-weight: 600;
+      color: var(--secondary);
+      text-align: left;
+    }
+
+    .stake input {
+      width: 100%;
+      padding: 8px;
+      border-radius: 8px;
+      border: none;
+      background: var(--bg-color);
+      color: var(--text-color);
+      font-weight: 600;
+      font-size: 16px;
+      text-align: center;
+      box-sizing: border-box;
+    }
+
+    .buttons {
+      display: flex;
+      gap: 10px;
+    }
+
+    .buttons button {
+      flex: 1;
+      padding: 12px;
+      border-radius: 8px;
+      font-weight: 600;
+      border: none;
+      cursor: pointer;
+      background: var(--primary);
+      color: var(--bg-color);
+      transition: background 0.3s ease;
+    }
+
+    .buttons button:hover:not(:disabled) {
+      background: #22c55e;
+    }
+
+    .buttons button:disabled {
+      background: #22c55e80;
+      cursor: not-allowed;
+    }
+
+    #stopBot {
+      background: #ef4444;
+      color: white;
+    }
+
+    #stopBot:hover:not(:disabled) {
+      background: #dc2626;
+    }
+
+    /* Trade History */
+    #tradeHistorySection {
+      margin-top: 30px;
+      background: var(--card-bg);
+      border-radius: 16px;
+      padding: 20px;
+      max-height: 280px;
+      overflow-y: auto;
+      color: var(--secondary);
+      font-weight: 600;
+    }
+
+    #tradeHistorySection h2 {
+      color: var(--primary);
+      margin-bottom: 12px;
+      font-weight: 600;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    th, td {
+      text-align: left;
+      padding: 8px;
+      font-size: 14px;
+      border-bottom: 1px solid #334155;
+    }
+
+    tr:hover {
+      background: #334155;
+    }
+
+    @media (max-width: 900px) {
+      main {
+        flex-direction: column;
+        min-height: auto;
+      }
+
+      .chart-section, .control-panel {
+        min-height: 300px;
+      }
+    }
+  </style>
 </head>
-<body class="collapsed">
-    <div class="wrapper-body">
-        <div class="sidebar-wrapper">
-            <div class="sidebar-top">
-                <a href="#" class="logo-wrapper">
-                    <img src="img/logo.png" alt="logo" class="logo">
-                    <h2 class="hide">Super Saige</h2>
-                </a>
+<body>
+  <div class="container">
 
-                <div class="expand-btn">
-                    <i class="bx bxs-chevrons-left"></i>
-                </div>
-                
-
-            </div>
-            <div class="sidebar-link">
-    <ul class="top-section">
-        <li>
-        <button class="tooltip logout-btn" onclick="window.location.href='logout.php'">
-            <i class="bx bxs-log-out"></i>
-            <span class="link hide">Log out</span>
-            <span class="tooltip-content">Log out</span>
-        </button>
-        </li>        
-    </ul>
-
-    <div class="section-divider"></div>
-
-    <ul class="middle-section">
-        <!-- 🟡 Dashboard, Analytics, History -->
-        <li>
-            <a href="#" class="active tooltip">
-                <i class="bx bxs-dashboard"></i>
-                <span class="link hide">Dashboard</span>
-                <span class="tooltip-content">Dashboard</span>
-            </a>
-        </li>
-        <li>
-            <a href="#" class="tooltip">
-                <i class="bx bx-line-chart"></i>
-                <span class="link hide">Analytics</span>
-                <span class="tooltip-content">Analytics</span>
-            </a>
-        </li>
-        <li>
-            <a href="#" class="tooltip">
-                <i class="bx bx-bar-chart-alt"></i>
-                <span class="link hide">History</span>
-                <span class="tooltip-content">History</span>
-            </a>
-        </li>
-    </ul>
-
-    <div class="section-divider"></div>
-</div>
-
-<!-- 🔵 Bottom section: Help + Settings + Profile -->
-<div class="sidebar-bottom">
-    <div class="sidebar-link">
-        <ul>
-            <li>
-                <a href="#" class="tooltip">
-                    <i class="bx bx-help-circle"></i>
-                    <span class="link hide">Help</span>
-                    <span class="tooltip-content">Help</span>
-                </a>
-            </li>
-            <li>
-                <a href="#" class="tooltip">
-                    <i class="bx bx-cog"></i>
-                    <span class="link hide">Settings</span>
-                    <span class="tooltip-content">Settings</span>
-                </a>
-            </li>
-        </ul>
-    </div>
-    <div class="sidebar-profile">
-        <div class="avatar-wrapper">
-            <img src="img/profile.webp" alt="profile" class="avatar">
-            <div class="online-status"></div>
-        </div>
-        <div class="avatar-name hide">
-            <div class="user-name"><?= $_SESSION['name'];?></div>
-            <div class="email"><?= $_SESSION['email'];?></div>
-        </div>
-    </div>
-</div>
-
-        </div>
-        <div class="content-wrapper">
-            <!-- ⬇️ Deriv Bot (Styled to match dashboard) ⬇️ -->
-<section id="connectSection" style="display: flex; flex-direction: column; align-items: center; justify-content: center; flex-grow: 1; padding: 40px;">
-  <h1 style="font-size: 28px; color: #007bff; font-family: 'Josefin Sans', sans-serif; margin-bottom: 24px;">Guardien Bot</h1>
-  <button id="connectBtn" style="background: #007bff; color: white; border: none; border-radius: 8px; padding: 12px 24px; font-size: 16px; cursor: pointer; font-weight: 600;">Connect to Deriv</button>
-  <p id="status" style="margin-top: 16px; color: #aaa;"></p>
-  <p id="balance" style="color: #aaa;"></p>
-</section>
-
-<!-- Updated Supersaige Auto Trader Section -->
-<section id="dashboard" style="display: flex; flex-direction: column; padding: 40px; gap: 20px;">
-  <header style="display: flex; justify-content: space-between; align-items: center;">
-    <h1 style="color: #007bff; font-size: 24px;">Supersaige Auto Trader</h1>
-    <select id="accountSelector" style="background: #0a0119; color: white; border: 1px solid #007bff; border-radius: 6px; padding: 6px;"></select>
-  </header>
-
-  <main style="display: flex; gap: 20px; flex-wrap: wrap;">
-    <section style="flex: 2; background: #0a0119; border-radius: 12px; padding: 20px; min-width: 300px;">
-      <div id="chart" style="height: 300px;"></div>
-      <div id="digitChartContainer" style="margin-top: 20px; background: #100028; padding: 10px; border-radius: 10px;">
-        <canvas id="digitChart" height="120"></canvas>
-        <small style="display: block; margin-top: 8px; color: #aaa;">Last 25 Ticks</small>
-      </div>
+    <!-- Initial Connect Section -->
+    <section id="connectSection">
+      <h1>Supersaige Deriv Bot</h1>
+      <button id="connectBtn">Connect to Deriv</button>
+      <p id="status"></p>
+      <p id="balance"></p>
     </section>
 
-    <section class="control-panel" style="flex: 1; background: #0a0119; border-radius: 12px; padding: 20px; color: #ccc; display: flex; flex-direction: column; gap: 20px;">
-      
-      <!-- Bigger + Centered Digit and Balance -->
-      <div style="text-align: center;">
-        <div class="status" id="botStatus" style="color: #ccc; font-size: 20px;">Last digit: 0</div>
-        <div class="balance" id="botBalance" style="color: #007bff; font-weight: bold; font-size: 20px;">Balance: $0.00</div>
-      </div>
-
-      <!-- Inputs -->
-      <div class="stake">
-        <label for="stakeInput">Initial Stake Amount (USD, min $1):</label>
-        <input type="number" id="stakeInput" min="1" step="0.01" value="1" style="width: 100%; padding: 8px; background: #100028; color: white; border: none; border-radius: 8px;">
-      </div>
-
-      <div>
-        <label for="dailyProfitTargetInput">Daily Profit Target (USD):</label>
-        <input type="number" id="dailyProfitTargetInput" value="10" step="0.01" min="0" style="width: 100%; padding: 8px; background: #100028; color: white; border: none; border-radius: 8px;">
-      </div>
-
-      <div>
-        <label for="dailyLossLimitInput">Daily Loss Limit (USD):</label>
-        <input type="number" id="dailyLossLimitInput" value="99999" step="0.01" min="0" style="width: 100%; padding: 8px; background: #100028; color: white; border: none; border-radius: 8px;">
-      </div>
-
-      <!-- Buttons -->
-      <div class="buttons" style="display: flex; gap: 10px;">
-        <button id="startBot" style="flex: 1; background: #007bff; color: white; border: none; border-radius: 8px; padding: 10px;">Start Bot</button>
-        <button id="stopBot" disabled style="flex: 1; background: #dc3545; color: white; border: none; border-radius: 8px; padding: 10px;">Stop Bot</button>
-      </div>
+    <!-- Dashboard Section - hidden initially -->
+    <section id="dashboard">
+      <header>
+        <h1>Supersaige Bot Dashboard</h1>
+        <select id="accountSelector" title="Select Account"></select>
+      </header>
+      <main>
+        <section class="chart-section">
+          <div id="chart" class="chart"></div>
+          <div id="digitChartContainer">
+            <canvas id="digitChart" height="120"></canvas>
+            <small>Last 25 Ticks</small>
+          </div>
+        </section>
+        <section class="control-panel">
+          <div class="status" id="botStatus">Not started</div>
+          <div class="balance" id="botBalance">Balance: -</div>
+          <div class="stake">
+            <label for="stakeInput">Initial Stake Amount (USD, min $1):</label>
+            <input type="number" id="stakeInput" min="1" step="0.01" value="1" />
+          </div>
+          <div class="buttons">
+            <button id="startBot">Start Bot</button>
+            <button id="stopBot" disabled>Stop Bot</button>
+          </div>
+        </section>
+      </main>
+      <section id="tradeHistorySection">
+        <h2>Trade History</h2>
+        <table>
+          <thead>
+            <tr>
+              <th>Contract ID</th>
+              <th>Type</th>
+              <th>Amount</th>
+              <th>Profit/Loss</th>
+              <th>Time</th>
+            </tr>
+          </thead>
+          <tbody id="tradeHistoryBody">
+            <!-- Trades appended here -->
+          </tbody>
+        </table>
+      </section>
     </section>
-  </main>
 
-  <!-- Trade History -->
-  <section id="tradeHistorySection" style="margin-top: 20px; background: #0a0119; padding: 20px; border-radius: 12px;">
-    <h2 style="color: #007bff; margin-bottom: 12px;">Trade History</h2>
-    <table style="width: 100%; border-collapse: collapse;">
-      <thead>
-        <tr style="border-bottom: 1px solid #333;">
-          <th style="text-align: left; padding: 8px;">Contract ID</th>
-          <th style="text-align: left; padding: 8px;">Type</th>
-          <th style="text-align: left; padding: 8px;">Amount</th>
-          <th style="text-align: left; padding: 8px;">Profit/Loss</th>
-          <th style="text-align: left; padding: 8px;">Time</th>
-        </tr>
-      </thead>
-      <tbody id="tradeHistoryBody" style="color: #ccc;">
-        <!-- Trades will be dynamically inserted here -->
-      </tbody>
-    </table>
-  </section>
-</section>
+  </div>
 
-<!-- ⬆️ Deriv Bot Section Ends ⬆️ -->
-
-        </div>
-    </div>
-    <script>
-        const expendBtn = document.querySelector(".expand-btn");
-        expendBtn.addEventListener("click", ()=>{
-            document.body.classList.toggle("collapsed")
-        })
-    </script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/lightweight-charts@3.8.0/dist/lightweight-charts.standalone.production.js"></script>
   <script>
 document.addEventListener("DOMContentLoaded", () => {
@@ -218,18 +359,18 @@ document.addEventListener("DOMContentLoaded", () => {
 
   const profitTargetDiv = document.createElement("div");
   profitTargetDiv.classList.add("profit-target");
-  profitTargetDiv.innerHTML = `
+  profitTargetDiv.innerHTML = 
     <label for="dailyProfitTargetInput">Daily Profit Target (USD): </label>
     <input type="number" id="dailyProfitTargetInput" min="0" step="0.01" value="10" />
-  `;
+  ;
   configDiv.appendChild(profitTargetDiv);
 
   const lossLimitDiv = document.createElement("div");
   lossLimitDiv.classList.add("loss-limit");
-  lossLimitDiv.innerHTML = `
+  lossLimitDiv.innerHTML = 
     <label for="dailyLossLimitInput">Daily Loss Limit (USD):</label>
     <input type="number" id="dailyLossLimitInput" min="0" step="0.01" value="99999" />
-  `;
+  ;
   configDiv.appendChild(lossLimitDiv);
 
   controlPanel.insertBefore(configDiv, controlPanel.querySelector(".buttons"));
@@ -255,7 +396,7 @@ document.addEventListener("DOMContentLoaded", () => {
           max: 25,
           ticks: {
             color: "#94a3b8",
-            callback: value => `${value}%`
+            callback: value => ${value}%
           }
         },
         x: {
@@ -266,7 +407,7 @@ document.addEventListener("DOMContentLoaded", () => {
         legend: { display: false },
         tooltip: {
           callbacks: {
-            label: ctx => `${ctx.dataset.label}: ${ctx.raw.toFixed(2)}%`
+            label: ctx => ${ctx.dataset.label}: ${ctx.raw.toFixed(2)}%
           }
         }
       }
@@ -294,7 +435,7 @@ document.addEventListener("DOMContentLoaded", () => {
   let totalLoss = 0;
 
   connectBtn.onclick = () => {
-    window.location.href = `https://oauth.deriv.com/oauth2/authorize?app_id=${app_id}&redirect_uri=${redirect_uri}`;
+    window.location.href = https://oauth.deriv.com/oauth2/authorize?app_id=${app_id}&redirect_uri=${redirect_uri};
   };
 
   if (stakeInput) {
@@ -314,9 +455,9 @@ document.addEventListener("DOMContentLoaded", () => {
   const urlParams = new URLSearchParams(window.location.search);
   const accounts = [];
   for (let i = 1; i <= 20; i++) {
-    const acct = urlParams.get(`acct${i}`);
-    const tok = urlParams.get(`token${i}`);
-    const currency = urlParams.get(`cur${i}`) || "";
+    const acct = urlParams.get(acct${i});
+    const tok = urlParams.get(token${i});
+    const currency = urlParams.get(cur${i}) || "";
     if (acct && tok) accounts.push({ loginid: acct, token: tok, currency });
   }
 
@@ -331,7 +472,7 @@ document.addEventListener("DOMContentLoaded", () => {
     accounts.forEach(acc => {
       const option = document.createElement("option");
       option.value = acc.token;
-      option.textContent = `${acc.loginid} (${acc.currency})`;
+      option.textContent = ${acc.loginid} (${acc.currency});
       accountSelector.appendChild(option);
     });
     connectToDeriv(accounts[0].token);
@@ -347,7 +488,7 @@ document.addEventListener("DOMContentLoaded", () => {
     token = selectedToken;
     if (ws && ws.readyState === WebSocket.OPEN) ws.close();
 
-    ws = new WebSocket(`wss://ws.derivws.com/websockets/v3?app_id=${app_id}`);
+    ws = new WebSocket(wss://ws.derivws.com/websockets/v3?app_id=${app_id});
 
     ws.onopen = () => ws.send(JSON.stringify({ authorize: token }));
 
@@ -355,8 +496,8 @@ document.addEventListener("DOMContentLoaded", () => {
       const data = JSON.parse(msg.data);
 
       if (data.msg_type === "authorize") {
-        statusEl.textContent = `Logged in as: ${data.authorize.loginid}`;
-        botStatusEl.textContent = `Logged in as: ${data.authorize.loginid}`;
+        statusEl.textContent = Logged in as: ${data.authorize.loginid};
+        botStatusEl.textContent = Logged in as: ${data.authorize.loginid};
         getBalance();
         currentStake = initialStake;
         waitingForResult = false;
@@ -393,7 +534,7 @@ document.addEventListener("DOMContentLoaded", () => {
       if (data.msg_type === "balance") {
         let balance = parseFloat(data.balance.balance);
         lastKnownBalance = balance;
-        balanceEl.textContent = botBalanceEl.textContent = `Balance: $${balance.toFixed(2)}`;
+        balanceEl.textContent = botBalanceEl.textContent = Balance: $${balance.toFixed(2)};
         if (!isBotRunning) {
           startBtn.disabled = false;
           stopBtn.disabled = true;
@@ -412,7 +553,7 @@ document.addEventListener("DOMContentLoaded", () => {
         if (last100Digits.length > 100) last100Digits.shift();
         updateDigitChart();
 
-        botStatusEl.textContent = `Last digit: ${lastDigit}`;
+        botStatusEl.textContent = Last digit: ${lastDigit};
         if (lineSeries) lineSeries.update({ time: Math.floor(tick.epoch), value: price });
 
         if (isBotRunning && !waitingForResult) {
@@ -420,12 +561,12 @@ document.addEventListener("DOMContentLoaded", () => {
           const lossLimit = parseFloat(dailyLossLimitInput.value) || 999;
 
           if (dailyProfit >= profitTarget) {
-            botStatusEl.textContent = `Daily profit target reached ($${dailyProfit.toFixed(2)}). Bot paused.`;
+            botStatusEl.textContent = Daily profit target reached ($${dailyProfit.toFixed(2)}). Bot paused.;
             stopBotExecution();
             return;
           }
           if (dailyLoss >= lossLimit) {
-            botStatusEl.textContent = `Daily loss limit reached ($${dailyLoss.toFixed(2)}). Bot paused.`;
+            botStatusEl.textContent = Daily loss limit reached ($${dailyLoss.toFixed(2)}). Bot paused.;
             stopBotExecution();
             return;
           }
@@ -434,284 +575,288 @@ document.addEventListener("DOMContentLoaded", () => {
         }
       }
 
-if (data.msg_type === "buy" && data.buy) {
-  handleBuy(data.buy);
-}
+      if (data.msg_type === "buy" && data.buy) {
+        handleBuy(data.buy);
+      }
 
-if (data.msg_type === "proposal_open_contract" && data.proposal_open_contract.is_sold) {
-  const profit = data.proposal_open_contract.profit;
-  const contract_id = data.proposal_open_contract.contract_id;
+      if (data.msg_type === "proposal_open_contract" && data.proposal_open_contract.is_sold) {
+        const profit = data.proposal_open_contract.profit;
+        const contract_id = data.proposal_open_contract.contract_id;
 
-  updateTradeProfit(contract_id, profit);
+        updateTradeProfit(contract_id, profit);
 
-  if (profit > 0) {
-    dailyProfit += profit;
-    currentStake = initialStake;
-    currentContractType = "DIGITUNDER9";
-    totalLoss = 0;
-    lossCount = 0;
-  } else {
-    dailyLoss += Math.abs(profit);
-    totalLoss += currentStake;
-    lossCount++;
-    const targetProfit = initialStake * 0.25;
-    currentStake = +(totalLoss + targetProfit).toFixed(2);
+        if (profit > 0) {
+          dailyProfit += profit;
+          currentStake = initialStake;
+          currentContractType = "DIGITUNDER9";
+          totalLoss = 0;
+          lossCount = 0;
+        } else {
+          dailyLoss += Math.abs(profit);
+          totalLoss += currentStake;
+          lossCount++;
+          const targetProfit = initialStake * 0.25;
+          currentStake = +(totalLoss + targetProfit).toFixed(2);
 
-    if (currentContractType === "DIGITUNDER9") currentContractType = "DIGITUNDER5";
+          if (currentContractType === "DIGITUNDER9") currentContractType = "DIGITUNDER5";
+        }
+
+        waitingForResult = false;
+      }
+    };
+
+    ws.onerror = (e) => {
+      statusEl.textContent = "WebSocket error.";
+      botStatusEl.textContent = "WebSocket error.";
+      console.error("WebSocket error", e);
+    };
+
+    ws.onclose = () => {
+      statusEl.textContent = "Disconnected.";
+      botStatusEl.textContent = "Disconnected.";
+      startBtn.disabled = true;
+      stopBtn.disabled = true;
+    };
+
+    function getBalance() {
+      if (ws && ws.readyState === WebSocket.OPEN) {
+        ws.send(JSON.stringify({ balance: 1, subscribe: 1 }));
+      }
+    }
+
+    function placeTrade() {
+      if (!ws || ws.readyState !== WebSocket.OPEN || waitingForResult) return;
+
+      const amount = +currentStake.toFixed(2);
+      const barrier = currentContractType === "DIGITUNDER9" ? 9 : 5;
+
+      const buyRequest = {
+        buy: 1,
+        price: amount,
+        parameters: {
+          amount: amount,
+          basis: "stake",
+          contract_type: "DIGITUNDER",
+          currency: "USD",
+          duration: 1,
+          duration_unit: "t",
+          symbol: selectedSymbol,
+          barrier: barrier
+        }
+      };
+
+      ws.send(JSON.stringify(buyRequest));
+      botStatusEl.textContent = Placing trade: DIGITUNDER${barrier} for $${amount.toFixed(2)};
+      waitingForResult = true;
+    }
+
+    function updateDigitChart() {
+      const counts = Array(10).fill(0);
+      last100Digits.forEach(d => counts[d]++);
+      const total = last100Digits.length;
+      const percentages = counts.map(c => (c / total) * 100);
+
+      const maxVal = Math.max(...percentages);
+      const minVal = Math.min(...percentages);
+
+      const colors = percentages.map(p => {
+        if (p === maxVal) return "#4ade80";
+        if (p === minVal) return "#ef4444";
+        return "#ffffff";
+      });
+
+      digitChart.data.datasets[0].data = percentages;
+      digitChart.data.datasets[0].backgroundColor = colors;
+      digitChart.update();
+    }
+
+    function handleBuy(buyData) {
+      addTradeToHistory({
+        contract_id: buyData.contract_id,
+        type: currentContractType,
+        amount: buyData.buy_price,
+        profit: null,
+        time: new Date().toLocaleTimeString(),
+      });
+
+      ws.send(JSON.stringify({
+        proposal_open_contract: 1,
+        contract_id: buyData.contract_id,
+        subscribe: 1
+      }));
+    }
+
+    function loadHistoricalData(symbol) {
+      return new Promise((resolve, reject) => {
+        const req_id = Date.now();
+        ws.send(JSON.stringify({
+          ticks_history: symbol,
+          end: "latest",
+          count: 100,
+          granularity: 60,
+          style: "candles",
+          req_id: req_id
+        }));
+
+        function onMessage(event) {
+          const data = JSON.parse(event.data);
+          if (data.req_id === req_id) {
+            ws.removeEventListener("message", onMessage);
+            if (data.candles) {
+              const candles = data.candles.map(c => ({ time: c.epoch, value: c.close }));
+              resolve(candles);
+            } else reject("No candles returned.");
+          }
+        }
+
+        ws.addEventListener("message", onMessage);
+      });
+    }
+
+    async function loadLast25Digits(symbol) {
+      return new Promise((resolve, reject) => {
+        const req_id = Date.now();
+        ws.send(JSON.stringify({
+          ticks_history: symbol,
+          end: "latest",
+          count: 25,
+          style: "ticks",
+          req_id: req_id
+        }));
+
+        function onMessage(event) {
+          const data = JSON.parse(event.data);
+          if (data.req_id === req_id) {
+            ws.removeEventListener("message", onMessage);
+            if (data.history && data.history.prices) {
+              const digits = data.history.prices.map(price => getSecondDecimalDigit(price));
+              resolve(digits);
+            } else {
+              reject("No tick history returned.");
+            }
+          }
+        }
+
+        ws.addEventListener("message", onMessage);
+      });
+    }
   }
 
-  waitingForResult = false;
-}
-
-ws.onerror = (e) => {
-  statusEl.textContent = "WebSocket error.";
-  botStatusEl.textContent = "WebSocket error.";
-  console.error("WebSocket error", e);
-};
-
-ws.onclose = () => {
-  statusEl.textContent = "Disconnected.";
-  botStatusEl.textContent = "Disconnected.";
-  startBtn.disabled = true;
-  stopBtn.disabled = true;
-};
-
-function getBalance() {
-  if (ws && ws.readyState === WebSocket.OPEN) {
-    ws.send(JSON.stringify({ balance: 1, subscribe: 1 }));
+  function addTradeToHistory(trade) {
+    trades.unshift(trade);
+    if (trades.length > 50) trades.pop();
+    renderTradeHistory();
   }
-}
 
-function placeTrade() {
-  if (!ws || ws.readyState !== WebSocket.OPEN || waitingForResult) return;
+  function updateTradeProfit(contract_id, profit) {
+    const trade = trades.find(t => t.contract_id === contract_id);
+    if (trade) {
+      trade.profit = profit.toFixed(2);
+      renderTradeHistory();
+    }
+  }
 
-  const amount = +currentStake.toFixed(2);
-  const barrier = currentContractType === "DIGITUNDER9" ? 9 : 5;
+  function renderTradeHistory() {
+    tradeHistoryBody.innerHTML = "";
+    trades.forEach(trade => {
+      const profit = parseFloat(trade.profit);
+      const profitClass = isNaN(profit) ? "" : profit >= 0 ? "profit" : "loss";
+      const tr = document.createElement("tr");
+      tr.innerHTML = 
+        <td>${trade.contract_id}</td>
+        <td>${trade.type}</td>
+        <td>$${parseFloat(trade.amount).toFixed(2)}</td>
+        <td class="${profitClass}">${trade.profit !== null ? $${parseFloat(trade.profit).toFixed(2)} : "-"}</td>
+        <td>${trade.time}</td>
+      ;
+      tradeHistoryBody.appendChild(tr);
+    });
+  }
 
-  const buyRequest = {
-    buy: 1,
-    price: amount,
-    parameters: {
-      amount: amount,
-      basis: "stake",
-      contract_type: "DIGITUNDER",
-      currency: "USD",
-      duration: 1,
-      duration_unit: "t",
-      symbol: selectedSymbol,
-      barrier: barrier
+  startBtn.onclick = () => {
+    isBotRunning = true;
+    waitingForResult = false;
+    ticksAbove4Count = 0;
+
+    if (stakeInput) {
+      let val = parseFloat(stakeInput.value);
+      if (isNaN(val) || val < 1) {
+        stakeInput.value = "1.00";
+        initialStake = 1;
+      } else {
+        initialStake = val;
+      }
+      currentStake = initialStake;
+      stakeInput.disabled = true;
+    }
+
+    botStatusEl.textContent = "Bot started.";
+    startBtn.disabled = true;
+    stopBtn.disabled = false;
+
+    if (ws && ws.readyState === WebSocket.OPEN) {
+      ws.send(JSON.stringify({ ticks: selectedSymbol, subscribe: 1 }));
     }
   };
 
-  ws.send(JSON.stringify(buyRequest));
-  botStatusEl.textContent = `Placing trade: DIGITUNDER${barrier} for $${amount.toFixed(2)}`;
-  waitingForResult = true;
-}
+  stopBtn.onclick = () => {
+    stopBotExecution();
+  };
 
-function updateDigitChart() {
-  const counts = Array(10).fill(0);
-  last100Digits.forEach(d => counts[d]++);
-  const total = last100Digits.length;
-  const percentages = counts.map(c => (c / total) * 100);
-
-  const maxVal = Math.max(...percentages);
-  const minVal = Math.min(...percentages);
-
-  const colors = percentages.map(p => {
-    if (p === maxVal) return "#4ade80";
-    if (p === minVal) return "#ef4444";
-    return "#ffffff";
-  });
-
-  digitChart.data.datasets[0].data = percentages;
-  digitChart.data.datasets[0].backgroundColor = colors;
-  digitChart.update();
-}
-
-function handleBuy(buyData) {
-  addTradeToHistory({
-    contract_id: buyData.contract_id,
-    type: currentContractType,
-    amount: buyData.buy_price,
-    profit: null,
-    time: new Date().toLocaleTimeString(),
-  });
-
-  ws.send(JSON.stringify({
-    proposal_open_contract: 1,
-    contract_id: buyData.contract_id,
-    subscribe: 1
-  }));
-}
-
-function loadHistoricalData(symbol) {
-  return new Promise((resolve, reject) => {
-    const req_id = Date.now();
-    ws.send(JSON.stringify({
-      ticks_history: symbol,
-      end: "latest",
-      count: 100,
-      granularity: 60,
-      style: "candles",
-      req_id: req_id
-    }));
-
-    function onMessage(event) {
-      const data = JSON.parse(event.data);
-      if (data.req_id === req_id) {
-        ws.removeEventListener("message", onMessage);
-        if (data.candles) {
-          const candles = data.candles.map(c => ({ time: c.epoch, value: c.close }));
-          resolve(candles);
-        } else reject("No candles returned.");
-      }
-    }
-
-    ws.addEventListener("message", onMessage);
-  });
-}
-
-async function loadLast25Digits(symbol) {
-  return new Promise((resolve, reject) => {
-    const req_id = Date.now();
-    ws.send(JSON.stringify({
-      ticks_history: symbol,
-      end: "latest",
-      count: 25,
-      style: "ticks",
-      req_id: req_id
-    }));
-
-    function onMessage(event) {
-      const data = JSON.parse(event.data);
-      if (data.req_id === req_id) {
-        ws.removeEventListener("message", onMessage);
-        if (data.history && data.history.prices) {
-          const digits = data.history.prices.map(price => getSecondDecimalDigit(price));
-          resolve(digits);
-        } else {
-          reject("No tick history returned.");
-        }
-      }
-    }
-
-    ws.addEventListener("message", onMessage);
-  });
-}
-
-function addTradeToHistory(trade) {
-  trades.unshift(trade);
-  if (trades.length > 50) trades.pop();
-  renderTradeHistory();
-}
-
-function updateTradeProfit(contract_id, profit) {
-  const trade = trades.find(t => t.contract_id === contract_id);
-  if (trade) {
-    trade.profit = profit.toFixed(2);
-    renderTradeHistory();
-  }
-}
-
-function renderTradeHistory() {
-  tradeHistoryBody.innerHTML = "";
-  trades.forEach(trade => {
-    const profit = parseFloat(trade.profit);
-    const profitClass = isNaN(profit) ? "" : profit >= 0 ? "profit" : "loss";
-    const tr = document.createElement("tr");
-    tr.innerHTML = `
-      <td>${trade.contract_id}</td>
-      <td>${trade.type}</td>
-      <td>$${parseFloat(trade.amount).toFixed(2)}</td>
-      <td class="${profitClass}">${trade.profit !== null ? `$${parseFloat(trade.profit).toFixed(2)}` : "-"}</td>
-      <td>${trade.time}</td>
-    `;
-    tradeHistoryBody.appendChild(tr);
-  });
-}
-
-startBtn.onclick = () => {
-  isBotRunning = true;
-  waitingForResult = false;
-  ticksAbove4Count = 0;
-
-  if (stakeInput) {
-    let val = parseFloat(stakeInput.value);
-    if (isNaN(val) || val < 1) {
-      stakeInput.value = "1.00";
-      initialStake = 1;
-    } else {
-      initialStake = val;
-    }
+  function stopBotExecution() {
+    isBotRunning = false;
+    waitingForResult = false;
     currentStake = initialStake;
-    stakeInput.disabled = true;
+    currentContractType = "DIGITUNDER9";
+    botStatusEl.textContent = "Bot stopped.";
+    startBtn.disabled = false;
+    stopBtn.disabled = true;
+    stakeInput.disabled = false;
+    if (ws && ws.readyState === WebSocket.OPEN) ws.send(JSON.stringify({ forget_all: ["ticks"] }));
   }
 
-  botStatusEl.textContent = "Bot started.";
-  startBtn.disabled = true;
-  stopBtn.disabled = false;
+  accountSelector.addEventListener("change", (e) => {
+    if (ws) ws.close();
+    stopBotExecution();
+    trades = [];
+    renderTradeHistory();
+    balanceEl.textContent = botBalanceEl.textContent = "Balance: --";
+    botStatusEl.textContent = statusEl.textContent = "Switching accounts...";
+    connectToDeriv(e.target.value);
+  });
 
-  if (ws && ws.readyState === WebSocket.OPEN) {
-    ws.send(JSON.stringify({ ticks: selectedSymbol, subscribe: 1 }));
+  function initChart() {
+    const chartContainer = document.getElementById("chart");
+    chart = LightweightCharts.createChart(chartContainer, {
+      width: chartContainer.clientWidth,
+      height: chartContainer.clientHeight,
+      layout: {
+        backgroundColor: "#0f172a",
+        textColor: "#94a3b8",
+      },
+      grid: {
+        vertLines: { color: "#334155" },
+        horzLines: { color: "#334155" },
+      },
+      crosshair: { mode: LightweightCharts.CrosshairMode.Normal },
+      priceScale: { borderColor: "#334155" },
+    });
+
+    lineSeries = chart.addLineSeries({ color: "#4ade80", lineWidth: 2 });
+    lineSeries.setData([]);
+
+    window.addEventListener("resize", () => {
+      if (chart) {
+        chart.resize(chartContainer.clientWidth, chartContainer.clientHeight);
+      }
+    });
   }
-};
-
-stopBtn.onclick = () => {
-  stopBotExecution();
-};
-
-function stopBotExecution() {
-  isBotRunning = false;
-  waitingForResult = false;
-  currentStake = initialStake;
-  currentContractType = "DIGITUNDER9";
-  botStatusEl.textContent = "Bot stopped.";
-  startBtn.disabled = false;
-  stopBtn.disabled = true;
-  stakeInput.disabled = false;
-  if (ws && ws.readyState === WebSocket.OPEN) ws.send(JSON.stringify({ forget_all: ["ticks"] }));
-}
-
-accountSelector.addEventListener("change", (e) => {
-  if (ws) ws.close();
-  stopBotExecution();
-  trades = [];
-  renderTradeHistory();
-  balanceEl.textContent = botBalanceEl.textContent = "Balance: --";
-  botStatusEl.textContent = statusEl.textContent = "Switching accounts...";
-  connectToDeriv(e.target.value);
 });
-
-function initChart() {
-  const chartContainer = document.getElementById("chart");
-  chart = LightweightCharts.createChart(chartContainer, {
-    width: chartContainer.clientWidth,
-    height: chartContainer.clientHeight,
-    layout: {
-      backgroundColor: "#0f172a",
-      textColor: "#94a3b8",
-    },
-    grid: {
-      vertLines: { color: "#334155" },
-      horzLines: { color: "#334155" },
-    },
-    crosshair: { mode: LightweightCharts.CrosshairMode.Normal },
-    priceScale: { borderColor: "#334155" },
-  });
-
-  lineSeries = chart.addLineSeries({ color: "#4ade80", lineWidth: 2 });
-  lineSeries.setData([]);
-
-  window.addEventListener("resize", () => {
-    if (chart) {
-      chart.resize(chartContainer.clientWidth, chartContainer.clientHeight);
-    }
-  });
-}
 
 
 
 
   </script>
+
 </body>
 </html>
