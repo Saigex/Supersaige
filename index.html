@@ -323,6 +323,11 @@ button.logout-btn {
   width: 100%;
   box-sizing: border-box;
 }
+#stopBot:hover:not([disabled]) {
+  background-color: #ffcccc !important;
+  color: #b00020 !important;
+  cursor: pointer;
+}
     </style>
 </head>
 <body class="collapsed">
@@ -443,8 +448,8 @@ button.logout-btn {
                         </div>
                         <div class="buttons" style="display: flex; gap: 10px;">
                             <button id="startBot" style="flex: 1; background: #007bff; color: white; border: none; border-radius: 10px; padding: 12px; font-weight: bold;">Start Bot</button>
-                            <button id="stopBot" disabled style="flex: 1; background: #dc3545; color: white; border: none; border-radius: 10px; padding: 12px; font-weight: bold;">Stop Bot</button>
-                        </div>
+                            <button id="stopBot" disabled style="flex: 1; background-color: #ffdddd; color: #b00020; border: none; border-radius: 10px; padding: 12px; font-weight: bold;">Stop Bot</button>
+
                     </section>
 
                 </main>
@@ -798,24 +803,41 @@ const configDiv = document.createElement("div");
     }
 
     function updateDigitChart() {
-      const counts = Array(10).fill(0);
-      last100Digits.forEach(d => counts[d]++);
-      const total = last100Digits.length;
-      const percentages = counts.map(c => (c / total) * 100);
+  const counts = Array(10).fill(0);
+  last100Digits.forEach(d => counts[d]++);
+  const total = last100Digits.length;
+  const percentages = counts.map(c => (c / total) * 100);
 
-      const maxVal = Math.max(...percentages);
-      const minVal = Math.min(...percentages);
+  const maxVal = Math.max(...percentages);
+  const minVal = Math.min(...percentages);
 
-      const colors = percentages.map(p => {
-        if (p === maxVal) return "#4ade80";
-        if (p === minVal) return "#ef4444";
-        return "#ffffff";
-      });
+  const colors = percentages.map(p => {
+    if (p === maxVal) return "linear-gradient(to top, #86efac, #22c55e)";
+    if (p === minVal) return "linear-gradient(to top, #f87171, #dc2626)";
+    return "#007bff"; // primary blue
+  });
 
-      digitChart.data.datasets[0].data = percentages;
-      digitChart.data.datasets[0].backgroundColor = colors;
-      digitChart.update();
+  // Gradient needs to be a canvas-compatible fill, so map manually
+  digitChart.data.datasets[0].data = percentages;
+  digitChart.data.datasets[0].backgroundColor = colors.map((color, i) => {
+    const ctx = digitCanvas.getContext("2d");
+    if (color.startsWith("linear-gradient")) {
+      const gradient = ctx.createLinearGradient(0, 0, 0, digitCanvas.height);
+      if (color.includes("22c55e")) {
+        gradient.addColorStop(0, "#86efac");
+        gradient.addColorStop(1, "#22c55e");
+      } else {
+        gradient.addColorStop(0, "#f87171");
+        gradient.addColorStop(1, "#dc2626");
+      }
+      return gradient;
     }
+    return color;
+  });
+
+  digitChart.update();
+}
+
 
     function handleBuy(buyData) {
       addTradeToHistory({
@@ -972,32 +994,50 @@ const configDiv = document.createElement("div");
     connectToDeriv(e.target.value);
   });
 
-  function initChart() {
-    const chartContainer = document.getElementById("chart");
-    chart = LightweightCharts.createChart(chartContainer, {
-      width: chartContainer.clientWidth,
-      height: chartContainer.clientHeight,
-      layout: {
-        backgroundColor: "#0f172a",
-        textColor: "#94a3b8",
-      },
-      grid: {
-        vertLines: { color: "#334155" },
-        horzLines: { color: "#334155" },
-      },
-      crosshair: { mode: LightweightCharts.CrosshairMode.Normal },
-      priceScale: { borderColor: "#334155" },
-    });
+function initChart() {
+  const chartContainer = document.getElementById("chart");
+  chart = LightweightCharts.createChart(chartContainer, {
+    width: chartContainer.clientWidth,
+    height: chartContainer.clientHeight,
+    layout: {
+      backgroundColor: "#ffffff", // white background
+      textColor: "#000000",
+    },
+    grid: {
+      vertLines: { color: "#e5e7eb" },
+      horzLines: { color: "#e5e7eb" },
+    },
+    crosshair: { mode: LightweightCharts.CrosshairMode.Normal },
+    priceScale: { borderColor: "#ccc" },
+  });
 
-    lineSeries = chart.addLineSeries({ color: "#4ade80", lineWidth: 2 });
-    lineSeries.setData([]);
+  lineSeries = chart.addLineSeries({
+    color: "#007bff", // blue line
+    lineWidth: 2,
+    priceLineVisible: false,
+    crossHairMarkerVisible: false,
+    lineStyle: 0,
+  });
 
-    window.addEventListener("resize", () => {
-      if (chart) {
-        chart.resize(chartContainer.clientWidth, chartContainer.clientHeight);
-      }
-    });
-  }
+  // Gradient fill under the line
+  lineSeries.applyOptions({
+    priceLineVisible: false,
+    lineWidth: 2,
+    color: "#007bff",
+    areaStyle: {
+      topColor: "rgba(0, 123, 255, 0.4)",
+      bottomColor: "rgba(0, 123, 255, 0.05)",
+    },
+  });
+
+  lineSeries.setData([]);
+
+  window.addEventListener("resize", () => {
+    if (chart) {
+      chart.resize(chartContainer.clientWidth, chartContainer.clientHeight);
+    }
+  });
+}
 });
 
 
