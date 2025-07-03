@@ -513,23 +513,23 @@ document.addEventListener("DOMContentLoaded", () => {
   configDiv.style.gap = "16px";
 
   // Profit Target Input
-  const profitTargetDiv = document.createElement("div");
-  profitTargetDiv.classList.add("profit-target");
-  profitTargetDiv.innerHTML = `
-    <label for="sessionProfitTargetInput">Session Profit Target (USD): </label>
-    <input type="number" id="sessionProfitTargetInput" min="0" step="0.01" value="10" />
-  `;
+const profitTargetDiv = document.createElement("div");
+profitTargetDiv.classList.add("profit-target");
+profitTargetDiv.innerHTML = `
+  <label for="sessionProfitTargetInput" style="opacity=0;">Daily Profit Target (USD): </label>
+  <input type="number" id="sessionProfitTargetInput" min="0" step="0.01" value="10" style="opacity=0;"/>
+`;
 
-  // Loss Limit Input
-  const lossLimitDiv = document.createElement("div");
-  lossLimitDiv.classList.add("loss-limit");
-  lossLimitDiv.innerHTML = `
-    <label for="sessionLossLimitInput">Session Loss Limit (USD): </label>
-    <input type="number" id="sessionLossLimitInput" min="0" step="0.01" value="999" />
-  `;
+configDiv.appendChild(profitTargetDiv);
 
-  configDiv.appendChild(profitTargetDiv);
-  configDiv.appendChild(lossLimitDiv);
+const lossLimitDiv = document.createElement("div");
+lossLimitDiv.classList.add("loss-limit");
+profitTargetDiv.innerHTML = `
+  <label for="sessionProfitTargetInput">Daily Profit Target (USD): </label>
+  <input type="number" id="sessionProfitTargetInput" min="0" step="0.01" value="10" />
+`;
+
+configDiv.appendChild(lossLimitDiv);
   controlPanel.insertBefore(configDiv, controlPanel.querySelector(".buttons"));
 
   // Input elements
