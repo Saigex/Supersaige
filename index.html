@@ -637,7 +637,7 @@ document.addEventListener("DOMContentLoaded", () => {
     token = selectedToken;
     if (ws && ws.readyState === WebSocket.OPEN) ws.close();
 
-    ws = new WebSocket(wss://ws.derivws.com/websockets/v3?app_id=${app_id});
+    ws = new WebSocket(`wss://ws.derivws.com/websockets/v3?app_id=${app_id}`);
 
     ws.onopen = () => ws.send(JSON.stringify({ authorize: token }));
 
