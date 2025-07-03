@@ -502,6 +502,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const stopBtn = document.getElementById("stopBot");
   const stakeInput = document.getElementById("stakeInput");
   const tradeHistoryBody = document.getElementById("tradeHistoryBody");
+  const digitCanvas = document.getElementById("digitChart");
 
   const controlPanel = document.querySelector(".control-panel");
   const configDiv = document.createElement("div");
@@ -512,23 +513,24 @@ document.addEventListener("DOMContentLoaded", () => {
   const profitTargetDiv = document.createElement("div");
   profitTargetDiv.classList.add("profit-target");
   profitTargetDiv.innerHTML = `
-    <label for="sessionProfitTargetInput">Daily Profit Target (USD):</label>
-    <input type="number" id="sessionProfitTargetInput" min="0" step="0.01" value="10" />
+    <label for="dailyProfitTargetInput" style="opacity:0;">Daily Profit Target (USD): </label>
+    <input type="number" id="dailyProfitTargetInput" min="0" step="0.01" value="10" style="opacity:0;" />
   `;
   configDiv.appendChild(profitTargetDiv);
 
   const lossLimitDiv = document.createElement("div");
   lossLimitDiv.classList.add("loss-limit");
   lossLimitDiv.innerHTML = `
-    <label for="sessionLossLimitInput">Daily Loss Limit (USD):</label>
-    <input type="number" id="sessionLossLimitInput" min="0" step="0.01" value="20" />
+    <label for="dailyLossLimitInput">Daily Loss Limit (USD): </label>
+    <input type="number" id="dailyLossLimitInput" min="0" step="0.01" value="999" />
   `;
   configDiv.appendChild(lossLimitDiv);
 
   controlPanel.insertBefore(configDiv, controlPanel.querySelector(".buttons"));
 
-  const sessionProfitTargetInput = document.getElementById("sessionProfitTargetInput");
-  const sessionLossLimitInput = document.getElementById("sessionLossLimitInput");
+  const dailyProfitTargetInput = document.getElementById("dailyProfitTargetInput");
+  const dailyLossLimitInput = document.getElementById("dailyLossLimitInput");
+
   const digitChart = new Chart(digitCanvas, {
     type: "bar",
     data: {
@@ -547,7 +549,7 @@ document.addEventListener("DOMContentLoaded", () => {
           max: 25,
           ticks: {
             color: "#94a3b8",
-            callback: value => ${value}%
+            callback: value => `${value}%`
           }
         },
         x: {
@@ -558,7 +560,7 @@ document.addEventListener("DOMContentLoaded", () => {
         legend: { display: false },
         tooltip: {
           callbacks: {
-            label: ctx => ${ctx.dataset.label}: ${ctx.raw.toFixed(2)}%
+            label: ctx => `${ctx.dataset.label}: ${ctx.raw.toFixed(2)}%`
           }
         }
       }
@@ -578,18 +580,15 @@ document.addEventListener("DOMContentLoaded", () => {
   let waitingForResult = false;
   let currentContractType = "DIGITUNDER9";
 
-  let sessionProfit = 0;
-  let sessionLoss = 0;
+  let dailyProfit = 0;
+  let dailyLoss = 0;
   let ticksAbove4Count = 0;
 
   let lossCount = 0;
   let totalLoss = 0;
 
-
-
-    
   connectBtn.onclick = () => {
-    window.location.href = https://oauth.deriv.com/oauth2/authorize?app_id=${app_id}&redirect_uri=${redirect_uri};
+    window.location.href = `https://oauth.deriv.com/oauth2/authorize?app_id=${app_id}&redirect_uri=${redirect_uri}`;
   };
 
   if (stakeInput) {
@@ -609,9 +608,9 @@ document.addEventListener("DOMContentLoaded", () => {
   const urlParams = new URLSearchParams(window.location.search);
   const accounts = [];
   for (let i = 1; i <= 20; i++) {
-    const acct = urlParams.get(acct${i});
-    const tok = urlParams.get(token${i});
-    const currency = urlParams.get(cur${i}) || "";
+    const acct = urlParams.get(`acct${i}`);
+    const tok = urlParams.get(`token${i}`);
+    const currency = urlParams.get(`cur${i}`) || "";
     if (acct && tok) accounts.push({ loginid: acct, token: tok, currency });
   }
 
@@ -626,7 +625,7 @@ document.addEventListener("DOMContentLoaded", () => {
     accounts.forEach(acc => {
       const option = document.createElement("option");
       option.value = acc.token;
-      option.textContent = ${acc.loginid} (${acc.currency});
+      option.textContent = `${acc.loginid} (${acc.currency})`;
       accountSelector.appendChild(option);
     });
     connectToDeriv(accounts[0].token);
@@ -656,8 +655,8 @@ document.addEventListener("DOMContentLoaded", () => {
         currentStake = initialStake;
         waitingForResult = false;
         currentContractType = "DIGITUNDER9";
-        sessionProfit = 0;
-        sessionLoss = 0;
+        dailyProfit = 0;
+        dailyLoss = 0;
         ticksAbove4Count = 0;
         trades = [];
         renderTradeHistory();
@@ -711,16 +710,16 @@ document.addEventListener("DOMContentLoaded", () => {
         if (lineSeries) lineSeries.update({ time: Math.floor(tick.epoch), value: price });
 
         if (isBotRunning && !waitingForResult) {
-          const profitTarget = parseFloat(sessionProfitTargetInput.value) || 10;
-          const lossLimit = parseFloat(sessionLossLimitInput.value) || 999;
+          const profitTarget = parseFloat(dailyProfitTargetInput.value) || 10;
+          const lossLimit = parseFloat(dailyLossLimitInput.value) || 999;
 
-          if (sessionProfit >= profitTarget) {
-            botStatusEl.textContent = Daily profit target reached ($${sessionProfit.toFixed(2)}). Bot paused.;
+          if (dailyProfit >= profitTarget) {
+            botStatusEl.textContent = Daily profit target reached ($${dailyProfit.toFixed(2)}). Bot paused.;
             stopBotExecution();
             return;
           }
-          if (sessionLoss >= lossLimit) {
-            botStatusEl.textContent = Daily loss limit reached ($${sessionLoss.toFixed(2)}). Bot paused.;
+          if (dailyLoss >= lossLimit) {
+            botStatusEl.textContent = Daily loss limit reached ($${dailyLoss.toFixed(2)}). Bot paused.;
             stopBotExecution();
             return;
           }
@@ -740,18 +739,21 @@ document.addEventListener("DOMContentLoaded", () => {
         updateTradeProfit(contract_id, profit);
 
         if (profit > 0) {
-          sessionProfit += profit;
+          dailyProfit += profit;
           currentStake = initialStake;
           currentContractType = "DIGITUNDER9";
-          totalLoss = 0; // ✅ Reset loss tracker
+          totalLoss = 0;
           lossCount = 0;
         } else {
-          sessionLoss += Math.abs(profit);
+          dailyLoss += Math.abs(profit);
           totalLoss += currentStake;
           lossCount++;
-          currentStake = +totalLoss.toFixed(2);
+          const targetProfit = initialStake * 0.25;
+          currentStake = +(totalLoss + targetProfit).toFixed(2);
+
           if (currentContractType === "DIGITUNDER9") currentContractType = "DIGITUNDER5";
         }
+
         waitingForResult = false;
       }
     };
@@ -945,8 +947,6 @@ document.addEventListener("DOMContentLoaded", () => {
     isBotRunning = true;
     waitingForResult = false;
     ticksAbove4Count = 0;
-    sessionProfit = 0;  // ✅ Reset here
-    sessionLoss = 0;
 
     if (stakeInput) {
       let val = parseFloat(stakeInput.value);
@@ -978,8 +978,6 @@ document.addEventListener("DOMContentLoaded", () => {
     waitingForResult = false;
     currentStake = initialStake;
     currentContractType = "DIGITUNDER9";
-    sessionProfit = 0;
-    sessionLoss = 0;
     botStatusEl.textContent = "Bot stopped.";
     startBtn.disabled = false;
     stopBtn.disabled = true;
