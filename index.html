@@ -502,9 +502,6 @@ document.addEventListener("DOMContentLoaded", () => {
   const stopBtn = document.getElementById("stopBot");
   const stakeInput = document.getElementById("stakeInput");
   const tradeHistoryBody = document.getElementById("tradeHistoryBody");
-  const digitCanvas = document.getElementById("digitChart");
-  const sessionProfitDisplay = document.getElementById("sessionProfitDisplay");
-  const dailyProfitDisplay = document.getElementById("dailyProfitDisplay");
 
   const controlPanel = document.querySelector(".control-panel");
   const configDiv = document.createElement("div");
@@ -588,20 +585,7 @@ document.addEventListener("DOMContentLoaded", () => {
   let lossCount = 0;
   let totalLoss = 0;
 
-  function updateProfitDisplays() {
-  const sessionNet = sessionProfit - sessionLoss;
-  const dailyNet = dailyProfit - dailyLoss;
 
-  if (sessionProfitDisplay) {
-    sessionProfitDisplay.textContent = Session P/L: $${sessionNet.toFixed(2)};
-    sessionProfitDisplay.style.color = sessionNet >= 0 ? "green" : "red";
-  }
-
-  if (dailyProfitDisplay) {
-    dailyProfitDisplay.textContent = Daily P/L: $${dailyNet.toFixed(2)};
-    dailyProfitDisplay.style.color = dailyNet >= 0 ? "green" : "red";
-  }
-}
 
     
   connectBtn.onclick = () => {
@@ -768,7 +752,6 @@ document.addEventListener("DOMContentLoaded", () => {
           currentStake = +totalLoss.toFixed(2);
           if (currentContractType === "DIGITUNDER9") currentContractType = "DIGITUNDER5";
         }
-        updateProfitDisplays();
         waitingForResult = false;
       }
     };
@@ -964,7 +947,6 @@ document.addEventListener("DOMContentLoaded", () => {
     ticksAbove4Count = 0;
     sessionProfit = 0;  // ✅ Reset here
     sessionLoss = 0;
-    updateProfitDisplays();
 
     if (stakeInput) {
       let val = parseFloat(stakeInput.value);
@@ -1003,7 +985,6 @@ document.addEventListener("DOMContentLoaded", () => {
     stopBtn.disabled = true;
     stakeInput.disabled = false;
     if (ws && ws.readyState === WebSocket.OPEN) ws.send(JSON.stringify({ forget_all: ["ticks"] }));
-    updateProfitDisplays();
   }
 
   accountSelector.addEventListener("change", (e) => {
