@@ -507,35 +507,36 @@ document.addEventListener("DOMContentLoaded", () => {
   const dailyProfitDisplay = document.getElementById("dailyProfitDisplay");
 
   const controlPanel = document.querySelector(".control-panel");
-const configDiv = document.createElement("div");
+  const configDiv = document.createElement("div");
   configDiv.style.display = "flex";
   configDiv.style.flexDirection = "column";
   configDiv.style.gap = "16px";
 
+  // Profit Target Input
   const profitTargetDiv = document.createElement("div");
   profitTargetDiv.classList.add("profit-target");
   profitTargetDiv.innerHTML = `
-  <label for="sessionProfitTargetInput" style="opacity=0;">Daily Profit Target (USD): </label>
-  <input type="number" id="sessionProfitTargetInput" min="0" step="0.01" value="10" style="opacity=0;"/>
-`;
+    <label for="sessionProfitTargetInput">Session Profit Target (USD): </label>
+    <input type="number" id="sessionProfitTargetInput" min="0" step="0.01" value="10" />
+  `;
 
-  configDiv.appendChild(profitTargetDiv);
-
+  // Loss Limit Input
   const lossLimitDiv = document.createElement("div");
   lossLimitDiv.classList.add("loss-limit");
-  profitTargetDiv.innerHTML = `
-  <label for="sessionProfitTargetInput">Daily Profit Target (USD): </label>
-  <input type="number" id="sessionProfitTargetInput" min="0" step="0.01" value="10" />
-`;
+  lossLimitDiv.innerHTML = `
+    <label for="sessionLossLimitInput">Session Loss Limit (USD): </label>
+    <input type="number" id="sessionLossLimitInput" min="0" step="0.01" value="999" />
+  `;
 
+  configDiv.appendChild(profitTargetDiv);
   configDiv.appendChild(lossLimitDiv);
-
   controlPanel.insertBefore(configDiv, controlPanel.querySelector(".buttons"));
-  
 
+  // Input elements
   const sessionProfitTargetInput = document.getElementById("sessionProfitTargetInput");
   const sessionLossLimitInput = document.getElementById("sessionLossLimitInput");
 
+  // Chart setup
   const digitChart = new Chart(digitCanvas, {
     type: "bar",
     data: {
@@ -587,30 +588,31 @@ const configDiv = document.createElement("div");
 
   let sessionProfit = 0;
   let sessionLoss = 0;
-  let ticksAbove4Count = 0;
+  let dailyProfit = 0;
+  let dailyLoss = 0;
 
   let lossCount = 0;
   let totalLoss = 0;
 
   function updateProfitDisplays() {
-  const sessionNet = sessionProfit - sessionLoss;
-  const dailyNet = dailyProfit - dailyLoss;
+    const sessionNet = sessionProfit - sessionLoss;
+    const dailyNet = dailyProfit - dailyLoss;
 
-  if (sessionProfitDisplay) {
-    sessionProfitDisplay.textContent = `Session P/L: $${sessionNet.toFixed(2)}`;
-    sessionProfitDisplay.style.color = sessionNet >= 0 ? "green" : "red";
+    if (sessionProfitDisplay) {
+      sessionProfitDisplay.textContent = `Session P/L: $${sessionNet.toFixed(2)}`;
+      sessionProfitDisplay.style.color = sessionNet >= 0 ? "green" : "red";
+    }
+
+    if (dailyProfitDisplay) {
+      dailyProfitDisplay.textContent = `Daily P/L: $${dailyNet.toFixed(2)}`;
+      dailyProfitDisplay.style.color = dailyNet >= 0 ? "green" : "red";
+    }
   }
 
-  if (dailyProfitDisplay) {
-    dailyProfitDisplay.textContent = `Daily P/L: $${dailyNet.toFixed(2)}`;
-    dailyProfitDisplay.style.color = dailyNet >= 0 ? "green" : "red";
-  }
-}
-
-    
   connectBtn.onclick = () => {
     window.location.href = `https://oauth.deriv.com/oauth2/authorize?app_id=${app_id}&redirect_uri=${redirect_uri}`;
   };
+});
 
   if (stakeInput) {
     stakeInput.value = initialStake.toFixed(2);
