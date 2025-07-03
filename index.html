@@ -484,7 +484,7 @@ button.logout-btn {
     </script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/lightweight-charts@3.8.0/dist/lightweight-charts.standalone.production.js"></script>
-  <script>
+<script>
 document.addEventListener("DOMContentLoaded", () => {
   const app_id = "82467";
   const redirect_uri = "https://saigex.github.io/Supersaige";
@@ -512,31 +512,26 @@ document.addEventListener("DOMContentLoaded", () => {
   configDiv.style.flexDirection = "column";
   configDiv.style.gap = "16px";
 
-  // Profit Target Input
-const profitTargetDiv = document.createElement("div");
-profitTargetDiv.classList.add("profit-target");
-profitTargetDiv.innerHTML = `
-  <label for="sessionProfitTargetInput" style="opacity=0;">Daily Profit Target (USD): </label>
-  <input type="number" id="sessionProfitTargetInput" min="0" step="0.01" value="10" style="opacity=0;"/>
-`;
+  const profitTargetDiv = document.createElement("div");
+  profitTargetDiv.classList.add("profit-target");
+  profitTargetDiv.innerHTML = `
+    <label for="sessionProfitTargetInput">Daily Profit Target (USD):</label>
+    <input type="number" id="sessionProfitTargetInput" min="0" step="0.01" value="10" />
+  `;
+  configDiv.appendChild(profitTargetDiv);
 
-configDiv.appendChild(profitTargetDiv);
+  const lossLimitDiv = document.createElement("div");
+  lossLimitDiv.classList.add("loss-limit");
+  lossLimitDiv.innerHTML = `
+    <label for="sessionLossLimitInput">Daily Loss Limit (USD):</label>
+    <input type="number" id="sessionLossLimitInput" min="0" step="0.01" value="20" />
+  `;
+  configDiv.appendChild(lossLimitDiv);
 
-const lossLimitDiv = document.createElement("div");
-lossLimitDiv.classList.add("loss-limit");
-profitTargetDiv.innerHTML = `
-  <label for="sessionProfitTargetInput">Daily Profit Target (USD): </label>
-  <input type="number" id="sessionProfitTargetInput" min="0" step="0.01" value="10" />
-`;
-
-configDiv.appendChild(lossLimitDiv);
   controlPanel.insertBefore(configDiv, controlPanel.querySelector(".buttons"));
 
-  // Input elements
   const sessionProfitTargetInput = document.getElementById("sessionProfitTargetInput");
   const sessionLossLimitInput = document.getElementById("sessionLossLimitInput");
-
-  // Chart setup
   const digitChart = new Chart(digitCanvas, {
     type: "bar",
     data: {
@@ -555,7 +550,7 @@ configDiv.appendChild(lossLimitDiv);
           max: 25,
           ticks: {
             color: "#94a3b8",
-            callback: value => `${value}%`
+            callback: value => ${value}%
           }
         },
         x: {
@@ -566,7 +561,7 @@ configDiv.appendChild(lossLimitDiv);
         legend: { display: false },
         tooltip: {
           callbacks: {
-            label: ctx => `${ctx.dataset.label}: ${ctx.raw.toFixed(2)}%`
+            label: ctx => ${ctx.dataset.label}: ${ctx.raw.toFixed(2)}%
           }
         }
       }
@@ -588,31 +583,30 @@ configDiv.appendChild(lossLimitDiv);
 
   let sessionProfit = 0;
   let sessionLoss = 0;
-  let dailyProfit = 0;
-  let dailyLoss = 0;
+  let ticksAbove4Count = 0;
 
   let lossCount = 0;
   let totalLoss = 0;
 
   function updateProfitDisplays() {
-    const sessionNet = sessionProfit - sessionLoss;
-    const dailyNet = dailyProfit - dailyLoss;
+  const sessionNet = sessionProfit - sessionLoss;
+  const dailyNet = dailyProfit - dailyLoss;
 
-    if (sessionProfitDisplay) {
-      sessionProfitDisplay.textContent = `Session P/L: $${sessionNet.toFixed(2)}`;
-      sessionProfitDisplay.style.color = sessionNet >= 0 ? "green" : "red";
-    }
-
-    if (dailyProfitDisplay) {
-      dailyProfitDisplay.textContent = `Daily P/L: $${dailyNet.toFixed(2)}`;
-      dailyProfitDisplay.style.color = dailyNet >= 0 ? "green" : "red";
-    }
+  if (sessionProfitDisplay) {
+    sessionProfitDisplay.textContent = Session P/L: $${sessionNet.toFixed(2)};
+    sessionProfitDisplay.style.color = sessionNet >= 0 ? "green" : "red";
   }
 
+  if (dailyProfitDisplay) {
+    dailyProfitDisplay.textContent = Daily P/L: $${dailyNet.toFixed(2)};
+    dailyProfitDisplay.style.color = dailyNet >= 0 ? "green" : "red";
+  }
+}
+
+    
   connectBtn.onclick = () => {
-    window.location.href = `https://oauth.deriv.com/oauth2/authorize?app_id=${app_id}&redirect_uri=${redirect_uri}`;
+    window.location.href = https://oauth.deriv.com/oauth2/authorize?app_id=${app_id}&redirect_uri=${redirect_uri};
   };
-});
 
   if (stakeInput) {
     stakeInput.value = initialStake.toFixed(2);
@@ -631,9 +625,9 @@ configDiv.appendChild(lossLimitDiv);
   const urlParams = new URLSearchParams(window.location.search);
   const accounts = [];
   for (let i = 1; i <= 20; i++) {
-    const acct = urlParams.get(`acct${i}`);
-    const tok = urlParams.get(`token${i}`);
-    const currency = urlParams.get(`cur${i}`) || "";
+    const acct = urlParams.get(acct${i});
+    const tok = urlParams.get(token${i});
+    const currency = urlParams.get(cur${i}) || "";
     if (acct && tok) accounts.push({ loginid: acct, token: tok, currency });
   }
 
@@ -648,7 +642,7 @@ configDiv.appendChild(lossLimitDiv);
     accounts.forEach(acc => {
       const option = document.createElement("option");
       option.value = acc.token;
-      option.textContent = `${acc.loginid} (${acc.currency})`;
+      option.textContent = ${acc.loginid} (${acc.currency});
       accountSelector.appendChild(option);
     });
     connectToDeriv(accounts[0].token);
@@ -664,7 +658,7 @@ configDiv.appendChild(lossLimitDiv);
     token = selectedToken;
     if (ws && ws.readyState === WebSocket.OPEN) ws.close();
 
-    ws = new WebSocket(`wss://ws.derivws.com/websockets/v3?app_id=${app_id}`);
+    ws = new WebSocket(wss://ws.derivws.com/websockets/v3?app_id=${app_id});
 
     ws.onopen = () => ws.send(JSON.stringify({ authorize: token }));
 
@@ -672,8 +666,8 @@ configDiv.appendChild(lossLimitDiv);
       const data = JSON.parse(msg.data);
 
       if (data.msg_type === "authorize") {
-        statusEl.textContent = `Logged in as: ${data.authorize.loginid}`;
-        botStatusEl.textContent = `Logged in as: ${data.authorize.loginid}`;
+        statusEl.textContent = Logged in as: ${data.authorize.loginid};
+        botStatusEl.textContent = Logged in as: ${data.authorize.loginid};
         getBalance();
         currentStake = initialStake;
         waitingForResult = false;
@@ -710,7 +704,7 @@ configDiv.appendChild(lossLimitDiv);
       if (data.msg_type === "balance") {
         let balance = parseFloat(data.balance.balance);
         lastKnownBalance = balance;
-        balanceEl.textContent = botBalanceEl.textContent = `Balance: $${balance.toFixed(2)}`;
+        balanceEl.textContent = botBalanceEl.textContent = Balance: $${balance.toFixed(2)};
         if (!isBotRunning) {
           startBtn.disabled = false;
           stopBtn.disabled = true;
@@ -729,7 +723,7 @@ configDiv.appendChild(lossLimitDiv);
         if (last100Digits.length > 100) last100Digits.shift();
         updateDigitChart();
 
-        botStatusEl.textContent = `Last digit: ${lastDigit}`;
+        botStatusEl.textContent = Last digit: ${lastDigit};
         if (lineSeries) lineSeries.update({ time: Math.floor(tick.epoch), value: price });
 
         if (isBotRunning && !waitingForResult) {
@@ -737,12 +731,12 @@ configDiv.appendChild(lossLimitDiv);
           const lossLimit = parseFloat(sessionLossLimitInput.value) || 999;
 
           if (sessionProfit >= profitTarget) {
-            botStatusEl.textContent = `Daily profit target reached ($${sessionProfit.toFixed(2)}). Bot paused.`;
+            botStatusEl.textContent = Daily profit target reached ($${sessionProfit.toFixed(2)}). Bot paused.;
             stopBotExecution();
             return;
           }
           if (sessionLoss >= lossLimit) {
-            botStatusEl.textContent = `Daily loss limit reached ($${sessionLoss.toFixed(2)}). Bot paused.`;
+            botStatusEl.textContent = Daily loss limit reached ($${sessionLoss.toFixed(2)}). Bot paused.;
             stopBotExecution();
             return;
           }
@@ -820,7 +814,7 @@ configDiv.appendChild(lossLimitDiv);
       };
 
       ws.send(JSON.stringify(buyRequest));
-      botStatusEl.textContent = `Placing trade: DIGITUNDER${barrier} for $${amount.toFixed(2)}`;
+      botStatusEl.textContent = Placing trade: DIGITUNDER${barrier} for $${amount.toFixed(2)};
       waitingForResult = true;
     }
 
@@ -953,13 +947,13 @@ configDiv.appendChild(lossLimitDiv);
       const profit = parseFloat(trade.profit);
       const profitClass = isNaN(profit) ? "" : profit >= 0 ? "profit" : "loss";
       const tr = document.createElement("tr");
-      tr.innerHTML = `
+      tr.innerHTML = 
         <td>${trade.contract_id}</td>
         <td>${trade.type}</td>
         <td>$${parseFloat(trade.amount).toFixed(2)}</td>
-        <td class="${profitClass}">${trade.profit !== null ? `$${parseFloat(trade.profit).toFixed(2)}` : "-"}</td>
+        <td class="${profitClass}">${trade.profit !== null ? $${parseFloat(trade.profit).toFixed(2)} : "-"}</td>
         <td>${trade.time}</td>
-      `;
+      ;
       tradeHistoryBody.appendChild(tr);
     });
   }
