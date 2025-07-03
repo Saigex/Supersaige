@@ -3,331 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Supersaige Auto Trader</title>
-    <link href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css" rel="stylesheet">
+    <title>Document</title>
+    <link href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css" rel="stylesheet" >
+    
     <link href="https://fonts.googleapis.com/css2?family=Play:wght@400;700&display=swap" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Josefin+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <style>
-        * {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
-}
-
-body {
-  font-family: "Josefin Sans", sans-serif;
-  background: #f8f9fb;
-  color: #000;
-  font-size: 16px;
-}
-
-.wrapper-body {
-  display: flex;
-  flex-wrap: nowrap;
-}
-
-/* === Sidebar === */
-.sidebar-wrapper {
-  position: sticky;
-  top: 0;
-  left: 0;
-  min-height: 100vh;
-  background-color: #ffffff;
-  width: 288px;
-  padding: 10px 12px;
-  display: flex;
-  color: #000;
-  flex-direction: column;
-  transition: width 0.2s linear;
-  border-right: 1px solid #e0e0e0;
-}
-
-.sidebar-top {
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  padding: 16px 0;
-}
-
-.logo-wrapper {
-  display: flex;
-  justify-content: flex-start;
-  align-items: center;
-  gap: 20px;
-  color: #000;
-  text-decoration: none;
-}
-
-.logo {
-  padding: 8px 8px;
-  height: 40px;
-  border-radius: 25%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  white-space: nowrap;
-}
-
-.logo-wrapper h2 {
-  white-space: nowrap;
-}
-
-.expand-btn {
-  position: absolute;
-  top: 16px;
-  right: -28px;
-  display: flex;
-  justify-content: center;
-  background-color: #ffffff;
-  align-items: center;
-  border-radius: 5px;
-  width: 32px;
-  height: 32px;
-  cursor: pointer;
-  border: 1px solid #ddd;
-}
-
-.expand-btn i {
-  color: #000;
-  font-size: 22px;
-}
-
-.sidebar-link {
-  padding: 8px 0;
-}
-
-.sidebar-link ul {
-  list-style-type: none;
-  position: relative;
-}
-
-.sidebar-link li {
-  position: relative;
-}
-
-.sidebar-link li a {
-  padding: 20px 11px;
-  margin: 8px 0;
-  color: #333;
-  font-size: 22px;
-  display: flex;
-  justify-content: start;
-  align-items: center;
-  border-radius: 11px;
-  text-decoration: none;
-  transition: all 0.2s ease-in-out;
-}
-
-.sidebar-link li a i {
-  font-family: 24px;
-}
-
-.sidebar-link .link {
-  margin-left: 24px;
-}
-
-.hide {
-  transition: all 0.5s ease-in-out;
-}
-
-.sidebar-link li a:hover,
-.sidebar-link li a:focus,
-.sidebar-link .active {
-  width: 100%;
-  text-decoration: none;
-  background-color: #007bff;
-  border-radius: 8px;
-  outline: none;
-  color: #fff;
-}
-
-.sidebar-link .active {
-  color: #fff;
-}
-
-/* === Tooltip === */
-.tooltip {
-  position: relative;
-}
-
-.tooltip .tooltip-content {
-  visibility: hidden;
-  background-color: #f5f5f5;
-  color: #000;
-  text-align: center;
-  border-radius: 6px;
-  padding: 6px 12px;
-  position: absolute;
-  z-index: 1;
-  left: 80px;
-  border: 1px solid #ccc;
-}
-
-.tooltip .tooltip-content::after {
-  content: "";
-  position: absolute;
-  top: 50%;
-  left: 0%;
-  margin-left: -20px;
-  margin-top: -10px;
-  border-width: 10px;
-  border-style: solid;
-  border-color: transparent #f5f5f5 transparent transparent;
-}
-
-.collapsed .tooltip:hover .tooltip-content {
-  visibility: visible;
-}
-
-/* === Bottom Section === */
-.sidebar-bottom {
-  padding: 8px 0;
-  display: flex;
-  justify-content: center;
-  flex-direction: column;
-}
-
-.sidebar-profile {
-  display: flex;
-  align-items: center;
-  gap: 18px;
-  flex-direction: row;
-  padding: 24px 2px;
-  border-top: 1px solid #007bff;
-  background-color: #f0f0f0;
-}
-
-.avatar-wrapper {
-  position: relative;
-  display: flex;
-}
-
-.online-status {
-  position: absolute;
-  width: 12px;
-  height: 12px;
-  border-radius: 50%;
-  background-color: #00C896;
-  bottom: 3px;
-  right: 3px;
-}
-
-.avatar {
-  display: block;
-  font-size: 20px;
-  width: 50px;
-  height: 50px;
-  cursor: pointer;
-  border-radius: 50%;
-  object-fit: cover;
-  filter: drop-shadow(-20px 0 10px #0000001a);
-}
-
-.avatar-name {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.user-name {
-  font-size: 15px;
-  font-weight: 700;
-  text-align: left;
-  color: #000;
-}
-
-.content-wrapper {
-  width: 100%;
-  display: flex;
-  justify-content: center;
-  align-items: flex-start;
-  padding: 20px;
-}
-
-body.collapsed .sidebar-wrapper {
-  width: 72px;
-}
-
-body.collapsed .hide {
-  position: absolute;
-  display: none;
-  pointer-events: none;
-  transition: 0.5s ease;
-}
-
-body.collapsed .expand-btn {
-  transform: rotate(180deg);
-}
-
-.section-divider {
-  border-top: 1px solid #007bff;
-  margin: 8px 0;
-}
-
-/* === Log Out Button === */
-.logout-btn {
-  background-color: #ffdddd !important;
-  color: #b00020 !important;
-}
-
-.logout-btn:hover,
-.logout-btn:focus,
-.logout-btn:active {
-  background-color: #ffcccc !important;
-  color: #b00020 !important;
-}
-
-.sidebar-link .logout-btn.active {
-  background-color: #ffcccc !important;
-  color: #b00020 !important;
-}
-
-.soon {
-  position: fixed;
-  top: 20px;
-  left: 50%;
-  transform: translateX(-50%);
-  z-index: 1000;
-  width: auto;
-  max-width: 90vw;
-  pointer-events: none;
-  text-align: center;
-}
-
-.soon h1 {
-  font-size: 6rem;
-  font-weight: 700;
-  color: #000;
-  margin: 0;
-  font-family: 'Play', sans-serif;
-  white-space: nowrap;
-}
-
-@media (max-width: 480px) {
-  .soon h1 {
-    font-size: 3rem;
-  }
-}
-
-button.logout-btn {
-  all: unset;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  padding: 20px 11px;
-  margin: 8px 0;
-  color: #b00020;
-  font-size: 22px;
-  border-radius: 11px;
-  width: 100%;
-  box-sizing: border-box;
-}
-#stopBot:hover:not([disabled]) {
-  background-color: #ffcccc !important;
-  color: #b00020 !important;
-  cursor: pointer;
-}
-    </style>
+    <link href="https://fonts.googleapis.com/css2?family=Josefin+Sans:wght@300;400;500;600;700&display=swap"
+    rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
 </head>
 <body class="collapsed">
     <div class="wrapper-body">
@@ -337,139 +19,161 @@ button.logout-btn {
                     <img src="img/logo.png" alt="logo" class="logo">
                     <h2 class="hide">Super Saige</h2>
                 </a>
+
                 <div class="expand-btn">
                     <i class="bx bxs-chevrons-left"></i>
                 </div>
+                
+
             </div>
             <div class="sidebar-link">
-                <ul class="top-section">
-                    <li>
-                        <button class="tooltip logout-btn" onclick="window.location.href='logout.php'">
-                            <i class="bx bxs-log-out"></i>
-                            <span class="link hide">Log out</span>
-                            <span class="tooltip-content">Log out</span>
-                        </button>
-                    </li>
-                </ul>
-                <div class="section-divider"></div>
-                <ul class="middle-section">
-                    <li>
-                        <a href="#" class="active tooltip">
-                            <i class="bx bxs-dashboard"></i>
-                            <span class="link hide">Dashboard</span>
-                            <span class="tooltip-content">Dashboard</span>
-                        </a>
-                    </li>
-                    <li>
-                        <a href="#" class="tooltip">
-                            <i class="bx bx-line-chart"></i>
-                            <span class="link hide">Analytics</span>
-                            <span class="tooltip-content">Analytics</span>
-                        </a>
-                    </li>
-                    <li>
-                        <a href="#" class="tooltip">
-                            <i class="bx bx-bar-chart-alt"></i>
-                            <span class="link hide">History</span>
-                            <span class="tooltip-content">History</span>
-                        </a>
-                    </li>
-                </ul>
-                <div class="section-divider"></div>
-            </div>
-            <div class="sidebar-bottom">
-                <div class="sidebar-link">
-                    <ul>
-                        <li>
-                            <a href="#" class="tooltip">
-                                <i class="bx bx-help-circle"></i>
-                                <span class="link hide">Help</span>
-                                <span class="tooltip-content">Help</span>
-                            </a>
-                        </li>
-                        <li>
-                            <a href="#" class="tooltip">
-                                <i class="bx bx-cog"></i>
-                                <span class="link hide">Settings</span>
-                                <span class="tooltip-content">Settings</span>
-                            </a>
-                        </li>
-                    </ul>
-                </div>
-                <div class="sidebar-profile">
-                    <div class="avatar-wrapper">
-                        <img src="img/profile.webp" alt="profile" class="avatar">
-                        <div class="online-status"></div>
-                    </div>
-                    <div class="avatar-name hide">
-                        <div class="user-name"><?= $_SESSION['name'];?></div>
-                        <div class="email"><?= $_SESSION['email'];?></div>
-                    </div>
-                </div>
-            </div>
+    <ul class="top-section">
+        <li>
+        <button class="tooltip logout-btn" onclick="window.location.href='logout.php'">
+            <i class="bx bxs-log-out"></i>
+            <span class="link hide">Log out</span>
+            <span class="tooltip-content">Log out</span>
+        </button>
+        </li>        
+    </ul>
+
+    <div class="section-divider"></div>
+
+    <ul class="middle-section">
+        <!-- 🟡 Dashboard, Analytics, History -->
+        <li>
+            <a href="#" class="active tooltip">
+                <i class="bx bxs-dashboard"></i>
+                <span class="link hide">Dashboard</span>
+                <span class="tooltip-content">Dashboard</span>
+            </a>
+        </li>
+        <li>
+            <a href="#" class="tooltip">
+                <i class="bx bx-line-chart"></i>
+                <span class="link hide">Analytics</span>
+                <span class="tooltip-content">Analytics</span>
+            </a>
+        </li>
+        <li>
+            <a href="#" class="tooltip">
+                <i class="bx bx-bar-chart-alt"></i>
+                <span class="link hide">History</span>
+                <span class="tooltip-content">History</span>
+            </a>
+        </li>
+    </ul>
+
+    <div class="section-divider"></div>
+</div>
+
+<!-- 🔵 Bottom section: Help + Settings + Profile -->
+<div class="sidebar-bottom">
+    <div class="sidebar-link">
+        <ul>
+            <li>
+                <a href="#" class="tooltip">
+                    <i class="bx bx-help-circle"></i>
+                    <span class="link hide">Help</span>
+                    <span class="tooltip-content">Help</span>
+                </a>
+            </li>
+            <li>
+                <a href="#" class="tooltip">
+                    <i class="bx bx-cog"></i>
+                    <span class="link hide">Settings</span>
+                    <span class="tooltip-content">Settings</span>
+                </a>
+            </li>
+        </ul>
+    </div>
+    <div class="sidebar-profile">
+        <div class="avatar-wrapper">
+            <img src="img/profile.webp" alt="profile" class="avatar">
+            <div class="online-status"></div>
+        </div>
+        <div class="avatar-name hide">
+            <div class="user-name"><?= $_SESSION['name'];?></div>
+            <div class="email"><?= $_SESSION['email'];?></div>
+        </div>
+    </div>
+</div>
+
         </div>
         <div class="content-wrapper">
-            <section id="connectSection" style="display: flex; flex-direction: column; align-items: center; justify-content: center; flex-grow: 1; padding: 40px; background: #f9f9f9;">
-    <h1 style="font-size: 32px; color: #007bff; font-family: 'Play', sans-serif; margin-bottom: 24px;">Supersaige Auto Trader</h1>
-    <button id="connectBtn" style="background: linear-gradient(90deg, #007bff, #00c8ff); color: white; border: none; border-radius: 12px; padding: 14px 28px; font-size: 18px; cursor: pointer; font-weight: 700;">Connect to Deriv</button>
-    <p id="status" style="margin-top: 16px; color: #555; font-style: italic;"></p>
-    <p id="balance" style="color: #000; font-weight: bold;"></p>
-            </section>
-            <section id="dashboard" style="display: none; flex-direction: column; padding: 40px; gap: 20px;">
-                <header style="display: flex; justify-content: space-between; align-items: center;">
-                    <div style="padding: 20px; font-size: 28px; font-weight: 800; text-align: center; color: #111;">Is it Monday yet...?</div>
-                    <select id="accountSelector" style="background: #ffffff; color: #000; border: 1px solid #ccc; border-radius: 8px; padding: 8px; font-weight: bold;"></select>
-                </header>
+            <!-- ⬇️ Deriv Bot (Styled to match dashboard) ⬇️ -->
+<section id="connectSection" style="display: flex; flex-direction: column; align-items: center; justify-content: center; flex-grow: 1; padding: 40px;">
+  <h1 style="font-size: 28px; color: #007bff; font-family: 'Josefin Sans', sans-serif; margin-bottom: 24px;">Supersaige Deriv Bot</h1>
+  <button id="connectBtn" style="background: #007bff; color: white; border: none; border-radius: 8px; padding: 12px 24px; font-size: 16px; cursor: pointer; font-weight: 600;">Connect to Deriv</button>
+  <p id="status" style="margin-top: 16px; color: #aaa;"></p>
+  <p id="balance" style="color: #aaa;"></p>
+</section>
 
-                <main style="display: flex; gap: 20px; flex-wrap: wrap; min-height: 600px; align-items: stretch;">
-                    <section style="flex: 2; display: flex; flex-direction: column; justify-content: space-between; background: #ffffff; border: 1px solid #ddd; border-radius: 16px; padding: 20px; min-width: 300px; box-shadow: 0 0 12px rgba(0, 0, 0, 0.1);">
-                        <div id="chart" style="flex-grow: 1; min-height: 300px;"></div>
-                        <div id="digitChartContainer" style="border-radius: 16px; overflow: hidden; background-color: #ffffff; padding: 10px; margin-top: 20px; background: #f1f1f1; padding: 12px; border-radius: 12px; border: 1px solid #ccc; box-shadow: 0 4px 10px rgba(0,0,0,0.05);">
-                            <canvas id="digitChart" height="120"></canvas>
-                            <small style="display: block; margin-top: 8px; color: #666;">Last 25 Ticks</small>
-                        </div>
-                    </section>
+<section id="dashboard" style="display: none; flex-direction: column; padding: 40px; gap: 20px;">
+  <header style="display: flex; justify-content: space-between; align-items: center;">
+    <h1 style="color: #007bff; font-size: 24px;">Supersaige Bot Dashboard</h1>
+    <select id="accountSelector" style="background: #0a0119; color: white; border: 1px solid #007bff; border-radius: 6px; padding: 6px;"></select>
+  </header>
 
-                    <section class="control-panel" style="flex: 1; background: #ffffff; border-radius: 16px; padding: 24px; color: #000; display: flex; flex-direction: column; gap: 20px; box-shadow: 0 0 12px rgba(0, 0, 0, 0.1);">
-                        <div class="status" id="botStatus" style="color: #666;">Not started</div>
-                        <div class="balance" id="botBalance" style="color: #007bff; font-weight: bold;">Balance: -</div>
-                        <div class="stake">
-                            <label for="stakeInput" style="margin-bottom: 4px; display: block;">Initial Stake Amount (USD, min $1):</label>
-                            <input type="number" id="stakeInput" min="1" step="0.01" value="1" style="width: 100%; padding: 10px; background: #fff; color: #000; border: 1px solid #ccc; border-radius: 10px; font-weight: bold;">
-                        </div>
-                        <div>
-                            <label for="dailyProfitTargetInput" style="margin-bottom: 4px; display: block;">Daily Profit Target (USD):</label>
-                            <input type="number" id="dailyProfitTargetInput" value="10" step="0.01" min="0" style="width: 100%; padding: 10px; background: #fff; color: #000; border: 1px solid #ccc; border-radius: 10px; font-weight: bold;">
-                        </div>
-                        <div>
-                            <label for="dailyLossLimitInput" style="margin-bottom: 4px; display: block;">Daily Loss Limit (USD):</label>
-                            <input type="number" id="dailyLossLimitInput" value="99999" step="0.01" min="0" style="width: 100%; padding: 10px; background: #fff; color: #000; border: 1px solid #ccc; border-radius: 10px; font-weight: bold;">
-                        </div>
-                        <div class="buttons" style="display: flex; gap: 10px;">
-                            <button id="startBot" style="flex: 1; background: #007bff; color: white; border: none; border-radius: 10px; padding: 12px; font-weight: bold;">Start Bot</button>
-                            <button id="stopBot" disabled style="flex: 1; background-color: #ffdddd; color: #b00020; border: none; border-radius: 10px; padding: 12px; font-weight: bold;">Stop Bot</button>
-                        </div>
+  <main style="display: flex; gap: 20px; flex-wrap: wrap; min-height: 600px; align-items: stretch;">
+  <!-- Chart Section -->
+  <section style="flex: 2; display: flex; flex-direction: column; justify-content: space-between; background: #0a0119; border-radius: 12px; padding: 20px; min-width: 300px;">
+    <div id="chart" style="flex-grow: 1; min-height: 300px;"></div>
 
-                    </section>
+    <div id="digitChartContainer" style="margin-top: 20px; background: #100028; padding: 10px; border-radius: 10px;">
+      <canvas id="digitChart" height="120"></canvas>
+      <small style="display: block; margin-top: 8px; color: #aaa;">Last 25 Ticks</small>
+    </div>
+  </section>
 
-                </main>
-                <section id="tradeHistorySection" style="margin-top: 20px; background: #ffffff; padding: 24px; border-radius: 16px; box-shadow: 0 0 12px rgba(0,0,0,0.05);">
-                    <h2 style="color: #007bff; margin-bottom: 12px; font-family: 'Play', sans-serif;">Trade History</h2>
-                    <table style="width: 100%; border-collapse: collapse;">
-                        <thead>
-                            <tr style="border-bottom: 1px solid #ccc;">
-                                <th style="text-align: left; padding: 8px;">Contract ID</th>
-                                <th style="text-align: left; padding: 8px;">Type</th>
-                                <th style="text-align: left; padding: 8px;">Amount</th>
-                                <th style="text-align: left; padding: 8px;">Profit/Loss</th>
-                                <th style="text-align: left; padding: 8px;">Time</th>
-                            </tr>
-                        </thead>
-                        <tbody id="tradeHistoryBody" style="color: #333;"></tbody>
-                    </table>
-                </section>
+  <!-- Control Panel Section -->
+<section class="control-panel" style="flex: 1; background: #0a0119; border-radius: 12px; padding: 20px; color: #ccc; display: flex; flex-direction: column; gap: 16px;">
+      <div class="status" id="botStatus" style="color: #ccc;">Not started</div>
+      <div class="balance" id="botBalance" style="color: #007bff; font-weight: bold;">Balance: -</div>
 
-            </section>
+      <div class="stake">
+        <label for="stakeInput" style="margin-bottom: 4px; display: block;">Initial Stake Amount (USD, min $1):</label>
+        <input type="number" id="stakeInput" min="1" step="0.01" value="1" style="width: 100%; padding: 8px; background: #100028; color: white; border: none; border-radius: 8px;">
+      </div>
+
+      <div>
+        <label for="dailyProfitTargetInput" style="margin-bottom: 4px; display: block;">Daily Profit Target (USD):</label>
+        <input type="number" id="dailyProfitTargetInput" value="10" step="0.01" min="0" style="width: 100%; padding: 8px; background: #100028; color: white; border: none; border-radius: 8px;">
+      </div>
+
+      <div>
+        <label for="dailyLossLimitInput" style="margin-bottom: 4px; display: block;">Daily Loss Limit (USD):</label>
+        <input type="number" id="dailyLossLimitInput" value="99999" step="0.01" min="0" style="width: 100%; padding: 8px; background: #100028; color: white; border: none; border-radius: 8px;">
+      </div>
+
+      <div class="buttons" style="display: flex; gap: 10px;">
+        <button id="startBot" style="flex: 1; background: #007bff; color: white; border: none; border-radius: 8px; padding: 10px;">Start Bot</button>
+        <button id="stopBot" disabled style="flex: 1; background: #dc3545; color: white; border: none; border-radius: 8px; padding: 10px;">Stop Bot</button>
+      </div>
+    </section>
+  </main>
+
+
+  <section id="tradeHistorySection" style="margin-top: 20px; background: #0a0119; padding: 20px; border-radius: 12px;">
+    <h2 style="color: #007bff; margin-bottom: 12px;">Trade History</h2>
+    <table style="width: 100%; border-collapse: collapse;">
+      <thead>
+        <tr style="border-bottom: 1px solid #333;">
+          <th style="text-align: left; padding: 8px;">Contract ID</th>
+          <th style="text-align: left; padding: 8px;">Type</th>
+          <th style="text-align: left; padding: 8px;">Amount</th>
+          <th style="text-align: left; padding: 8px;">Profit/Loss</th>
+          <th style="text-align: left; padding: 8px;">Time</th>
+        </tr>
+      </thead>
+      <tbody id="tradeHistoryBody" style="color: #ccc;">
+        <!-- Trades will be dynamically inserted here -->
+      </tbody>
+    </table>
+  </section>
+</section>
+<!-- ⬆️ Deriv Bot Section Ends ⬆️ -->
+
         </div>
     </div>
     <script>
